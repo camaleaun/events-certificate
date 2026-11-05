@@ -151,6 +151,10 @@ const esc = ( v: string ) => v.replace( /&/g, '&amp;' ).replace( /</g, '&lt;' ).
 /** Formats a field's sample value. */
 export function fieldValue( field: string, format: string | undefined, sample: Record< string, string >, locale: string ): string {
 	if ( field === 'issued_date' || field === 'event_date' ) {
+		// Default: the site's date format (Settings > General), formatted by WordPress.
+		if ( ! format || format === 'site' ) {
+			return sample.date_site || sample.date_iso;
+		}
 		const date = new Date( sample.date_iso || Date.now() );
 		const options: Record< string, Intl.DateTimeFormatOptions > = {
 			long: { day: 'numeric', month: 'long', year: 'numeric' },

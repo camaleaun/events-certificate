@@ -175,6 +175,7 @@ function enqueue() {
 					'event'       => get_bloginfo( 'name' ),
 					'location'    => 'São Paulo, Brazil',
 					'date_iso'    => gmdate( 'Y-m-d\TH:i:s\Z' ),
+					'date_site'   => wp_date( (string) get_option( 'date_format' ) ),
 					'hours'       => '8',
 					/* translators: %s: number of hours, in the certificate design's sample. */
 					'hours_long'  => sprintf( _n( '%s hour', '%s hours', 8, 'events-certificate' ), '8' ),

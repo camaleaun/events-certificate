@@ -13,6 +13,7 @@ export type FieldInfo = { label: string; formats?: { key: string; label: string 
 
 export function fields(): Record< string, FieldInfo > {
 	const dateFormats = [
+		{ key: 'site', label: __( 'Site default', 'events-certificate' ) },
 		{ key: 'long', label: __( 'Long (5 November 2026)', 'events-certificate' ) },
 		{ key: 'medium', label: __( 'Medium (5 Nov 2026)', 'events-certificate' ) },
 		{ key: 'short', label: __( 'Short (05/11/2026)', 'events-certificate' ) },
