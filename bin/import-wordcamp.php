@@ -95,9 +95,16 @@ $upsert = static function ( $type, $item, $meta ) {
 	return $id;
 };
 
+// The Gravatar the WordCamp site shows (from the w.org account), without its size: the local shim uses it for the avatar.
+$avatar = static function ( $item ) {
+	$url = (string) ( $item['avatar_urls']['96'] ?? '' );
+
+	return $url ? remove_query_arg( 's', $url ) : '';
+};
+
 $speakers = array();
 foreach ( $get( 'speakers' ) as $speaker ) {
-	$speakers[ $speaker['id'] ] = $upsert( 'wcb_speaker', $speaker, array( '_wcpt_user_name' => $speaker['meta']['_wcpt_user_name'] ?? '' ) );
+	$speakers[ $speaker['id'] ] = $upsert( 'wcb_speaker', $speaker, array( '_wcpt_user_name' => $speaker['meta']['_wcpt_user_name'] ?? '', '_evcert_avatar' => $avatar( $speaker ) ) );
 }
 WP_CLI::log( 'speakers: ' . count( $speakers ) );
 
@@ -130,7 +137,7 @@ WP_CLI::log( 'sessions: ' . $sessions );
 
 $organizers = 0;
 foreach ( $get( 'organizers' ) as $organizer ) {
-	$id = $upsert( 'wcb_organizer', $organizer, array( '_wcpt_user_name' => $organizer['meta']['_wcpt_user_name'] ?? '' ) );
+	$id = $upsert( 'wcb_organizer', $organizer, array( '_wcpt_user_name' => $organizer['meta']['_wcpt_user_name'] ?? '', '_evcert_avatar' => $avatar( $organizer ) ) );
 	wp_set_object_terms( $id, array_values( array_filter( array_map( static function ( $tid ) use ( $terms ) {
 		return $terms['wcb_organizer_team'][ $tid ] ?? 0;
 	}, (array) ( $organizer['organizer_team'] ?? array() ) ) ) ), 'wcb_organizer_team' );
