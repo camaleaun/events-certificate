@@ -211,6 +211,11 @@ body.evcert-verify {
 .evcert-dock__item svg { width: 20px; height: 20px; flex: none; }
 .evcert-dock__item:hover { background: var(--dock-hover); }
 .evcert-dock__item.is-linkedin-profile { font-weight: 600; }
+.evcert-dock__item.is-linkedin-profile svg,
+.evcert-dock__item.is-linkedin svg { color: #0a66c2; }
+.evcert-dock__item.is-linkedin-profile svg { background: #fff; border-radius: 2px; }
+.evcert-dock__item.is-facebook svg { color: #1877f2; }
+.evcert-dock__item.is-whatsapp svg { color: #25d366; }
 .evcert-dock__pop.is-menu a[aria-current]::after { content: " ✓"; color: var(--ok); }
 
 /* Docked: one icon in a bottom corner. */
