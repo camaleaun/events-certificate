@@ -34,6 +34,10 @@ The QR code and the verification link only make sense when anyone can open your 
 
 No, unless an administrator chose to delete all data. Printed certificates point to their verification page, so they are kept by default.
 
+== External services ==
+
+To name the site's languages the way WordPress's language selector does ("Português do Brasil"), the plugin reads WordPress's list of translations with the core function wp_get_available_translations(), which asks the WordPress.org API (api.wordpress.org/translations/core/) for it. It runs in the admin, for administrators, only when a language of the site has no name stored yet, at most once a day; it sends the WordPress version and the site address WordPress sends on its own update checks. The names are stored in the site, so the public certificate page makes no request. WordPress.org privacy policy: https://wordpress.org/about/privacy/
+
 == Changelog ==
 
 = 0.1.0 =

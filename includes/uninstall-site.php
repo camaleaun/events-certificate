@@ -25,6 +25,8 @@ if ( ! function_exists( 'evcert_uninstall_site' ) ) {
 			}
 			delete_option( 'evcert_db_version' );
 			delete_option( 'evcert_settings' );
+			delete_option( 'evcert_locale_names' );
+			delete_transient( 'evcert_locale_names_tried' );
 		}
 	}
 }

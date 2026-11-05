@@ -45,7 +45,6 @@ function LocalizedField( { label, values, onChange, placeholder }: { label: stri
 	const { locales } = window.evcertSigner;
 	const [ index, setIndex ] = useState( 0 );
 	const current = locales[ index ] || locales[ 0 ];
-	const short = ( l: string ) => l.split( '_' )[ 0 ].toUpperCase();
 	return (
 		<div className="evcert-localized">
 			<HStack className="evcert-localized__header">
@@ -53,12 +52,12 @@ function LocalizedField( { label, values, onChange, placeholder }: { label: stri
 					{ label }
 				</label>
 				{ locales.length === 2 && (
-					<Button size="small" variant="tertiary" className="evcert-localized__switch" label={ sprintf( /* translators: %s: language name. */ __( 'Edit in %s', 'events-certificate' ), locales[ 1 - index ].name ) } showTooltip onClick={ () => setIndex( 1 - index ) }>
-						{ short( current.locale ) }
+					<Button size="small" variant="tertiary" className="evcert-localized__switch" label={ sprintf( /* translators: %s: language name. */ __( 'Switch to %s', 'events-certificate' ), locales[ 1 - index ].name ) } showTooltip onClick={ () => setIndex( 1 - index ) }>
+						{ current.name }
 					</Button>
 				) }
 				{ locales.length > 2 && (
-					<DropdownMenu label={ __( 'Language', 'events-certificate' ) } icon={ null } text={ short( current.locale ) } toggleProps={ { size: 'small', variant: 'tertiary' } as any }>
+					<DropdownMenu label={ __( 'Language', 'events-certificate' ) } icon={ null } text={ current.name } toggleProps={ { size: 'small', variant: 'tertiary' } as any }>
 						{ ( { onClose } ) => (
 							<MenuGroup>
 								{ locales.map( ( l, i ) => (

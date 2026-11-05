@@ -44,6 +44,38 @@ function bootstrap() {
 	add_action( 'init', __NAMESPACE__ . '\maybe_flush', 99 );
 	add_filter( 'query_vars', __NAMESPACE__ . '\query_vars' );
 	add_action( 'template_redirect', __NAMESPACE__ . '\template_redirect' );
+	add_action( 'admin_init', __NAMESPACE__ . '\store_locale_names' );
+}
+
+/**
+ * Option with the native names of the site's languages, for the public page.
+ */
+const NAMES_OPTION = 'evcert_locale_names';
+
+/**
+ * Keeps the native names of the site's languages ("Português do Brasil"), as
+ * WordPress's language selector shows them. They come from WordPress's list
+ * of translations (wp_get_available_translations(), cached by core for hours);
+ * fetched in the admin only when a language is missing, at most once a day.
+ */
+function store_locale_names() {
+	if ( wp_doing_ajax() || ! current_user_can( 'manage_options' ) ) {
+		return;
+	}
+	$names   = get_option( NAMES_OPTION, array() );
+	$names   = is_array( $names ) ? $names : array();
+	$missing = array_diff( locales(), array_keys( $names ), array( 'en_US' ) );
+	if ( ! $missing || get_transient( 'evcert_locale_names_tried' ) ) {
+		return;
+	}
+	set_transient( 'evcert_locale_names_tried', 1, DAY_IN_SECONDS );
+	require_once ABSPATH . 'wp-admin/includes/translation-install.php';
+	foreach ( wp_get_available_translations() as $locale => $translation ) {
+		if ( in_array( $locale, $missing, true ) && ! empty( $translation['native_name'] ) ) {
+			$names[ $locale ] = (string) $translation['native_name'];
+		}
+	}
+	update_option( NAMES_OPTION, $names, false );
 }
 
 /**
@@ -103,16 +135,25 @@ function locales() {
 }
 
 /**
- * A locale's name in its own language.
+ * A locale's name in its own language, as WordPress's language selector shows
+ * it ("Português do Brasil", "English (United States)"): the names kept by
+ * store_locale_names() (no request is made here), else from Intl.
  *
  * @param string $locale Locale.
  * @return string
  */
 function locale_name( $locale ) {
+	if ( 'en_US' === $locale ) {
+		return 'English (United States)';
+	}
+	$names = get_option( NAMES_OPTION, array() );
+	if ( is_array( $names ) && ! empty( $names[ $locale ] ) ) {
+		return (string) $names[ $locale ];
+	}
 	if ( class_exists( 'Locale' ) ) {
-		$name = \Locale::getDisplayLanguage( $locale, $locale );
+		$name = \Locale::getDisplayName( $locale, $locale );
 		if ( $name ) {
-			return function_exists( 'mb_convert_case' ) ? mb_convert_case( $name, MB_CASE_TITLE, 'UTF-8' ) : ucfirst( $name );
+			return function_exists( 'mb_strtoupper' ) ? mb_strtoupper( mb_substr( $name, 0, 1 ) ) . mb_substr( $name, 1 ) : ucfirst( $name );
 		}
 	}
 
@@ -418,11 +459,11 @@ function render_page( $cert, $code, $locale, $invalid ) {
 					<?php endif; ?>
 					<button type="button" class="evcert-dock__tool" data-evcert-pop="share" aria-expanded="false"><?php echo icon( 'share' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?><span><?php esc_html_e( 'Share', 'events-certificate' ); ?></span></button>
 					<?php
-					// Language: a globe with a name. With two languages it switches to the other (named); with more it opens a menu (named after the current one).
+					// Language: a globe with the current language's name. With two languages a click switches to the other; with more it opens a menu.
 					$others = array_values( array_diff( locales(), array( $locale ) ) );
 					?>
 					<?php if ( 1 === count( $others ) ) : ?>
-						<a class="evcert-dock__tool" href="<?php echo esc_url( page_url( $cert['code'], $others[0] ) ); ?>" hreflang="<?php echo esc_attr( str_replace( '_', '-', $others[0] ) ); ?>" lang="<?php echo esc_attr( str_replace( '_', '-', $others[0] ) ); ?>"><?php echo icon( 'globe' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?><span><?php echo esc_html( locale_name( $others[0] ) ); ?></span></a>
+						<a class="evcert-dock__tool" href="<?php echo esc_url( page_url( $cert['code'], $others[0] ) ); ?>" hreflang="<?php echo esc_attr( str_replace( '_', '-', $others[0] ) ); ?>" title="<?php echo esc_attr( locale_name( $others[0] ) ); ?>" aria-label="<?php echo esc_attr( __( 'Language', 'events-certificate' ) . ': ' . locale_name( $locale ) . ' — ' . locale_name( $others[0] ) ); ?>"><?php echo icon( 'globe' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?><span><?php echo esc_html( locale_name( $locale ) ); ?></span></a>
 					<?php elseif ( count( $others ) > 1 ) : ?>
 						<button type="button" class="evcert-dock__tool" data-evcert-pop="langs" aria-expanded="false" aria-label="<?php echo esc_attr( __( 'Language', 'events-certificate' ) . ': ' . locale_name( $locale ) ); ?>"><?php echo icon( 'globe' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?><span><?php echo esc_html( locale_name( $locale ) ); ?></span></button>
 					<?php endif; ?>
