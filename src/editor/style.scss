@@ -1234,3 +1234,9 @@
 		font-style: italic;
 	}
 }
+
+// Paired fields (line height | letter spacing, left | width…): a label on two lines keeps the inputs level.
+.typography-block-support-panel .components-tools-panel-item.single-column,
+.evcert-grid-2 > * {
+	align-self: end;
+}

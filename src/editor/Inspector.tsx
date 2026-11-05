@@ -25,12 +25,12 @@ import {
 	__experimentalHStack as HStack,
 } from '@wordpress/components';
 import { useState } from '@wordpress/element';
-import { __ } from '@wordpress/i18n';
+import { __, _x } from '@wordpress/i18n';
 import { justifyBottom, justifyCenter, justifyCenterVertical, justifyLeft, justifyRight, justifyStretch, justifyStretchVertical, justifyTop, alignCenter, alignLeft, alignRight, cornerBottomLeft, cornerBottomRight, cornerTopLeft, cornerTopRight, formatUppercase, Icon, link, linkOff, reset, settings } from '@wordpress/icons';
 import { elementIcon } from './icons';
 import { naturalSize, type Picked } from './media';
 import SvgPanel from './SvgPanel';
-import { box as boxOf, color, isLen, layoutFrom, parseLen, lockedRatio, lockedSide, refBox, REQUIRED_SLOTS, type AxisMode, type Box, type Layout, type Design, type Element, type Mode } from './model';
+import { box as boxOf, color, isLen, layoutFrom, parseLen, lockedRatio, lockedSide, refBox, REQUIRED_SLOTS, type Axis, type AxisMode, type Box, type Layout, type Design, type Element, type Mode } from './model';
 
 type Props = {
 	el: Element;
@@ -457,6 +457,8 @@ function LengthField( { label, value, total, onChange, locked }: { label: string
 	);
 }
 
+const round2 = ( n: number ) => Math.round( n * 100 ) / 100;
+
 /** Anchors per axis (start, centre, end, stretch) with open length fields, relative to the page or the safe margin. */
 function Anchors( { el, stored, page, onChange }: { el: Element; stored: Element; page: Design[ 'page' ]; onChange: ( patch: Partial< Element > ) => void } ) {
 	const labels = AXIS_LABELS();
@@ -501,12 +503,40 @@ function Anchors( { el, stored, page, onChange }: { el: Element; stored: Element
 		const lock = stored.type === 'svg' && stored.vw && stored.vh ? stored.vw / stored.vh : b.w / b.h;
 		onChange( ( stored.layout ? { lock } : { lock, h: b.w / lock } ) as Partial< Element > );
 	};
-	const fill = ( r: 'page' | 'safe' ) => set( { ref: r, h: { mode: 'stretch', start: '0pt', end: '0pt' }, v: { mode: 'stretch', start: '0pt', end: '0pt' } } );
+	// Fill the reference box (page or margin, as chosen above) along one axis or both; Fit keeps the aspect ratio inside it.
+	const whole: Axis = { mode: 'stretch', start: '0pt', end: '0pt' };
+	const fill = ( axes: Array< 'h' | 'v' > ) => set( { ...layout, ...Object.fromEntries( axes.map( ( a ) => [ a, whole ] ) ) } );
+	const fit = () => {
+		if ( ! ratio ) {
+			return;
+		}
+		const r = round2;
+		set(
+			ref.w / ref.h > ratio
+				? { ...layout, v: whole, h: { mode: 'center', start: '0pt', size: `${ r( ref.h * ratio ) }pt` } }
+				: { ...layout, h: whole, v: { mode: 'center', start: '0pt', size: `${ r( ref.w / ratio ) }pt` } }
+		);
+	};
+	const fills = { h: layout.h.mode === 'stretch', v: layout.v.mode === 'stretch' };
 	return (
 		<div className="evcert-anchors">
 			<ToggleGroupControl __next40pxDefaultSize __nextHasNoMarginBottom isBlock label={ __( 'Relative to', 'events-certificate' ) } value={ layout.ref || 'page' } onChange={ ( v ) => setRef( v as 'page' ) }>
 				<ToggleGroupControlOption value="page" label={ __( 'Page', 'events-certificate' ) } />
 				<ToggleGroupControlOption value="safe" label={ __( 'Margin', 'events-certificate' ) } aria-label={ __( 'Safe margin', 'events-certificate' ) } showTooltip />
+			</ToggleGroupControl>
+			<ToggleGroupControl
+				__next40pxDefaultSize
+				__nextHasNoMarginBottom
+				isBlock
+				className="evcert-anchors__fill"
+				label={ _x( 'Fill', 'size: fill the page or margin', 'events-certificate' ) }
+				value={ fills.h && fills.v ? 'both' : fills.h ? 'h' : fills.v ? 'v' : '' }
+				onChange={ ( v ) => ( v === 'fit' ? fit() : fill( v === 'both' ? [ 'h', 'v' ] : [ v as 'h' | 'v' ] ) ) }
+			>
+				<ToggleGroupControlOption value="h" label={ __( 'Width', 'events-certificate' ) } />
+				<ToggleGroupControlOption value="v" label={ __( 'Height', 'events-certificate' ) } />
+				<ToggleGroupControlOption value="both" label={ __( 'Both', 'events-certificate' ) } />
+				{ ratio && <ToggleGroupControlOption value="fit" label={ __( 'Fit', 'events-certificate' ) } aria-label={ __( 'As large as fits, keeping the aspect ratio', 'events-certificate' ) } showTooltip /> }
 			</ToggleGroupControl>
 			<ToggleGroupControl __next40pxDefaultSize __nextHasNoMarginBottom label={ __( 'Horizontal', 'events-certificate' ) } value={ layout.h.mode } onChange={ ( v ) => setMode( 'h', v as AxisMode ) }>
 				<ToggleGroupControlOptionIcon value="start" icon={ justifyLeft } label={ __( 'Left', 'events-certificate' ) } />
@@ -534,14 +564,6 @@ function Anchors( { el, stored, page, onChange }: { el: Element; stored: Element
 					{ stored.lock ? __( 'Aspect ratio locked', 'events-certificate' ) : __( 'Lock aspect ratio', 'events-certificate' ) }
 				</Button>
 			) }
-			<HStack justify="flex-start">
-				<Button variant="secondary" size="compact" onClick={ () => fill( 'page' ) }>
-					{ __( 'Fill page', 'events-certificate' ) }
-				</Button>
-				<Button variant="secondary" size="compact" onClick={ () => fill( 'safe' ) }>
-					{ __( 'Fill margin', 'events-certificate' ) }
-				</Button>
-			</HStack>
 		</div>
 	);
 }
