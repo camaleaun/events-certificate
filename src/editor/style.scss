@@ -1270,3 +1270,13 @@
 		font-variant-numeric: tabular-nums;
 	}
 }
+
+.evcert-color-popover__footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	.evcert-meta {
+		margin: 0;
+	}
+}

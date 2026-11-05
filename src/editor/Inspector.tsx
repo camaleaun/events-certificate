@@ -51,7 +51,7 @@ const num = ( v: number ) => Math.round( v * 100 ) / 100;
 const PT = [ { value: 'pt', label: 'pt', default: 0 } ];
 
 /** A color item like the block editor's ColorGradientDropdown (indicator + name, a palette in a dropdown). */
-export function ColorItem( { label, value, design, mode, onChange }: { label: string; value?: string; design: Design; mode: Mode; onChange: ( v: string ) => void } ) {
+export function ColorItem( { label, value, design, mode, onChange, clearTo = '' }: { label: string; value?: string; design: Design; mode: Mode; onChange: ( v: string ) => void; clearTo?: string } ) {
 	const shown = color( design, value, mode );
 	const variable = value?.startsWith( '$' ) ? design.colors[ value.slice( 1 ) ] : null;
 	return (
@@ -81,7 +81,14 @@ export function ColorItem( { label, value, design, mode, onChange }: { label: st
 						} }
 					/>
 					<p className="evcert-color-popover__label">{ __( 'Custom', 'events-certificate' ) }</p>
-					<ColorPalette value={ value?.startsWith( '$' ) ? undefined : value } onChange={ ( c ) => onChange( c || '' ) } clearable />
+					<ColorPalette value={ value?.startsWith( '$' ) ? undefined : value } onChange={ ( c ) => onChange( c || clearTo ) } clearable={ false } />
+					{ /* One Clear for any color, theme or custom: back to the element's default (none, or the text color). */ }
+					<div className="evcert-color-popover__footer">
+						<span />
+						<Button variant="tertiary" size="small" disabled={ ( value || '' ) === clearTo } accessibleWhenDisabled onClick={ () => onChange( clearTo ) }>
+							{ __( 'Clear', 'events-certificate' ) }
+						</Button>
+					</div>
 				</div>
 			) }
 		/>
@@ -277,9 +284,9 @@ export default function Inspector( { el, stored, design, mode, tab, locale, samp
 			{ tab === 'art' && el.type !== 'qr' && el.type !== 'image' && (
 				<ToolsPanel label={ __( 'Color', 'events-certificate' ) } resetAll={ () => {} } className="color-block-support-panel">
 					<div className="evcert-color-items">
-						{ el.type === 'text' && <ColorItem label={ __( 'Text', 'events-certificate' ) } value={ el.color } design={ design } mode={ mode } onChange={ ( c ) => onChange( { color: c } ) } /> }
+						{ el.type === 'text' && <ColorItem label={ __( 'Text', 'events-certificate' ) } value={ el.color } clearTo="$text" design={ design } mode={ mode } onChange={ ( c ) => onChange( { color: c } ) } /> }
 						{ ( el.type === 'rect' || el.type === 'ellipse' || el.type === 'path' ) && <ColorItem label={ __( 'Fill', 'events-certificate' ) } value={ el.fill } design={ design } mode={ mode } onChange={ ( fill ) => onChange( { fill } ) } /> }
-						{ el.type === 'svg' && <ColorItem label={ __( 'Current color', 'events-certificate' ) } value={ el.color || '$text' } design={ design } mode={ mode } onChange={ ( c ) => onChange( { color: c } as Partial< Element > ) } /> }
+						{ el.type === 'svg' && <ColorItem label={ __( 'Current color', 'events-certificate' ) } value={ el.color || '$text' } clearTo="$text" design={ design } mode={ mode } onChange={ ( c ) => onChange( { color: c === '$text' ? undefined : c } as Partial< Element > ) } /> }
 						{ el.type !== 'text' && el.type !== 'svg' && <ColorItem label={ el.type === 'line' ? __( 'Line', 'events-certificate' ) : __( 'Stroke', 'events-certificate' ) } value={ ( el as any ).stroke } design={ design } mode={ mode } onChange={ ( stroke ) => onChange( { stroke } as Partial< Element > ) } /> }
 					</div>
 				</ToolsPanel>

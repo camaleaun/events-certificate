@@ -129,12 +129,19 @@ export default function DesignPanel( { design, mode, title, status, sample, defa
 					value={
 						<HStack spacing={ 2 } justify="flex-start">
 							<ColorIndicator colorValue={ bg === 'transparent' || bg === 'none' ? undefined : bg } />
-							<span>{ bgVar ? bgVar.name : page.bg }</span>
+							<span>{ bgVar ? bgVar.name : page.bg || __( 'Default (page color)', 'events-certificate' ) }</span>
 						</HStack>
 					}
 				>
 					{ ( close ) => (
 						<ItemGroup isBordered isSeparated>
+							{ /* No background: the page's own color shows (light or dark on the certificate page, the paper in the PDF). */ }
+							<Item onClick={ () => { setPage( { bg: '' } ); close(); } }>
+								<HStack justify="flex-start">
+									<ColorIndicator colorValue={ undefined } />
+									<span>{ __( 'Default (page color)', 'events-certificate' ) }</span>
+								</HStack>
+							</Item>
 							{ Object.entries( design.colors ).map( ( [ key, v ] ) => (
 								<Item key={ key } onClick={ () => { setPage( { bg: `$${ key }` } ); close(); } }>
 									<HStack justify="flex-start">
