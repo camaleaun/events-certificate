@@ -210,7 +210,7 @@ function enqueue() {
 					'signer_role' => __( 'Event Coordinator', 'events-certificate' ),
 					'code'        => '2611-04K7-M29Q-XAP3',
 					'verify_url'  => untrailingslashit( preg_replace( '#^https?://#', '', home_url( \EventsCertificate\Settings\value( 'slug' ) ) ) ),
-				),
+				) + \EventsCertificate\Render\phrases(),
 			)
 		) . ';',
 		'before'

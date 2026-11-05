@@ -63,7 +63,7 @@
 			},
 			"runs": [
 				{
-					"text": "Certificate of participation"
+					"field": "title_text"
 				}
 			],
 			"font": "Lora",
@@ -98,7 +98,7 @@
 			},
 			"runs": [
 				{
-					"text": "This is to certify that"
+					"field": "intro_text"
 				}
 			],
 			"font": "Inter",
@@ -284,7 +284,7 @@
 			},
 			"runs": [
 				{
-					"text": "Place and date"
+					"field": "place_date_label"
 				}
 			],
 			"font": "Inter",
@@ -507,7 +507,10 @@
 			},
 			"runs": [
 				{
-					"text": "Use the code above to verify at:\n"
+					"field": "verify_hint"
+				},
+				{
+					"text": "\n"
 				},
 				{
 					"field": "verify_url"

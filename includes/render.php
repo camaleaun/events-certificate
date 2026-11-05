@@ -250,6 +250,23 @@ function values( array $cert ) {
 		'code'        => (string) ( $cert['code'] ?? '' ),
 		'verify_url'  => untrailingslashit( (string) preg_replace( '#^https?://#', '', home_url( Settings\value( 'slug' ) ) ) ),
 		'document'    => (string) ( $cert['doc_masked'] ?? '' ),
+	) + phrases();
+}
+
+/**
+ * The standard texts of a certificate, as fields: a design holds the field,
+ * not the words, so the text comes from the plugin's translation in the
+ * language the certificate is shown in.
+ *
+ * @return array<string, string> Field key => text in the current locale.
+ */
+function phrases() {
+	return array(
+		'title_text'       => __( 'Certificate of participation', 'events-certificate' ),
+		'intro_text'       => __( 'This is to certify that', 'events-certificate' ),
+		'issued_label'     => __( 'Date of issue', 'events-certificate' ),
+		'place_date_label' => __( 'Place and date', 'events-certificate' ),
+		'verify_hint'      => __( 'Use the code above to verify at:', 'events-certificate' ),
 	);
 }
 
@@ -308,6 +325,46 @@ function field_value( $field, $format, array $values ) {
 }
 
 /**
+ * Words that stand for a field in designs made before the field existed (the
+ * standard texts, and the Base's sample signer role), in English and in each
+ * of the site's languages: they render as the field, so certificates already
+ * issued show them in the page's language and with the real signer.
+ *
+ * @param string $text Text of a run, trimmed.
+ * @return string Field key, or ''.
+ */
+function phrase_field( $text ) {
+	static $keys = null;
+	if ( null === $keys ) {
+		$english = array(
+			'Certificate of participation'     => 'title_text',
+			'This is to certify that'          => 'intro_text',
+			'Date of issue'                    => 'issued_label',
+			'Date of emission'                 => 'issued_label',
+			'Place and date'                   => 'place_date_label',
+			'Use the code above to verify at:' => 'verify_hint',
+			'Event Coordinator'                => 'signer_role',
+		);
+		$keys    = array();
+		$locales = function_exists( 'EventsCertificate\Verify\locales' ) ? \EventsCertificate\Verify\locales() : array( determine_locale() );
+		foreach ( $locales as $locale ) {
+			$switched = switch_to_locale( $locale );
+			foreach ( $english as $words => $key ) {
+				$keys[ mb_strtolower( translate( $words, 'events-certificate' ) ) ] = $key; // phpcs:ignore WordPress.WP.I18n.LowLevelTranslationFunction, WordPress.WP.I18n.NonSingularStringLiteralText -- the same strings as phrases(), looked up by their words.
+			}
+			if ( $switched ) {
+				restore_previous_locale();
+			}
+		}
+		foreach ( $english as $words => $key ) {
+			$keys[ mb_strtolower( $words ) ] = $key;
+		}
+	}
+
+	return $keys[ mb_strtolower( $text ) ] ?? '';
+}
+
+/**
  * A text element's runs as HTML.
  *
  * @param array<string, mixed>  $el     Text element.
@@ -319,6 +376,9 @@ function runs_html( array $el, array $values ) {
 	$html = '';
 	foreach ( $runs as $run ) {
 		$text = isset( $run['field'] ) ? field_value( (string) $run['field'], (string) ( $run['format'] ?? '' ), $values ) : (string) ( $run['text'] ?? '' );
+		if ( ! isset( $run['field'] ) && preg_match( '/^(\s*)(.+?)(\s*)$/su', $text, $m ) && '' !== phrase_field( $m[2] ) ) {
+			$text = $m[1] . field_value( phrase_field( $m[2] ), '', $values ) . $m[3];
+		}
 		if ( ! empty( $el['upper'] ) ) {
 			$text = function_exists( 'mb_strtoupper' ) ? mb_strtoupper( $text ) : strtoupper( $text );
 		}

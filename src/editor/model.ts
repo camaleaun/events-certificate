@@ -4,6 +4,7 @@
  * text in foreignObject) and by the PDF renderer (dompdf reads the same
  * positioned HTML).
  */
+import { __ } from '@wordpress/i18n';
 
 export type Mode = 'light' | 'dark';
 
@@ -349,10 +350,50 @@ export function svgPaths( el: SvgEl ): SvgPath[] {
 }
 
 /** Moves SVG elements saved as markup to fields. */
+/** Standard texts that are fields (FieldText fields(), group 'text'), by their English words. */
+const PHRASES: Record< string, string > = {
+	'Certificate of participation': 'title_text',
+	'This is to certify that': 'intro_text',
+	'Date of issue': 'issued_label',
+	'Date of emission': 'issued_label',
+	'Place and date': 'place_date_label',
+	'Use the code above to verify at:': 'verify_hint',
+	// The Base's sample signer role, before the signer had one.
+	'Event Coordinator': 'signer_role',
+};
+
+/**
+ * A text run that is a standard text, in English or in the admin's language,
+ * becomes its field (with its trailing line break kept as text): designs
+ * saved before these fields existed hold the words.
+ */
+function phraseRuns( runs: Run[] ): Run[] {
+	const keys: Record< string, string > = {};
+	for ( const [ english, key ] of Object.entries( PHRASES ) ) {
+		keys[ english.toLowerCase() ] = key;
+		keys[ __( english, 'events-certificate' ).toLowerCase() ] = key; // eslint-disable-line @wordpress/i18n-no-variables
+	}
+	return runs.flatMap( ( run ) => {
+		if ( ! ( 'text' in run ) ) {
+			return [ run ];
+		}
+		const m = /^(\s*)(.*?)(\s*)$/s.exec( run.text ) as RegExpExecArray;
+		const key = keys[ m[ 2 ].toLowerCase() ];
+		if ( ! key ) {
+			return [ run ];
+		}
+		const { text, ...marks } = run;
+		return [ m[ 1 ] && { ...marks, text: m[ 1 ] }, { ...marks, field: key }, m[ 3 ] && { ...marks, text: m[ 3 ] } ].filter( Boolean ) as Run[];
+	} );
+}
+
 export function migrate( design: Design ): Design {
 	return {
 		...design,
 		elements: design.elements.map( ( el ) => {
+			if ( el.type === 'text' && el.runs ) {
+				return { ...el, runs: phraseRuns( el.runs ) };
+			}
 			if ( el.type !== 'svg' || el.paths ) {
 				return el;
 			}

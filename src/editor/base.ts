@@ -13,12 +13,8 @@ import { box, REQUIRED_SLOTS, resolve, type Design, type Element } from './model
 function strings(): Record< string, string > {
 	return {
 		// Texts.
-		'Certificate of participation': __( 'Certificate of participation', 'events-certificate' ),
-		'This is to certify that': __( 'This is to certify that', 'events-certificate' ),
 		'took part in ': __( 'took part in ', 'events-certificate' ),
 		', with a workload of ': __( ', with a workload of ', 'events-certificate' ),
-		'Place and date': __( 'Place and date', 'events-certificate' ),
-		'Use the code above to verify at:\n': __( 'Use the code above to verify at:\n', 'events-certificate' ),
 		// Element names.
 		Authenticity: __( 'Authenticity', 'events-certificate' ),
 		Code: __( 'Code', 'events-certificate' ),

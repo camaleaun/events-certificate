@@ -12,7 +12,12 @@ import { fieldValue, type Run } from './model';
 /** Fields with an editable preview value (same list as the Certificate tab's Preview data). */
 const PREVIEW_KEYS = [ 'name', 'event', 'location', 'hours', 'role', 'details', 'signer_name', 'signer_role' ];
 
-export type FieldInfo = { label: string; formats?: { key: string; label: string }[] };
+/**
+ * group 'text': a standard text (the title, "This is to certify that"…), shown
+ * as a chip with its words; the words come from the translation in the
+ * language the certificate is shown in (Render\phrases() in PHP).
+ */
+export type FieldInfo = { label: string; group?: 'text'; formats?: { key: string; label: string }[] };
 
 export function fields(): Record< string, FieldInfo > {
 	const dateFormats = [
@@ -43,6 +48,11 @@ export function fields(): Record< string, FieldInfo > {
 		code: { label: __( 'Certificate code', 'events-certificate' ) },
 		verify_url: { label: __( 'Verification address', 'events-certificate' ) },
 		document: { label: __( 'Document (masked)', 'events-certificate' ) },
+		title_text: { label: __( 'Certificate of participation', 'events-certificate' ), group: 'text' },
+		intro_text: { label: __( 'This is to certify that', 'events-certificate' ), group: 'text' },
+		issued_label: { label: __( 'Date of issue', 'events-certificate' ), group: 'text' },
+		place_date_label: { label: __( 'Place and date', 'events-certificate' ), group: 'text' },
+		verify_hint: { label: __( 'Use the code above to verify at:', 'events-certificate' ), group: 'text' },
 	};
 }
 
@@ -397,20 +407,26 @@ export default function FieldText( { label, runs, onChange, sample, locale, inli
 						</Button>
 					) }
 					renderContent={ ( { onClose } ) => (
-						<MenuGroup label={ __( 'Insert a field', 'events-certificate' ) }>
-							{ Object.entries( info ).map( ( [ key, f ] ) => (
-								<MenuItem
-									key={ key }
-									info={ fieldValue( key, undefined, sample, locale ) }
-									onClick={ () => {
-										insertField( key );
-										onClose();
-									} }
-								>
-									{ f.label }
-								</MenuItem>
+						<>
+							{ [ false, true ].map( ( isText ) => (
+								<MenuGroup key={ String( isText ) } label={ isText ? __( 'Translated texts', 'events-certificate' ) : __( 'Insert a field', 'events-certificate' ) }>
+									{ Object.entries( info )
+										.filter( ( [ , f ] ) => ( f.group === 'text' ) === isText )
+										.map( ( [ key, f ] ) => (
+											<MenuItem
+												key={ key }
+												info={ isText ? undefined : fieldValue( key, undefined, sample, locale ) }
+												onClick={ () => {
+													insertField( key );
+													onClose();
+												} }
+											>
+												{ f.label }
+											</MenuItem>
+										) ) }
+								</MenuGroup>
 							) ) }
-						</MenuGroup>
+						</>
 					) }
 				/>
 			</div>
