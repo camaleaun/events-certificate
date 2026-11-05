@@ -4,7 +4,7 @@
  * the other elements, and a floating Dock with everything else.
  */
 import apiFetch from '@wordpress/api-fetch';
-import { Button, ColorPalette, DropdownMenu, MenuGroup, MenuItem, Modal, Popover, RangeControl, SelectControl, TextareaControl, TextControl, ToggleControl } from '@wordpress/components';
+import { Button, ColorPalette, DropdownMenu, MenuGroup, MenuItem, Modal, Popover, Spinner, RangeControl, SelectControl, TextareaControl, TextControl, ToggleControl } from '@wordpress/components';
 import { chevronLeft, drawerRight, listView, moreVertical, plus, redo as redoIcon, undo as undoIcon } from '@wordpress/icons';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
@@ -27,6 +27,7 @@ import {
 	type Run,
 	type TextEl,
 } from './model';
+import DesignPanel from './DesignPanel';
 import ElementToolbar from './ElementToolbar';
 import FieldText, { type FieldTextCommands } from './FieldText';
 import Inserter from './Inserter';
@@ -307,6 +308,12 @@ export default function Editor() {
 		const z = Math.min( ( wrap.clientWidth - pad * 2 ) / design.page.w, ( wrap.clientHeight - pad * 2 - 72 ) / design.page.h );
 		setZoom( Math.max( 0.2, Math.min( 3, z ) ) );
 	}, [ design.page.w, design.page.h ] );
+	const loaded = status !== 'loading';
+	useEffect( () => {
+		if ( loaded ) {
+			fit();
+		}
+	}, [ loaded ] );
 	useEffect( () => {
 		fit();
 		window.addEventListener( 'resize', fit );
@@ -573,7 +580,12 @@ export default function Editor() {
 					</aside>
 				) }
 
-				<div className="evcert-stage" ref={ wrapRef } onPointerDown={ () => { if ( editing ) { stopEditing(); } setSelected( null ); } }>
+				{ status === 'loading' && (
+					<div className="evcert-loading">
+						<Spinner />
+					</div>
+				) }
+				<div className="evcert-stage" ref={ wrapRef } hidden={ status === 'loading' } onPointerDown={ () => { if ( editing ) { stopEditing(); } setSelected( null ); } }>
 					<svg
 						ref={ svgRef }
 						className="evcert-canvas"
@@ -713,33 +725,7 @@ export default function Editor() {
 						{ sidebarTab === 'element' && current && (
 							<Inspector el={ current } design={ design } mode={ mode } tab={ tab } locale={ LOCALE } sample={ config.sample } onChange={ ( patch ) => update( current.id, patch ) } onImage={ () => imageRef.current?.click() } />
 						) }
-						{ sidebarTab === 'design' && (
-							<div className="evcert-inspector evcert-inspector__section">
-								<TextControl __next40pxDefaultSize label={ __( 'Name', 'events-certificate' ) } value={ title } onChange={ setTitle } />
-								<p className="evcert-meta">{ sprintf( /* translators: 1: width, 2: height in points. */ __( 'A4 landscape · %1$s × %2$s pt', 'events-certificate' ), String( w ), String( h ) ) }</p>
-								<SelectControl
-									__next40pxDefaultSize
-									label={ __( 'Background', 'events-certificate' ) }
-									value={ design.page.bg as any }
-									options={ [ { label: __( 'Transparent / Background variable', 'events-certificate' ), value: '$background' }, { label: __( 'White', 'events-certificate' ), value: '#ffffff' } ] }
-									onChange={ ( bgValue ) => commit( { ...design, page: { ...design.page, bg: bgValue } } ) }
-								/>
-								<h3 className="evcert-section-title">{ __( 'Colors', 'events-certificate' ) }</h3>
-								<div className="evcert-colors">
-									{ Object.entries( design.colors ).map( ( [ key, v ] ) => (
-										<div key={ key } className="evcert-color-row">
-											<span>{ v.name }</span>
-											{ ( [ 'light', 'dark' ] as const ).map( ( m ) => (
-												<label key={ m } title={ m === 'light' ? __( 'Light', 'events-certificate' ) : __( 'Dark', 'events-certificate' ) }>
-													<span className="evcert-swatch" style={ { background: v[ m ] } } />
-													<input type="text" value={ v[ m ] } onChange={ ( event ) => commit( { ...design, colors: { ...design.colors, [ key ]: { ...v, [ m ]: event.target.value } } } ) } />
-												</label>
-											) ) }
-										</div>
-									) ) }
-								</div>
-							</div>
-						) }
+						{ sidebarTab === 'design' && <DesignPanel design={ design } mode={ mode } title={ title } status={ statusLabel } onTitle={ setTitle } onChange={ commit } /> }
 					</aside>
 				) }
 			</div>
