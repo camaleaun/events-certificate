@@ -16,7 +16,9 @@ import {
 	newId,
 	REQUIRED_SLOTS,
 	placed,
+	fromView,
 	migrate,
+	toView,
 	svgPaths,
 	resolve,
 	rectPath,
@@ -28,6 +30,7 @@ import {
 	type Mode,
 	type Run,
 	type TextEl,
+	type View,
 } from './model';
 import DesignPanel, { setSample } from './DesignPanel';
 import ElementToolbar from './ElementToolbar';
@@ -35,6 +38,7 @@ import FieldText, { type FieldTextCommands } from './FieldText';
 import Inserter from './Inserter';
 import { ImagePlaceholder } from './ImageSource';
 import Inspector from './Inspector';
+import PreviewDropdown from './PreviewDropdown';
 import SvgEditor from './SvgEditor';
 import type { Picked } from './media';
 import ListView from './ListView';
@@ -300,7 +304,10 @@ function Shape( { el, design, mode, sample }: { el: Element; design: Design; mod
 export default function Editor() {
 	const config = window.evcertEditor;
 	const [ history, dispatch ] = useReducer( historyReducer, { past: [], present: base as unknown as Design, future: [] } );
-	const design = history.present;
+	// The stored design, and the design as the current view shows it (the print page or a screen).
+	const stored = history.present;
+	const [ view, setView ] = useState< View >( { device: 'page', orientation: 'landscape' } );
+	const design = useMemo( () => toView( stored, view ), [ stored, view ] );
 	const [ draft, setDraft ] = useState< Design | null >( null );
 	const shown = draft || design;
 	const sample = useMemo( () => ( { ...config.sample, ...( design.sample || {} ) } ), [ design.sample ] );
@@ -371,9 +378,9 @@ export default function Editor() {
 
 	useEffect( () => {
 		if ( status !== 'loading' && status !== 'saving' ) {
-			setStatus( design === savedRef.current ? 'saved' : 'dirty' );
+			setStatus( stored === savedRef.current ? 'saved' : 'dirty' );
 		}
-	}, [ design ] );
+	}, [ stored ] );
 
 	// Fit the page in the window.
 	const fit = useCallback( () => {
@@ -397,7 +404,8 @@ export default function Editor() {
 		return () => window.removeEventListener( 'resize', fit );
 	}, [ fit ] );
 
-	const commit = ( next: Design ) => dispatch( { type: 'commit', design: next } );
+	const commit = ( next: Design ) => dispatch( { type: 'commit', design: fromView( stored, next, view ) } );
+	const replaceDesign = ( next: Design ) => dispatch( { type: 'commit', design: next } );
 	const shift = ( e: Element, dx: number, dy: number ): Element => ( e.layout ? placed( e, box( moved( resolve( e, design.page ), dx, dy ) ), design.page ) : moved( e, dx, dy ) );
 	const update = ( id: string, patch: Partial< Element > ) =>
 		commit( { ...design, elements: design.elements.map( ( el ) => ( el.id === id ? ( { ...el, ...patch } as Element ) : el ) ) } );
@@ -500,8 +508,8 @@ export default function Editor() {
 	const save = async () => {
 		setStatus( 'saving' );
 		try {
-			await apiFetch( { path: `/wp/v2/evcert-designs/${ config.design }`, method: 'POST', data: { title, content: JSON.stringify( design ) } } );
-			savedRef.current = design;
+			await apiFetch( { path: `/wp/v2/evcert-designs/${ config.design }`, method: 'POST', data: { title, content: JSON.stringify( stored ) } } );
+			savedRef.current = stored;
 			setStatus( 'saved' );
 		} catch ( e ) {
 			setStatus( 'error' );
@@ -509,7 +517,7 @@ export default function Editor() {
 	};
 
 	const exportJson = () => {
-		const blob = new Blob( [ JSON.stringify( { ...design, $schema: 'events-certificate/design/1' }, null, '\t' ) ], { type: 'application/json' } );
+		const blob = new Blob( [ JSON.stringify( { ...stored, $schema: 'events-certificate/design/1' }, null, '\t' ) ], { type: 'application/json' } );
 		const a = document.createElement( 'a' );
 		a.href = URL.createObjectURL( blob );
 		a.download = `${ ( title || 'certificate' ).toLowerCase().replace( /[^a-z0-9]+/g, '-' ) }.certificate.json`;
@@ -523,7 +531,7 @@ export default function Editor() {
 				throw new Error( 'format' );
 			}
 			delete parsed.$schema;
-			commit( migrate( { ...( base as unknown as Design ), ...parsed } ) );
+			replaceDesign( migrate( { ...( base as unknown as Design ), ...parsed } ) );
 			setSelected( null );
 		} catch ( e ) {
 			// eslint-disable-next-line no-alert
@@ -631,6 +639,7 @@ export default function Editor() {
 					</button>
 				</div>
 				<div className="evcert-header-right">
+					<PreviewDropdown view={ view } onChange={ ( next ) => { setView( next ); setDraft( null ); } } />
 					<Button onClick={ () => setMode( mode === 'light' ? 'dark' : 'light' ) } label={ mode === 'light' ? __( 'Preview in dark mode', 'events-certificate' ) : __( 'Preview in light mode', 'events-certificate' ) }>
 						{ mode === 'light' ? '☀︎' : '☾' }
 					</Button>
@@ -654,7 +663,7 @@ export default function Editor() {
 								<MenuGroup label={ __( 'Design', 'events-certificate' ) }>
 									<MenuItem onClick={ () => { exportJson(); onClose(); } }>{ __( 'Export (JSON)', 'events-certificate' ) }</MenuItem>
 									<MenuItem onClick={ () => { fileRef.current?.click(); onClose(); } }>{ __( 'Import…', 'events-certificate' ) }</MenuItem>
-									<MenuItem onClick={ () => { commit( base as unknown as Design ); onClose(); } }>{ __( 'Restore the Base design', 'events-certificate' ) }</MenuItem>
+									<MenuItem onClick={ () => { replaceDesign( base as unknown as Design ); onClose(); } }>{ __( 'Restore the Base design', 'events-certificate' ) }</MenuItem>
 								</MenuGroup>
 								<MenuGroup label={ __( 'View', 'events-certificate' ) }>
 									<MenuItem onClick={ () => { fit(); onClose(); } }>{ __( 'Fit to screen', 'events-certificate' ) }</MenuItem>
@@ -866,7 +875,7 @@ export default function Editor() {
 						{ sidebarTab === 'element' && current && (
 							<Inspector el={ current } stored={ currentStored } design={ design } mode={ mode } tab={ tab } locale={ LOCALE } sample={ sample } onChange={ ( patch ) => update( current.id, patch ) } onBox={ ( b ) => setBox( current.id, b ) } onEditDrawing={ () => setDrawing( current.id ) } onImage={ ( picked ) => pickImage( current.id, picked ) } />
 						) }
-						{ sidebarTab === 'design' && <DesignPanel design={ design } mode={ mode } title={ title } status={ statusLabel } sample={ sample } defaults={ config.sample } onTitle={ setTitle } onChange={ commit } /> }
+						{ sidebarTab === 'design' && <DesignPanel design={ stored } mode={ mode } title={ title } status={ statusLabel } sample={ sample } defaults={ config.sample } onTitle={ setTitle } onChange={ replaceDesign } /> }
 					</aside>
 				) }
 			</div>
@@ -903,6 +912,18 @@ export default function Editor() {
 						</>
 					) }
 				</nav>
+				{ view.device !== 'page' && (
+					<span className="evcert-view-badge">
+						{ sprintf(
+							/* translators: 1: screen (Desktop, Tablet, Mobile), 2: orientation, 3: width, 4: height. */
+							__( '%1$s · %2$s · %3$s × %4$s', 'events-certificate' ),
+							{ desktop: __( 'Desktop', 'events-certificate' ), tablet: __( 'Tablet', 'events-certificate' ), mobile: __( 'Mobile', 'events-certificate' ) }[ view.device ],
+							view.orientation === 'portrait' ? __( 'Portrait', 'events-certificate' ) : __( 'Landscape', 'events-certificate' ),
+							String( design.page.w ),
+							String( design.page.h )
+						) }
+					</span>
+				) }
 			</footer>
 
 			{ drawing && ( () => {

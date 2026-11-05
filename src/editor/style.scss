@@ -976,16 +976,29 @@
 .evcert-svg-panel__open {
 	margin-top: 12px;
 }
+// Only the fields column scrolls; the preview and the buttons stay in view.
+.components-modal__frame.evcert-svg-editor {
+	height: min(86vh, 820px);
+}
 .evcert-svg-editor .components-modal__content {
 	display: flex;
 	flex-direction: column;
+	flex: 1;
+	min-height: 0;
+	overflow: hidden;
+}
+.evcert-svg-editor .components-modal__children-container {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-height: 0;
 }
 .evcert-svg-editor__body {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
 	gap: 24px;
-	min-height: 0;
 	flex: 1;
+	min-height: 0;
 }
 .evcert-svg-editor__preview {
 	display: flex;
@@ -995,10 +1008,10 @@
 	background: repeating-conic-gradient(#f0f0f1 0 25%, #fff 0 50%) 0 0 / 16px 16px;
 	border: 1px solid #ddd;
 	border-radius: 2px;
-	min-height: 360px;
+	min-height: 0;
 	svg {
 		width: 100%;
-		max-height: 60vh;
+		height: 100%;
 		overflow: visible;
 	}
 }
@@ -1014,6 +1027,9 @@
 	flex-direction: column;
 	gap: 16px;
 	min-width: 0;
+	min-height: 0;
+	overflow-y: auto;
+	padding-right: 4px;
 }
 .evcert-svg-editor__paths {
 	list-style: none;
@@ -1057,5 +1073,20 @@
 @media (max-width: 782px) {
 	.evcert-svg-editor__body {
 		grid-template-columns: 1fr;
+		grid-template-rows: 200px minmax(0, 1fr);
 	}
+}
+
+// Preview switcher.
+.evcert-preview-dropdown__note {
+	margin: 0;
+	padding: 8px 12px 12px;
+	max-width: 240px;
+	color: #757575;
+	font-size: 12px;
+}
+.evcert-view-badge {
+	margin-left: auto;
+	margin-right: 8px;
+	color: #757575;
 }

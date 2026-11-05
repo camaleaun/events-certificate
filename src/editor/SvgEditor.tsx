@@ -14,6 +14,7 @@ import { useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import { arrowDown, arrowUp, closeSmall, plus } from '@wordpress/icons';
 import { color, svgPaths, type Design, type Mode, type SvgEl, type SvgPath } from './model';
+import { DropdownRow } from './DesignPanel';
 import { FillSwatch, PathData } from './SvgPanel';
 
 type Props = {
@@ -57,10 +58,17 @@ export default function SvgEditor( { el, design, mode, onApply, onClose }: Props
 					</svg>
 				</div>
 				<div className="evcert-svg-editor__fields">
-					<HStack alignment="top">
-						<NumberControl __next40pxDefaultSize label={ __( 'ViewBox width', 'events-certificate' ) } min={ 1 } value={ vw } onChange={ ( v ) => Number( v ) > 0 && setVw( Number( v ) ) } />
-						<NumberControl __next40pxDefaultSize label={ __( 'ViewBox height', 'events-certificate' ) } min={ 1 } value={ vh } onChange={ ( v ) => Number( v ) > 0 && setVh( Number( v ) ) } />
-					</HStack>
+					<DropdownRow label={ __( 'ViewBox', 'events-certificate' ) } value={ `${ vw } × ${ vh }` }>
+						{ () => (
+							<>
+								<HStack alignment="top">
+									<NumberControl __next40pxDefaultSize label={ __( 'Width', 'events-certificate' ) } min={ 1 } value={ vw } onChange={ ( v ) => Number( v ) > 0 && setVw( Number( v ) ) } />
+									<NumberControl __next40pxDefaultSize label={ __( 'Height', 'events-certificate' ) } min={ 1 } value={ vh } onChange={ ( v ) => Number( v ) > 0 && setVh( Number( v ) ) } />
+								</HStack>
+								<p className="evcert-meta">{ __( 'The coordinate space of the paths.', 'events-certificate' ) }</p>
+							</>
+						) }
+					</DropdownRow>
 					<HStack className="evcert-svg-panel__header">
 						<h2 className="evcert-section-heading">{ __( 'Paths', 'events-certificate' ) }</h2>
 						<Button size="small" icon={ plus } label={ __( 'Add path', 'events-certificate' ) } onClick={ () => { replace( [ ...paths, { d: '' } ] ); setFocus( paths.length ); } } />

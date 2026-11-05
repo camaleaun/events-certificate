@@ -22,6 +22,8 @@ export type Base = {
 	locked?: boolean;
 	hidden?: boolean;
 	layout?: Layout;
+	// Per-device position, size and visibility for the web views (the print page uses the element's own).
+	views?: Partial< Record< Screen, ElementView > >;
 };
 
 export type TextEl = Base & {
@@ -474,4 +476,122 @@ export function placed< T extends Element >( stored: T, b: Box, page: Design[ 'p
 		return stored;
 	}
 	return layout ? { ...stored, layout: layoutFrom( layout, b, page ) } : { ...stored, x: b.x, y: b.y, w: b.w, h: b.h };
+}
+
+/**
+ * Previews: the print page (the format set in Size, never rotated) and the
+ * screens the certificate page is seen on. Each screen has an orientation;
+ * elements keep their content and style everywhere, and may have their own
+ * anchors and visibility per screen (views). Without one, an element keeps
+ * its anchors, and an element without anchors scales with the page.
+ */
+export type Screen = 'desktop' | 'tablet' | 'mobile';
+export type Device = 'page' | Screen;
+export type Orientation = 'landscape' | 'portrait';
+export type View = { device: Device; orientation: Orientation };
+export type ElementView = { layout?: Layout; hidden?: boolean; line?: { x1: number; y1: number; x2: number; y2: number } };
+
+/** Screen sizes in CSS px (= pt on the canvas), landscape. */
+export const SCREENS: Record< Screen, [ number, number ] > = {
+	desktop: [ 1280, 800 ],
+	tablet: [ 1024, 768 ],
+	mobile: [ 844, 390 ],
+};
+
+export function viewPage( page: Design[ 'page' ], view: View ): Design[ 'page' ] {
+	if ( view.device === 'page' ) {
+		return page;
+	}
+	const [ w, h ] = SCREENS[ view.device ];
+	const portrait = view.orientation === 'portrait';
+	return { ...page, w: portrait ? h : w, h: portrait ? w : h, bleed: 0, safe: Math.min( page.safe, view.device === 'mobile' ? 16 : 32 ) };
+}
+
+const pct = ( n: number ) => `${ Math.round( n * 10000 ) / 100 }%`;
+
+/**
+ * Anchors for an unanchored element on a screen: its centre keeps its place
+ * (as a share of the page); shapes keep their proportions (one scale for
+ * both axes, so a QR code stays square), texts and rectangles take the same
+ * share of the width and height.
+ */
+function scaled( el: Element, from: Design[ 'page' ], to: Design[ 'page' ] ): Layout {
+	const b = box( el );
+	const cx = ( b.x + b.w / 2 ) / from.w;
+	const cy = ( b.y + b.h / 2 ) / from.h;
+	const sx = to.w / from.w;
+	const sy = to.h / from.h;
+	const uniform = el.type === 'qr' || el.type === 'svg' || el.type === 'image' || el.type === 'ellipse';
+	const k = Math.min( sx, sy );
+	const w = Math.round( b.w * ( uniform ? k : sx ) * 100 ) / 100;
+	const h = Math.round( b.h * ( uniform ? k : sy ) * 100 ) / 100;
+	return {
+		ref: 'page',
+		h: { mode: 'start', start: `calc(${ pct( cx ) } - ${ w / 2 }pt)`, size: `${ w }pt` },
+		v: { mode: 'start', start: `calc(${ pct( cy ) } - ${ h / 2 }pt)`, size: `${ h }pt` },
+	};
+}
+
+/** The element as seen on a screen: its view's anchors and visibility, or its own. */
+function inView( el: Element, design: Design, device: Screen, page: Design[ 'page' ] ): Element {
+	const v = el.views?.[ device ];
+	const hidden = v?.hidden ?? el.hidden;
+	if ( el.type === 'line' ) {
+		const sx = page.w / design.page.w;
+		const sy = page.h / design.page.h;
+		const line = v?.line || { x1: el.x1 * sx, y1: el.y1 * sy, x2: el.x2 * sx, y2: el.y2 * sy };
+		return { ...el, ...line, hidden };
+	}
+	return { ...el, layout: v?.layout || el.layout || scaled( el, design.page, page ), hidden } as Element;
+}
+
+/** The design as the editor shows it for a view. */
+export function toView( design: Design, view: View ): Design {
+	if ( view.device === 'page' ) {
+		return design;
+	}
+	const device = view.device;
+	const page = viewPage( design.page, view );
+	return { ...design, page, elements: design.elements.map( ( el ) => inView( el, design, device, page ) ) };
+}
+
+/** Edits made in a view, back into the design: content and style are shared, position and visibility go to the view. */
+export function fromView( stored: Design, edited: Design, view: View ): Design {
+	if ( view.device === 'page' ) {
+		return edited;
+	}
+	const device = view.device;
+	const page = viewPage( stored.page, view );
+	const byId = new Map( stored.elements.map( ( el ) => [ el.id, el ] ) );
+	const elements = edited.elements.map( ( next ) => {
+		const orig = byId.get( next.id );
+		if ( ! orig ) {
+			return next;
+		}
+		const shown = inView( orig, stored, device, page );
+		const views = { ...( orig.views || {} ) };
+		const v: ElementView = { ...( views[ device ] || {} ) };
+		let shared: Element;
+		if ( next.type === 'line' && orig.type === 'line' && shown.type === 'line' ) {
+			const { x1, y1, x2, y2, hidden, views: _v, ...rest } = next;
+			if ( x1 !== shown.x1 || y1 !== shown.y1 || x2 !== shown.x2 || y2 !== shown.y2 ) {
+				v.line = { x1, y1, x2, y2 };
+			}
+			shared = { ...orig, ...rest } as Element;
+		} else {
+			const { x, y, w, h, layout, hidden, views: _v, ...rest } = next as Element & { x: number };
+			if ( JSON.stringify( layout ) !== JSON.stringify( ( shown as { layout?: Layout } ).layout ) ) {
+				v.layout = layout;
+			}
+			shared = { ...orig, ...rest } as Element;
+		}
+		if ( !! next.hidden !== !! shown.hidden ) {
+			v.hidden = !! next.hidden;
+		}
+		if ( Object.keys( v ).length ) {
+			views[ device ] = v;
+		}
+		return { ...shared, ...( Object.keys( views ).length ? { views } : {} ) } as Element;
+	} );
+	return { ...edited, page: stored.page, elements };
 }
