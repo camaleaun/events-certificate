@@ -6,13 +6,21 @@
  */
 import {
 	Button,
+	DropdownMenu,
+	MenuGroup,
+	MenuItem,
 	Modal,
+	Toolbar,
+	ToolbarButton,
+	ToolbarGroup,
+	ToolbarItem,
 	__experimentalHStack as HStack,
 	__experimentalNumberControl as NumberControl,
 } from '@wordpress/components';
-import { useState } from '@wordpress/element';
+import { Fragment, useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
-import { arrowDown, arrowUp, closeSmall, plus } from '@wordpress/icons';
+import { chevronDown, chevronUp, copy, moreVertical, plus, trash } from '@wordpress/icons';
+import { elementIcon } from './icons';
 import { color, svgPaths, type Design, type Mode, type SvgEl, type SvgPath } from './model';
 import { DropdownRow } from './DesignPanel';
 import { FillSwatch, PathData } from './SvgPanel';
@@ -38,6 +46,11 @@ export default function SvgEditor( { el, design, mode, onApply, onClose }: Props
 		setVersion( version + 1 );
 	};
 	const setPath = ( i: number, patch: Partial< SvgPath > ) => setPaths( paths.map( ( p, j ) => ( j === i ? { ...p, ...patch } : p ) ) );
+	/** Inserts an empty path at a position, like the block inserter. */
+	const insertAt = ( at: number ) => {
+		replace( [ ...paths.slice( 0, at ), { d: '' }, ...paths.slice( at ) ] );
+		setFocus( at );
+	};
 	const move = ( i: number, to: number ) => {
 		const next = [ ...paths ];
 		const [ p ] = next.splice( i, 1 );
@@ -71,28 +84,67 @@ export default function SvgEditor( { el, design, mode, onApply, onClose }: Props
 					</DropdownRow>
 					<HStack className="evcert-svg-panel__header">
 						<h2 className="evcert-section-heading">{ __( 'Paths', 'events-certificate' ) }</h2>
-						<Button size="small" icon={ plus } label={ __( 'Add path', 'events-certificate' ) } onClick={ () => { replace( [ ...paths, { d: '' } ] ); setFocus( paths.length ); } } />
+						<Button size="small" icon={ plus } label={ __( 'Add path', 'events-certificate' ) } onClick={ () => insertAt( paths.length ) } />
 					</HStack>
 					<ol className="evcert-svg-editor__paths">
 						{ paths.map( ( p, i ) => (
-							<li key={ `${ version }-${ i }` } className={ focus === i ? 'is-focused' : '' }>
-								<FillSwatch value={ p.fill } current={ current } design={ design } mode={ mode } onChange={ ( fill ) => setPath( i, { fill } ) } />
+							<Fragment key={ `${ version }-${ i }` }>
+							{ i > 0 && (
+								<li className="evcert-path-inserter" aria-hidden={ false }>
+									<Button size="small" icon={ plus } label={ sprintf( /* translators: %d: path number. */ __( 'Add a path before path %d', 'events-certificate' ), i + 1 ) } onClick={ () => insertAt( i ) } />
+								</li>
+							) }
+							<li className={ `evcert-path-block${ focus === i ? ' is-selected' : '' }` } onFocusCapture={ () => setFocus( i ) }>
+								<Toolbar label={ sprintf( /* translators: %d: path number. */ __( 'Path %d tools', 'events-certificate' ), i + 1 ) } className="evcert-path-block__toolbar">
+									<ToolbarGroup>
+										<ToolbarButton icon={ elementIcon( 'path' ) } label={ sprintf( /* translators: %d: path number. */ __( 'Path %d', 'events-certificate' ), i + 1 ) } onClick={ () => setFocus( i ) }>
+											<span className="evcert-path-block__title">{ sprintf( /* translators: %d: path number. */ __( 'Path %d', 'events-certificate' ), i + 1 ) }</span>
+										</ToolbarButton>
+									</ToolbarGroup>
+									<ToolbarGroup className="evcert-path-block__mover">
+										<ToolbarButton icon={ chevronUp } label={ __( 'Move up', 'events-certificate' ) } disabled={ i === 0 } accessibleWhenDisabled onClick={ () => move( i, i - 1 ) } />
+										<ToolbarButton icon={ chevronDown } label={ __( 'Move down', 'events-certificate' ) } disabled={ i === paths.length - 1 } accessibleWhenDisabled onClick={ () => move( i, i + 1 ) } />
+									</ToolbarGroup>
+									<ToolbarGroup>
+										<ToolbarItem>
+											{ () => <FillSwatch value={ p.fill } current={ current } design={ design } mode={ mode } onChange={ ( fill ) => setPath( i, { fill } ) } /> }
+										</ToolbarItem>
+									</ToolbarGroup>
+									<ToolbarGroup>
+										<ToolbarItem>
+											{ ( toggleProps ) => (
+												<DropdownMenu icon={ moreVertical } label={ __( 'Options', 'events-certificate' ) } toggleProps={ toggleProps as any } popoverProps={ { placement: 'bottom-start' } }>
+													{ ( { onClose } ) => (
+														<>
+															<MenuGroup>
+																<MenuItem icon={ copy } onClick={ () => { replace( [ ...paths.slice( 0, i + 1 ), { ...p }, ...paths.slice( i + 1 ) ] ); setFocus( i + 1 ); onClose(); } }>
+																	{ __( 'Duplicate', 'events-certificate' ) }
+																</MenuItem>
+															</MenuGroup>
+															<MenuGroup>
+																<MenuItem icon={ trash } disabled={ paths.length === 1 } onClick={ () => { replace( paths.filter( ( _, j ) => j !== i ) ); setFocus( null ); onClose(); } }>
+																	{ __( 'Delete', 'events-certificate' ) }
+																</MenuItem>
+															</MenuGroup>
+														</>
+													) }
+												</DropdownMenu>
+											) }
+										</ToolbarItem>
+									</ToolbarGroup>
+								</Toolbar>
 								<PathData
 									multiline
 									index={ i }
 									value={ p.d }
-									onFocus={ () => setFocus( i ) }
 									onChange={ ( d ) => setPath( i, { d } ) }
 									onImport={ ( svg ) => { setVw( svg.vw ); setVh( svg.vh ); replace( svg.paths ); } }
 								/>
-								<div className="evcert-svg-editor__actions">
-									<Button size="small" icon={ arrowUp } label={ __( 'Move up', 'events-certificate' ) } disabled={ i === 0 } accessibleWhenDisabled onClick={ () => move( i, i - 1 ) } />
-									<Button size="small" icon={ arrowDown } label={ __( 'Move down', 'events-certificate' ) } disabled={ i === paths.length - 1 } accessibleWhenDisabled onClick={ () => move( i, i + 1 ) } />
-									<Button size="small" icon={ closeSmall } label={ __( 'Remove path', 'events-certificate' ) } disabled={ paths.length === 1 } accessibleWhenDisabled onClick={ () => { replace( paths.filter( ( _, j ) => j !== i ) ); setFocus( null ); } } />
-								</div>
 							</li>
+							</Fragment>
 						) ) }
 					</ol>
+					<Button className="evcert-path-appender" icon={ plus } label={ __( 'Add path', 'events-certificate' ) } onClick={ () => insertAt( paths.length ) } />
 					<p className="evcert-meta">{ __( 'Paths further down are drawn on top. Without a fill a path uses the current color. Pasting SVG code into a path replaces the drawing with its viewBox and paths; nothing else is kept.', 'events-certificate' ) }</p>
 				</div>
 			</div>

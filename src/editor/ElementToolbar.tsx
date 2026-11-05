@@ -5,7 +5,7 @@
  */
 import { DropdownMenu, MenuGroup, MenuItem, Popover, Toolbar, ToolbarButton, ToolbarDropdownMenu, ToolbarGroup, ToolbarItem } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
-import { arrowDown, arrowUp, copy, formatBold, formatItalic, lock, moreVertical, pencil, plus, trash, unlock, unseen } from '@wordpress/icons';
+import { chevronDown, chevronUp, copy, formatBold, formatItalic, lock, moreVertical, pencil, plus, trash, unlock, unseen } from '@wordpress/icons';
 import { fields } from './FieldText';
 import { ReplaceImage } from './ImageSource';
 import type { Picked } from './media';
@@ -87,9 +87,9 @@ export default function ElementToolbar( { anchor, el, required, onSelectParent, 
 					</ToolbarGroup>
 				) }
 				{ ! editing && (
-				<ToolbarGroup>
-					<ToolbarButton icon={ arrowUp } label={ __( 'Bring forward', 'events-certificate' ) } onClick={ () => onOrder( 'up' ) } />
-					<ToolbarButton icon={ arrowDown } label={ __( 'Send backward', 'events-certificate' ) } onClick={ () => onOrder( 'down' ) } />
+				<ToolbarGroup className="evcert-mover">
+					<ToolbarButton icon={ chevronUp } label={ __( 'Bring forward', 'events-certificate' ) } onClick={ () => onOrder( 'up' ) } />
+					<ToolbarButton icon={ chevronDown } label={ __( 'Send backward', 'events-certificate' ) } onClick={ () => onOrder( 'down' ) } />
 				</ToolbarGroup>
 				) }
 				<ToolbarGroup>
