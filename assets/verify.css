@@ -144,6 +144,9 @@ body.evcert-verify {
 	white-space: nowrap;
 }
 .evcert-dock__code svg { width: 20px; height: 20px; }
+.evcert-dock__code.is-valid svg { color: var(--ok); }
+.evcert-dock__code.is-replaced svg { color: var(--warn); }
+.evcert-dock__code.is-revoked svg { color: var(--bad); }
 .evcert-dock__code[aria-expanded="true"] { background: var(--dock-hover); }
 .evcert-dock__spacer { flex: 1; min-width: 12px; }
 .evcert-dock__icon,
