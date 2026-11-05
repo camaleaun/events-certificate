@@ -335,7 +335,7 @@ function Shape( { el, design, mode, sample }: { el: Element; design: Design; mod
 				const h = swap ? el.w : el.h;
 				return (
 					<g transform={ turn ? `rotate(${ -turn } ${ cx } ${ cy })` : undefined }>
-						<svg x={ cx - w / 2 } y={ cy - h / 2 } width={ w } height={ h } viewBox={ `0 0 ${ signer.vw } ${ signer.vh }` } opacity={ opacity } overflow="visible">
+						<svg x={ cx - w / 2 } y={ cy - h / 2 } width={ w } height={ h } viewBox={ `0 0 ${ signer.vw } ${ signer.vh }` } opacity={ opacity } overflow="hidden">
 							{ signer.paths.map( ( p, i ) => (
 								<path key={ i } d={ p.d } fill={ color( design, p.fill || el.color || '$text', mode ) } fillRule={ p.rule } />
 							) ) }
@@ -344,7 +344,8 @@ function Shape( { el, design, mode, sample }: { el: Element; design: Design; mod
 				);
 			}
 			return (
-				<svg x={ el.x } y={ el.y } width={ el.w } height={ el.h } viewBox={ `0 0 ${ el.vw } ${ el.vh }` } opacity={ opacity } overflow="visible">
+				// Clipped to the viewBox, as certificates draw it (an <img> of the SVG).
+				<svg x={ el.x } y={ el.y } width={ el.w } height={ el.h } viewBox={ `0 0 ${ el.vw } ${ el.vh }` } opacity={ opacity } overflow="hidden">
 					{ svgPaths( el ).map( ( p, i ) => (
 						<path key={ i } d={ p.d } fill={ color( design, p.fill || el.color || '$text', mode ) } fillRule={ p.rule } />
 					) ) }

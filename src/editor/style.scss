@@ -1076,7 +1076,8 @@
 		width: min(100cqw, 100cqh * var(--evcert-ratio, 1));
 		aspect-ratio: var(--evcert-ratio, 1);
 		background: repeating-conic-gradient(#e0e0e0 0 25%, #fff 0 50%) 0 0 / 16px 16px;
-		overflow: visible;
+		// What falls outside the viewBox isn't drawn on certificates either.
+		overflow: hidden;
 	}
 }
 .evcert-svg-editor__fields {
