@@ -408,8 +408,7 @@ function render_page( $cert, $code, $locale, $invalid ) {
 							<span><?php echo esc_html( $short ); ?></span>
 						</button>
 					<?php endif; ?>
-					<button type="button" class="evcert-dock__code" data-evcert-pop="details" aria-expanded="false" aria-label="<?php echo esc_attr( __( 'Code', 'events-certificate' ) . ': ' . $cert['code'] ); ?>"><?php echo esc_html( $cert['code'] ); ?></button>
-					<span class="evcert-dock__spacer"></span>
+					<button type="button" class="evcert-dock__code" data-evcert-pop="details" aria-expanded="false" aria-label="<?php echo esc_attr( __( 'Details', 'events-certificate' ) . ' — ' . $cert['code'] ); ?>"><?php echo icon( 'info' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?><span><?php echo esc_html( $cert['code'] ); ?></span></button>
 					<button type="button" class="evcert-dock__icon" data-evcert-dock-to="left" aria-label="<?php esc_attr_e( 'Dock to the left corner', 'events-certificate' ); ?>" title="<?php esc_attr_e( 'Dock to the left corner', 'events-certificate' ); ?>"><?php echo icon( 'left' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?></button>
 					<button type="button" class="evcert-dock__icon" data-evcert-dock-to="right" aria-label="<?php esc_attr_e( 'Dock to the right corner', 'events-certificate' ); ?>" title="<?php esc_attr_e( 'Dock to the right corner', 'events-certificate' ); ?>"><?php echo icon( 'right' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?></button>
 				</div>
@@ -428,7 +427,6 @@ function render_page( $cert, $code, $locale, $invalid ) {
 						<button type="button" class="evcert-dock__tool" data-evcert-pop="langs" aria-expanded="false" aria-label="<?php echo esc_attr( __( 'Language', 'events-certificate' ) . ': ' . locale_name( $locale ) ); ?>"><?php echo icon( 'globe' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?><span><?php echo esc_html( locale_name( $locale ) ); ?></span></button>
 					<?php endif; ?>
 					<button type="button" class="evcert-dock__tool" data-evcert-mode data-to-light="<?php esc_attr_e( 'Light', 'events-certificate' ); ?>" data-to-dark="<?php esc_attr_e( 'Dark', 'events-certificate' ); ?>"><span class="evcert-dock__glyph" aria-hidden="true">☀︎</span><span class="evcert-dock__mode-label"><?php esc_html_e( 'Light', 'events-certificate' ); ?></span></button>
-					<button type="button" class="evcert-dock__tool" data-evcert-pop="details" aria-expanded="false"><?php echo icon( 'info' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?><span><?php esc_html_e( 'Details', 'events-certificate' ); ?></span></button>
 				</div>
 			</div>
 
