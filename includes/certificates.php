@@ -111,6 +111,22 @@ function store_design( array $design ) {
 }
 
 /**
+ * The design version a certificate was issued with (falls back to the site
+ * design when the snapshot is missing).
+ *
+ * @param array<string, mixed> $cert Certificate.
+ * @return array<string, mixed>
+ */
+function design( array $cert ) {
+	global $wpdb;
+
+	$json   = $wpdb->get_var( $wpdb->prepare( 'SELECT design FROM %i WHERE hash = %s', Install\tables()['designs'], (string) ( $cert['design_hash'] ?? '' ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- the plugin's own table.
+	$design = $json ? json_decode( $json, true ) : null;
+
+	return is_array( $design ) && isset( $design['elements'], $design['page'] ) ? $design : Designs\get( Designs\site_design_id() );
+}
+
+/**
  * Fingerprint of what a certificate says, so a changed row can be noticed.
  *
  * @param array<string, mixed> $row Certificate.
@@ -128,13 +144,16 @@ function fingerprint( array $row ) {
 /**
  * Issues a certificate.
  *
- * @param array<string, mixed> $data Values from FIELDS; "name" is required.
+ * @param array<string, mixed> $data Values from FIELDS ("name" is required) and "data", extra frozen values (location, signer…).
  * @return array<string, mixed>|WP_Error The certificate.
  */
 function issue( array $data ) {
 	global $wpdb;
 
 	$row = array_intersect_key( $data, array_flip( FIELDS ) );
+	if ( isset( $data['data'] ) && is_array( $data['data'] ) ) {
+		$row['data_json'] = (string) wp_json_encode( $data['data'] );
+	}
 
 	$row['name'] = trim( preg_replace( '/\s+/u', ' ', wp_strip_all_tags( (string) ( $row['name'] ?? '' ) ) ) );
 	if ( '' === $row['name'] ) {
@@ -179,7 +198,11 @@ function reissue( array $old, array $changes ) {
 	global $wpdb;
 
 	$data = array_merge( array_intersect_key( $old, array_flip( FIELDS ) ), $changes );
-	$new  = issue( $data );
+	if ( ! isset( $changes['data'] ) ) {
+		$kept         = json_decode( (string) ( $old['data_json'] ?? '' ), true );
+		$data['data'] = is_array( $kept ) ? $kept : array();
+	}
+	$new = issue( $data );
 	if ( is_wp_error( $new ) ) {
 		return $new;
 	}

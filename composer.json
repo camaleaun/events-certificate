@@ -39,7 +39,10 @@
             "@phpcs",
             "@test"
         ],
-        "prefix-namespaces": "php bin/strauss.phar"
+        "prefix-namespaces": [
+            "php bin/strauss.phar",
+            "php bin/patch-prefixed.php"
+        ]
     },
     "scripts-descriptions": {
         "lint": "PHP syntax check of every file.",

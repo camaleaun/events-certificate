@@ -110,6 +110,23 @@ function certificate_link( $attendee_id ) {
 }
 
 /**
+ * Where the event happens: the WordCamp's Location on WordCamp.org, else the
+ * plugin setting.
+ *
+ * @return string
+ */
+function event_location() {
+	if ( function_exists( 'get_wordcamp_post' ) ) {
+		$wordcamp = get_wordcamp_post();
+		if ( $wordcamp && ! empty( $wordcamp->meta['Location'][0] ) ) {
+			return (string) $wordcamp->meta['Location'][0];
+		}
+	}
+
+	return (string) Settings\value( 'location' );
+}
+
+/**
  * What the certificate says, from the attendee.
  *
  * @param \WP_Post $attendee Attendee.
@@ -137,6 +154,7 @@ function attendee_data( $attendee ) {
 		'source'         => SOURCE,
 		'source_ref'     => (string) $attendee->ID,
 		'self_service'   => 'attendee',
+		'data'           => array( 'location' => event_location() ),
 	);
 
 	/**

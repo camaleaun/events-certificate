@@ -24,6 +24,9 @@ const OPTION = 'evcert_settings';
  *   anyone sees a certificate and checks it is authentic.
  * - delete_data: drop the tables on uninstall. Off by default: printed
  *   certificates point to their verification page.
+ * - location: where the event happens ("City, Country"), for the {location}
+ *   field when the event source doesn't say (on WordCamp.org it comes from
+ *   the WordCamp's Location).
  * - self_issue: who gets their own certificate from the tickets page
  *   (CampTix): "attended" (marked present), "confirmed" (any confirmed
  *   ticket) or "off" (only organizers issue).
@@ -36,6 +39,7 @@ function defaults() {
 		'slug'         => 'certificate',
 		'delete_data'  => false,
 		'self_issue'   => 'attended',
+		'location'     => '',
 	);
 }
 
@@ -56,6 +60,8 @@ function sanitize( $value ) {
 
 	$slug          = array_key_exists( 'slug', $value ) ? sanitize_title( (string) $value['slug'] ) : '';
 	$clean['slug'] = '' !== $slug ? $slug : $defaults['slug'];
+
+	$clean['location'] = array_key_exists( 'location', $value ) ? sanitize_text_field( (string) $value['location'] ) : $defaults['location'];
 
 	$who                 = array_key_exists( 'self_issue', $value ) ? (string) $value['self_issue'] : '';
 	$clean['self_issue'] = in_array( $who, array( 'attended', 'confirmed', 'off' ), true ) ? $who : $defaults['self_issue'];

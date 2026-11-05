@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-05T10:17:26+00:00\n"
+"POT-Creation-Date: 2026-11-05T11:07:35+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: events-certificate\n"
@@ -50,13 +50,16 @@ msgid "Edit certificate"
 msgstr ""
 
 #: includes/admin-app.php:198
+#: includes/admin.php:249
 msgid "City, Country"
 msgstr ""
 
 #. translators: %s: number of hours (workload), e.g. "1 hour".
 #. translators: %s: number of hours (workload), e.g. "8 hours".
+#. translators: %s: number of hours.
 #: includes/admin-app.php:203
 #: includes/admin-app.php:205
+#: includes/render.php:292
 #, php-format
 msgid "%s hour"
 msgid_plural "%s hours"
@@ -64,6 +67,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: includes/admin-app.php:206
+#: includes/render.php:219
 msgid "Speaker"
 msgstr ""
 
@@ -80,7 +84,7 @@ msgid "Edit certificate design"
 msgstr ""
 
 #: includes/admin.php:64
-#: includes/admin.php:301
+#: includes/admin.php:322
 #: includes/compat/camptix.php:109
 msgid "Certificates"
 msgstr ""
@@ -104,113 +108,122 @@ msgid "Issuing"
 msgstr ""
 
 #: includes/admin.php:153
+msgid "Event location"
+msgstr ""
+
+#: includes/admin.php:161
 msgid "Attendees get their own"
 msgstr ""
 
-#: includes/admin.php:162
+#: includes/admin.php:170
 msgid "Data"
 msgstr ""
 
-#: includes/admin.php:168
+#: includes/admin.php:176
 msgid "Uninstall"
 msgstr ""
 
-#: includes/admin.php:181
+#: includes/admin.php:189
 msgid "Certificates issued on this site carry a QR code and a code anyone can check on its verification page."
 msgstr ""
 
-#: includes/admin.php:186
+#: includes/admin.php:194
 msgid "it runs on WordPress Playground"
 msgstr ""
 
-#: includes/admin.php:187
+#: includes/admin.php:195
 msgid "its environment type is “local”"
 msgstr ""
 
-#: includes/admin.php:188
+#: includes/admin.php:196
 msgid "its address only works on this computer or network"
 msgstr ""
 
-#: includes/admin.php:189
+#: includes/admin.php:197
 msgid "its address is a private IP"
 msgstr ""
 
 #. translators: %s: reasons, e.g. "its address only works on this computer or network".
-#: includes/admin.php:199
+#: includes/admin.php:207
 #, php-format
 msgid "This site doesn’t look public (%s), so certificates show a placeholder where the QR code and the verification address go: nobody else could open them."
 msgstr ""
 
-#: includes/admin.php:213
+#: includes/admin.php:221
 msgid "Treat this site as public"
 msgstr ""
 
-#: includes/admin.php:214
+#: includes/admin.php:222
 msgid "For a staging site with a public address. Only turn it on when anyone can open this site’s pages."
 msgstr ""
 
-#: includes/admin.php:227
+#: includes/admin.php:235
 msgid "The address printed on certificates and in their QR code. Change it before issuing: printed certificates keep the old one."
 msgstr ""
 
 #. translators: Stands for a certificate code in an example address, as in https://example.com/certificate/<code>/.
-#: includes/admin.php:229
+#: includes/admin.php:237
 msgctxt "certificate code placeholder"
 msgid "code"
 msgstr ""
 
-#: includes/admin.php:238
-msgid "When marked as present at the event"
-msgstr ""
-
-#: includes/admin.php:239
-msgid "With any confirmed ticket"
-msgstr ""
-
-#: includes/admin.php:240
-msgid "No: only organizers issue certificates"
-msgstr ""
-
-#: includes/admin.php:247
-msgid "From the link in their ticket e-mail, attendees check how their name goes on the certificate and get it with its code."
-msgstr ""
-
-#: includes/admin.php:258
-msgid "Delete all certificates when the plugin is deleted"
+#: includes/admin.php:250
+msgid "Shown where the design uses the Location field. On WordCamp.org it comes from the WordCamp’s location."
 msgstr ""
 
 #: includes/admin.php:259
+msgid "When marked as present at the event"
+msgstr ""
+
+#: includes/admin.php:260
+msgid "With any confirmed ticket"
+msgstr ""
+
+#: includes/admin.php:261
+msgid "No: only organizers issue certificates"
+msgstr ""
+
+#: includes/admin.php:268
+msgid "From the link in their ticket e-mail, attendees check how their name goes on the certificate and get it with its code."
+msgstr ""
+
+#: includes/admin.php:279
+msgid "Delete all certificates when the plugin is deleted"
+msgstr ""
+
+#: includes/admin.php:280
 msgid "Printed certificates would no longer be verifiable. Leave it off unless you are sure."
 msgstr ""
 
-#: includes/admin.php:295
+#: includes/admin.php:316
 msgid "Drafts"
 msgstr ""
 
-#: includes/admin.php:296
+#: includes/admin.php:317
 msgid "Issued"
 msgstr ""
 
-#: includes/admin.php:297
+#: includes/admin.php:318
+#: includes/verify.php:204
 msgid "Revoked"
 msgstr ""
 
-#: includes/admin.php:302
+#: includes/admin.php:323
 msgid "Issue, send and revoke attendance certificates here. This screen is still being built."
 msgstr ""
 
-#: includes/admin.php:327
+#: includes/admin.php:348
 #: build/routes/editor/content.js:1920
 #: build/routes/editor/content.js:3522
 #: build/routes/editor/content.js:3709
 msgid "Settings"
 msgstr ""
 
-#: includes/certificates.php:141
+#: includes/certificates.php:160
 msgid "The name on the certificate is required."
 msgstr ""
 
-#: includes/certificates.php:167
+#: includes/certificates.php:186
 msgid "The certificate could not be issued. Try again."
 msgstr ""
 
@@ -226,36 +239,36 @@ msgstr ""
 msgid "Certificates are available to attendees marked as present at the event. If you were there, please ask the organizers."
 msgstr ""
 
-#: includes/compat/camptix-front.php:159
+#: includes/compat/camptix-front.php:177
 msgid "The form expired. Please try again."
 msgstr ""
 
-#: includes/compat/camptix-front.php:196
+#: includes/compat/camptix-front.php:214
 msgid "Your certificate is available."
 msgstr ""
 
-#: includes/compat/camptix-front.php:198
+#: includes/compat/camptix-front.php:216
 msgid "View certificate"
 msgstr ""
 
-#: includes/compat/camptix-front.php:198
+#: includes/compat/camptix-front.php:216
 msgid "Get your certificate"
 msgstr ""
 
-#: includes/compat/camptix-front.php:210
+#: includes/compat/camptix-front.php:228
 msgid "This link isn’t valid. Use the link from your ticket e-mail."
 msgstr ""
 
-#: includes/compat/camptix-front.php:243
+#: includes/compat/camptix-front.php:261
 msgid "Your certificate was issued."
 msgstr ""
 
-#: includes/compat/camptix-front.php:245
+#: includes/compat/camptix-front.php:263
 msgid "Your certificate was corrected. The previous code now says it was replaced."
 msgstr ""
 
-#: includes/compat/camptix-front.php:248
-#: includes/compat/camptix-front.php:313
+#: includes/compat/camptix-front.php:266
+#: includes/compat/camptix-front.php:331
 #: includes/designs.php:97
 #: build/routes/editor/content.js:814
 #: build/routes/editor/content.js:819
@@ -265,46 +278,49 @@ msgstr ""
 msgid "Certificate"
 msgstr ""
 
-#: includes/compat/camptix-front.php:257
+#: includes/compat/camptix-front.php:275
+#: includes/verify.php:285
 #: build/routes/editor/content.js:819
 #: build/routes/editor/content.js:2932
 msgid "Name"
 msgstr ""
 
-#: includes/compat/camptix-front.php:258
+#: includes/compat/camptix-front.php:276
+#: includes/verify.php:291
 #: build/routes/editor/content.js:2928
 msgid "Code"
 msgstr ""
 
-#: includes/compat/camptix-front.php:259
+#: includes/compat/camptix-front.php:277
+#: includes/verify.php:290
 msgid "Issued on"
 msgstr ""
 
-#: includes/compat/camptix-front.php:260
+#: includes/compat/camptix-front.php:278
 msgid "Address"
 msgstr ""
 
-#: includes/compat/camptix-front.php:271
+#: includes/compat/camptix-front.php:289
 msgid "Correct the name"
 msgstr ""
 
-#: includes/compat/camptix-front.php:275
+#: includes/compat/camptix-front.php:293
 msgid "Name on the certificate"
 msgstr ""
 
-#: includes/compat/camptix-front.php:281
+#: includes/compat/camptix-front.php:299
 msgid "As it should appear: check accents and capital letters."
 msgstr ""
 
-#: includes/compat/camptix-front.php:285
+#: includes/compat/camptix-front.php:303
 msgid "E-mail"
 msgstr ""
 
-#: includes/compat/camptix-front.php:290
+#: includes/compat/camptix-front.php:308
 msgid "Correct and reissue"
 msgstr ""
 
-#: includes/compat/camptix-front.php:290
+#: includes/compat/camptix-front.php:308
 msgid "Issue certificate"
 msgstr ""
 
@@ -316,13 +332,116 @@ msgstr ""
 msgid "Certificate designs"
 msgstr ""
 
-#: build/routes/editor/content.js:774
-msgid "Participant"
+#: includes/render.php:218
+msgid "Attendee"
 msgstr ""
 
+#: includes/render.php:220
+msgid "Organizer"
+msgstr ""
+
+#: includes/render.php:221
+msgid "Volunteer"
+msgstr ""
+
+#: includes/render.php:222
+msgid "Sponsor"
+msgstr ""
+
+#: includes/verify.php:195
+msgid "Replaced by a corrected certificate"
+msgstr ""
+
+#. translators: %s: link to the new certificate.
+#: includes/verify.php:198
+#, php-format
+msgid "This code was valid, but the certificate was corrected. See the current one: %s"
+msgstr ""
+
+#: includes/verify.php:209
+msgid "Authentic certificate"
+msgstr ""
+
+#. translators: %s: site name.
+#: includes/verify.php:212
+#, php-format
+msgid "Issued by %s and kept in its records. The data below is what was issued."
+msgstr ""
+
+#. translators: %s: person's name.
+#: includes/verify.php:232
+#, php-format
+msgid "Certificate: %s"
+msgstr ""
+
+#. translators: %s: person's name.
+#: includes/verify.php:232
+#: includes/verify.php:301
+msgid "Check a certificate"
+msgstr ""
+
+#: includes/verify.php:246
+msgid "Certificate check"
+msgstr ""
+
+#: includes/verify.php:248
+msgid "Language"
+msgstr ""
+
+#: includes/verify.php:254
+msgid "Light mode"
+msgstr ""
+
+#: includes/verify.php:254
+msgid "Dark mode"
+msgstr ""
+
+#: includes/verify.php:286
 #: build/routes/editor/content.js:775
 #: build/routes/editor/content.js:945
 msgid "Event"
+msgstr ""
+
+#: includes/verify.php:288
+#: build/routes/editor/content.js:950
+msgid "Workload"
+msgstr ""
+
+#: includes/verify.php:295
+msgid "Download PDF"
+msgstr ""
+
+#: includes/verify.php:297
+msgid "Link copied"
+msgstr ""
+
+#: includes/verify.php:297
+msgid "Copy link"
+msgstr ""
+
+#: includes/verify.php:301
+msgid "Certificate not found"
+msgstr ""
+
+#: includes/verify.php:302
+msgid "No certificate has this code. Check it and try again: it has 16 letters and numbers, like 2611-04K7-M29Q-XAP3."
+msgstr ""
+
+#: includes/verify.php:302
+msgid "Type the code printed on the certificate, below its QR code."
+msgstr ""
+
+#: includes/verify.php:305
+#: build/routes/editor/content.js:960
+msgid "Certificate code"
+msgstr ""
+
+#: includes/verify.php:307
+msgid "Check"
+msgstr ""
+
+#: build/routes/editor/content.js:774
+msgid "Participant"
 msgstr ""
 
 #: build/routes/editor/content.js:776
@@ -481,10 +600,6 @@ msgstr ""
 msgid "Date of issue"
 msgstr ""
 
-#: build/routes/editor/content.js:950
-msgid "Workload"
-msgstr ""
-
 #: build/routes/editor/content.js:952
 msgid "8 hours"
 msgstr ""
@@ -500,10 +615,6 @@ msgstr ""
 #: build/routes/editor/content.js:958
 #: build/routes/editor/content.js:2935
 msgid "Signer name"
-msgstr ""
-
-#: build/routes/editor/content.js:960
-msgid "Certificate code"
 msgstr ""
 
 #: build/routes/editor/content.js:961

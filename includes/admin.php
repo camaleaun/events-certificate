@@ -149,6 +149,14 @@ function add_settings_fields( $page ) {
 		$page
 	);
 	add_settings_field(
+		'evcert_location',
+		__( 'Event location', 'events-certificate' ),
+		__NAMESPACE__ . '\render_location_field',
+		$page,
+		'evcert_issuing',
+		array( 'label_for' => 'evcert_location' )
+	);
+	add_settings_field(
 		'evcert_self_issue',
 		__( 'Attendees get their own', 'events-certificate' ),
 		__NAMESPACE__ . '\render_self_issue_field',
@@ -227,6 +235,19 @@ function render_slug_field() {
 		esc_html__( 'The address printed on certificates and in their QR code. Change it before issuing: printed certificates keep the old one.', 'events-certificate' ),
 		/* translators: Stands for a certificate code in an example address, as in https://example.com/certificate/<code>/. */
 		esc_html_x( 'code', 'certificate code placeholder', 'events-certificate' )
+	);
+}
+
+/**
+ * Field: event location.
+ */
+function render_location_field() {
+	printf(
+		'<input type="text" id="evcert_location" name="%1$s[location]" value="%2$s" class="regular-text" placeholder="%3$s"><p class="description">%4$s</p>',
+		esc_attr( Settings\OPTION ),
+		esc_attr( Settings\value( 'location' ) ),
+		esc_attr__( 'City, Country', 'events-certificate' ),
+		esc_html__( 'Shown where the design uses the Location field. On WordCamp.org it comes from the WordCamp’s location.', 'events-certificate' )
 	);
 }
 
