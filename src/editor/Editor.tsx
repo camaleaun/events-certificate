@@ -314,6 +314,7 @@ export default function Editor() {
 	const [ sidebar, setSidebar ] = useState< 'design' | 'element' | null >( 'design' );
 		const [ editing, setEditing ] = useState< { id: string; runs: Run[] } | null >( null );
 	const textCommands = useRef< FieldTextCommands | null >( null );
+	const [ marks, setMarks ] = useState( { b: false, i: false } );
 	const clickToEdit = useRef< Element | null >( null );
 	const [ editAnchor, setEditAnchor ] = useState< HTMLElement | null >( null );
 	useEffect( () => {
@@ -720,6 +721,7 @@ export default function Editor() {
 												locale={ LOCALE }
 												style={ textStyle( el, shown, mode ) }
 												commands={ textCommands }
+												onMarks={ setMarks }
 												onDone={ stopEditing }
 											/>
 										</foreignObject>
@@ -870,6 +872,7 @@ export default function Editor() {
 				<ElementToolbar
 					anchor={ editing ? editAnchor : anchor }
 					editing={ !! editing }
+					marks={ marks }
 					onBold={ () => textCommands.current?.bold() }
 					onItalic={ () => textCommands.current?.italic() }
 					onInsertField={ ( field ) => textCommands.current?.insertField( field ) }

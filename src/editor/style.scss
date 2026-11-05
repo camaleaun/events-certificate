@@ -966,8 +966,8 @@
 .evcert-length {
 	min-width: 0;
 }
-.evcert-chip-marks {
-	display: flex;
-	gap: 4px;
-	margin: 8px 0;
+// The selected field: the toolbar's Bold/Italic act on it.
+.evcert-chip.is-selected {
+	outline: 2px solid var(--wp-admin-theme-color, #3858e9);
+	outline-offset: 1px;
 }

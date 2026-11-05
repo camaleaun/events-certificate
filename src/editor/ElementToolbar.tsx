@@ -22,6 +22,7 @@ type Props = {
 	onDuplicate: () => void;
 	onRemove: () => void;
 	editing?: boolean;
+	marks?: { b: boolean; i: boolean };
 	onBold?: () => void;
 	onItalic?: () => void;
 	onInsertField?: ( field: string ) => void;
@@ -29,7 +30,7 @@ type Props = {
 	onImage?: ( picked: Picked ) => void;
 };
 
-export default function ElementToolbar( { anchor, el, required, onSelectParent, onOrder, onToggle, onDuplicate, onRemove, editing, onBold, onItalic, onInsertField, onToggleEdit, onImage }: Props ) {
+export default function ElementToolbar( { anchor, el, required, onSelectParent, onOrder, onToggle, onDuplicate, onRemove, editing, marks, onBold, onItalic, onInsertField, onToggleEdit, onImage }: Props ) {
 	const info = fields();
 	if ( ! anchor ) {
 		return null;
@@ -70,8 +71,8 @@ export default function ElementToolbar( { anchor, el, required, onSelectParent, 
 				) }
 				{ editing && (
 					<ToolbarGroup>
-						<ToolbarButton icon={ formatBold } label={ __( 'Bold', 'events-certificate' ) } shortcut="⌘B" onMouseDown={ ( e: { preventDefault: () => void } ) => e.preventDefault() } onClick={ onBold } />
-						<ToolbarButton icon={ formatItalic } label={ __( 'Italic', 'events-certificate' ) } shortcut="⌘I" onMouseDown={ ( e: { preventDefault: () => void } ) => e.preventDefault() } onClick={ onItalic } />
+						<ToolbarButton icon={ formatBold } isPressed={ !! marks?.b } label={ __( 'Bold', 'events-certificate' ) } shortcut="⌘B" onMouseDown={ ( e: { preventDefault: () => void } ) => e.preventDefault() } onClick={ onBold } />
+						<ToolbarButton icon={ formatItalic } isPressed={ !! marks?.i } label={ __( 'Italic', 'events-certificate' ) } shortcut="⌘I" onMouseDown={ ( e: { preventDefault: () => void } ) => e.preventDefault() } onClick={ onItalic } />
 						<ToolbarDropdownMenu
 							icon={ plus }
 							label={ __( 'Insert a field', 'events-certificate' ) }

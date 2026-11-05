@@ -7,7 +7,6 @@
 import { Button, Dropdown, MenuGroup, MenuItem, Popover, SelectControl } from '@wordpress/components';
 import { useEffect, useLayoutEffect, useRef, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { formatBold, formatItalic } from '@wordpress/icons';
 import { fieldValue, type Run } from './model';
 
 export type FieldInfo = { label: string; formats?: { key: string; label: string }[] };
@@ -150,9 +149,11 @@ type FieldTextProps = {
 	style?: Record< string, string | number | undefined >;
 	commands?: { current: FieldTextCommands | null };
 	onDone?: () => void;
+	// Bold/italic state of the selection or of the selected field, for the toolbar's toggles.
+	onMarks?: ( marks: { b: boolean; i: boolean } ) => void;
 };
 
-export default function FieldText( { label, runs, onChange, sample, locale, inline, style, commands, onDone }: FieldTextProps ) {
+export default function FieldText( { label, runs, onChange, sample, locale, inline, style, commands, onDone, onMarks }: FieldTextProps ) {
 	const info = fields();
 	const ref = useRef< HTMLDivElement >( null );
 	const last = useRef< string >( '' );
@@ -204,19 +205,51 @@ export default function FieldText( { label, runs, onChange, sample, locale, inli
 		emit();
 	};
 
+	// The selected field (clicked chip): Bold/Italic toggle its marks instead of the text selection's.
+	const chipRef = useRef< HTMLElement | null >( null );
+	const selectChip = ( el: HTMLElement | null ) => {
+		chipRef.current?.classList.remove( 'is-selected' );
+		chipRef.current = el;
+		el?.classList.add( 'is-selected' );
+	};
+	const reportMarks = () => {
+		if ( ! onMarks ) {
+			return;
+		}
+		const root = ref.current;
+		if ( chipRef.current && root?.contains( chipRef.current ) ) {
+			onMarks( { b: hasMark( chipRef.current, root, 'b' ), i: hasMark( chipRef.current, root, 'i' ) } );
+			return;
+		}
+		const selection = window.getSelection();
+		if ( root && selection?.anchorNode && root.contains( selection.anchorNode ) ) {
+			onMarks( { b: document.queryCommandState( 'bold' ), i: document.queryCommandState( 'italic' ) } );
+		}
+	};
+	const mark = ( which: 'b' | 'i' ) => {
+		if ( chipRef.current && ref.current?.contains( chipRef.current ) ) {
+			toggleMark( chipRef.current, ref.current, which );
+		} else {
+			document.execCommand( which === 'b' ? 'bold' : 'italic' );
+		}
+		emit();
+		reportMarks();
+	};
+
 	if ( commands ) {
 		commands.current = {
-			bold: () => {
-				document.execCommand( 'bold' );
-				emit();
-			},
-			italic: () => {
-				document.execCommand( 'italic' );
-				emit();
-			},
+			bold: () => mark( 'b' ),
+			italic: () => mark( 'i' ),
 			insertField,
 		};
 	}
+
+	// Keep the toolbar's toggles in step with the caret.
+	useEffect( () => {
+		const onSelection = () => reportMarks();
+		document.addEventListener( 'selectionchange', onSelection );
+		return () => document.removeEventListener( 'selectionchange', onSelection );
+	}, [] );
 
 	// On the canvas: focus with the caret at the end as soon as editing starts.
 	useEffect( () => {
@@ -239,9 +272,11 @@ export default function FieldText( { label, runs, onChange, sample, locale, inli
 		}
 		const onClick = ( event: MouseEvent ) => {
 			const target = ( event.target as HTMLElement ).closest( '.evcert-chip' ) as HTMLElement | null;
+			selectChip( target );
 			if ( target ) {
 				setChip( { el: target, index: Number( target.dataset.index ?? -1 ) } );
 			}
+			reportMarks();
 		};
 		root.addEventListener( 'click', onClick );
 		return () => root.removeEventListener( 'click', onClick );
@@ -251,7 +286,7 @@ export default function FieldText( { label, runs, onChange, sample, locale, inli
 	const chipInfo = info[ chipField ];
 
 	const chipPopover = chip && chipInfo && (
-					<Popover anchor={ chip.el } onClose={ () => setChip( null ) } placement="bottom-start">
+					<Popover anchor={ chip.el } onClose={ () => setChip( null ) } placement="bottom-start" focusOnMount={ false }>
 						<div className="evcert-chip-popover">
 							<strong>{ chipInfo.label }</strong>
 							<p className="evcert-chip-sample">{ fieldValue( chipField, chip.el.dataset.format, sample, locale ) }</p>
@@ -268,22 +303,6 @@ export default function FieldText( { label, runs, onChange, sample, locale, inli
 									} }
 								/>
 							) }
-							<div className="evcert-chip-marks">
-								{ ( [ [ 'b', formatBold, __( 'Bold', 'events-certificate' ) ], [ 'i', formatItalic, __( 'Italic', 'events-certificate' ) ] ] as const ).map( ( [ mark, icon, text ] ) => (
-									<Button
-										key={ mark }
-										size="compact"
-										icon={ icon }
-										label={ text }
-										isPressed={ hasMark( chip.el, ref.current, mark ) }
-										onClick={ () => {
-											toggleMark( chip.el, ref.current, mark );
-											emit();
-											setChip( { ...chip } );
-										} }
-									/>
-								) ) }
-							</div>
 							<Button
 								variant="link"
 								isDestructive
@@ -327,8 +346,9 @@ export default function FieldText( { label, runs, onChange, sample, locale, inli
 						}
 						if ( ( event.metaKey || event.ctrlKey ) && ( event.key === 'b' || event.key === 'i' ) ) {
 							event.preventDefault();
-							document.execCommand( event.key === 'b' ? 'bold' : 'italic' );
-							emit();
+							mark( event.key );
+						} else if ( ! event.metaKey && ! event.ctrlKey && chipRef.current ) {
+							selectChip( null );
 						}
 						event.stopPropagation();
 					} }
@@ -402,8 +422,9 @@ export default function FieldText( { label, runs, onChange, sample, locale, inli
 					}
 					if ( ( event.metaKey || event.ctrlKey ) && ( event.key === 'b' || event.key === 'i' ) ) {
 						event.preventDefault();
-						document.execCommand( event.key === 'b' ? 'bold' : 'italic' );
-						emit();
+						mark( event.key );
+					} else if ( ! event.metaKey && ! event.ctrlKey && chipRef.current ) {
+						selectChip( null );
 					}
 					event.stopPropagation();
 				} }
