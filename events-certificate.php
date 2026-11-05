@@ -26,5 +26,23 @@ require_once __DIR__ . '/includes/install.php';
 require_once __DIR__ . '/includes/settings.php';
 require_once __DIR__ . '/includes/environment.php';
 require_once __DIR__ . '/includes/code.php';
+require_once __DIR__ . '/includes/admin.php';
+require_once __DIR__ . '/includes/compat/camptix.php';
 
 Install\bootstrap();
+Admin\bootstrap();
+
+// Integrations with other plugins register on this action, after every
+// plugin has loaded; each checks that its plugin is active.
+add_action( 'evcert_register_compat', 'EventsCertificate\Compat\CampTix\register' );
+add_action(
+	'plugins_loaded',
+	static function () {
+		/**
+		 * Fires after all plugins have loaded, for the integrations with
+		 * other plugins (CampTix, GatherPress) to register.
+		 */
+		do_action( 'evcert_register_compat' );
+	},
+	20
+);
