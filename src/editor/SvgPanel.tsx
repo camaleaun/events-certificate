@@ -10,6 +10,9 @@ import {
 	ColorIndicator,
 	ColorPalette,
 	Dropdown,
+	DropdownMenu,
+	MenuGroup,
+	MenuItem,
 	TextareaControl,
 	TextControl,
 	__experimentalHStack as HStack,
@@ -19,7 +22,7 @@ import {
 } from '@wordpress/components';
 import { useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
-import { closeSmall, plus } from '@wordpress/icons';
+import { chevronDown, chevronUp, copy, moreVertical, plus, trash } from '@wordpress/icons';
 import { DropdownRow } from './DesignPanel';
 import { color, isPathData, sanitizeSvg, svgPaths, type Design, type Mode, type SvgEl, type SvgPath } from './model';
 
@@ -110,11 +113,95 @@ export function PathData( { index, value, multiline, onChange, onImport, onFocus
 	);
 }
 
+type PathListProps = {
+	paths: SvgPath[];
+	current: string;
+	design: Design;
+	mode: Mode;
+	onPaths: ( next: SvgPath[] ) => void;
+	onImport: ( svg: { vw: number; vh: number; paths: SvgPath[] } ) => void;
+	onFocus?: ( index: number | null ) => void;
+	// Where the path data popover opens: beside the sidebar, or below the row in the modal.
+	placement?: 'left-start' | 'bottom-start';
+};
+
+/** A short, readable start of the path data for the row's link. */
+const short = ( d: string ) => ( d.length > 28 ? `${ d.slice( 0, 28 ).trim() }…` : d );
+
+/**
+ * The paths, one row each (as compact as the palette's colors): the fill
+ * swatch, the path data as a link that opens a popover with the whole value,
+ * the block mover and an Options menu. One + in the heading adds a path.
+ */
+export function PathList( { paths, current, design, mode, onPaths, onImport, onFocus, placement = 'left-start' }: PathListProps ) {
+	const [ version, setVersion ] = useState( 0 );
+	const replace = ( next: SvgPath[] ) => {
+		onPaths( next );
+		setVersion( version + 1 );
+	};
+	const setPath = ( i: number, patch: Partial< SvgPath > ) => onPaths( paths.map( ( p, j ) => ( j === i ? { ...p, ...patch } : p ) ) );
+	const move = ( i: number, to: number ) => {
+		const next = [ ...paths ];
+		const [ p ] = next.splice( i, 1 );
+		next.splice( to, 0, p );
+		replace( next );
+	};
+	return (
+		<>
+			<HStack className="evcert-svg-panel__header">
+				<h2 className="evcert-section-heading">{ __( 'Paths', 'events-certificate' ) }</h2>
+				<Button size="small" icon={ plus } label={ __( 'Add path', 'events-certificate' ) } onClick={ () => replace( [ ...paths, { d: '' } ] ) } />
+			</HStack>
+			<ItemGroup isBordered isSeparated className="evcert-svg-paths">
+				{ paths.map( ( p, i ) => (
+					<Item key={ `${ version }-${ i }` } className="evcert-svg-path" onMouseEnter={ () => onFocus?.( i ) } onMouseLeave={ () => onFocus?.( null ) }>
+						<HStack spacing={ 2 }>
+							<FillSwatch value={ p.fill } current={ current } design={ design } mode={ mode } onChange={ ( fill ) => setPath( i, { fill } ) } />
+							<Dropdown
+								className="evcert-svg-path__link"
+								popoverProps={ { placement, offset: placement === 'left-start' ? 36 : 8, shift: true } }
+								onToggle={ ( open ) => onFocus?.( open ? i : null ) }
+								renderToggle={ ( { isOpen, onToggle } ) => (
+									<Button variant="link" className="evcert-svg-path__d-link" onClick={ onToggle } aria-expanded={ isOpen } title={ p.d }>
+										{ p.d ? short( p.d ) : __( 'Add path data', 'events-certificate' ) }
+									</Button>
+								) }
+								renderContent={ () => (
+									<div className="evcert-svg-path__popover">
+										<PathData multiline index={ i } value={ p.d } onChange={ ( d ) => setPath( i, { d } ) } onImport={ onImport } />
+									</div>
+								) }
+							/>
+							<div className="evcert-mover evcert-mover--inline">
+								<Button size="small" icon={ chevronUp } label={ __( 'Move up', 'events-certificate' ) } disabled={ i === 0 } accessibleWhenDisabled onClick={ () => move( i, i - 1 ) } />
+								<Button size="small" icon={ chevronDown } label={ __( 'Move down', 'events-certificate' ) } disabled={ i === paths.length - 1 } accessibleWhenDisabled onClick={ () => move( i, i + 1 ) } />
+							</div>
+							<DropdownMenu icon={ moreVertical } label={ __( 'Path options', 'events-certificate' ) } toggleProps={ { size: 'small' } as any } popoverProps={ { placement: 'bottom-end' } }>
+								{ ( { onClose } ) => (
+									<>
+										<MenuGroup>
+											<MenuItem onClick={ () => { move( i, 0 ); onClose(); } } disabled={ i === 0 }>{ __( 'Move to bottom (behind)', 'events-certificate' ) }</MenuItem>
+											<MenuItem onClick={ () => { move( i, paths.length - 1 ); onClose(); } } disabled={ i === paths.length - 1 }>{ __( 'Move to top (in front)', 'events-certificate' ) }</MenuItem>
+											<MenuItem icon={ copy } onClick={ () => { replace( [ ...paths.slice( 0, i + 1 ), { ...p }, ...paths.slice( i + 1 ) ] ); onClose(); } }>{ __( 'Duplicate', 'events-certificate' ) }</MenuItem>
+										</MenuGroup>
+										<MenuGroup>
+											<MenuItem icon={ trash } disabled={ paths.length === 1 } onClick={ () => { replace( paths.filter( ( _, j ) => j !== i ) ); onClose(); } }>{ __( 'Delete', 'events-certificate' ) }</MenuItem>
+										</MenuGroup>
+									</>
+								) }
+							</DropdownMenu>
+						</HStack>
+					</Item>
+				) ) }
+			</ItemGroup>
+		</>
+	);
+}
+
 export default function SvgPanel( { el, design, mode, onChange, onOpen }: Props ) {
 	const paths = svgPaths( el );
 	const current = el.color || '$text';
 	const setPaths = ( next: SvgPath[] ) => onChange( { paths: next, markup: undefined, fill: undefined } );
-	const setPath = ( i: number, patch: Partial< SvgPath > ) => setPaths( paths.map( ( p, j ) => ( j === i ? { ...p, ...patch } : p ) ) );
 
 	return (
 		<div className="evcert-svg-panel">
@@ -132,21 +219,7 @@ export default function SvgPanel( { el, design, mode, onChange, onOpen }: Props 
 				</DropdownRow>
 			</div>
 			<div className="evcert-inspector__section">
-				<HStack className="evcert-svg-panel__header">
-					<h2 className="evcert-section-heading">{ __( 'Paths', 'events-certificate' ) }</h2>
-					<Button size="small" icon={ plus } label={ __( 'Add path', 'events-certificate' ) } onClick={ () => setPaths( [ ...paths, { d: '' } ] ) } />
-				</HStack>
-				<ItemGroup isBordered isSeparated className="evcert-svg-paths">
-					{ paths.map( ( p, i ) => (
-						<Item key={ `${ i }-${ paths.length }` } className="evcert-svg-path">
-							<HStack spacing={ 2 }>
-								<FillSwatch value={ p.fill } current={ current } design={ design } mode={ mode } onChange={ ( fill ) => setPath( i, { fill } ) } />
-								<PathData index={ i } value={ p.d } onChange={ ( d ) => setPath( i, { d } ) } onImport={ ( svg ) => onChange( { ...svg, markup: undefined, fill: undefined } ) } />
-								<Button size="small" icon={ closeSmall } label={ __( 'Remove path', 'events-certificate' ) } disabled={ paths.length === 1 } accessibleWhenDisabled onClick={ () => setPaths( paths.filter( ( _, j ) => j !== i ) ) } />
-							</HStack>
-						</Item>
-					) ) }
-				</ItemGroup>
+				<PathList paths={ paths } current={ current } design={ design } mode={ mode } onPaths={ setPaths } onImport={ ( svg ) => onChange( { ...svg, markup: undefined, fill: undefined } ) } />
 				<Button variant="secondary" __next40pxDefaultSize className="evcert-svg-panel__open" onClick={ onOpen }>
 					{ __( 'Edit drawing', 'events-certificate' ) }
 				</Button>

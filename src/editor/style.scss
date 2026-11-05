@@ -1031,121 +1031,23 @@
 	overflow-y: auto;
 	padding-right: 4px;
 }
-.evcert-svg-editor__paths {
-	list-style: none;
-	margin: 0;
-	padding: 0;
-	display: grid;
-}
-// Between paths: a + that shows on hover or focus, like the in-between block inserter.
-.evcert-path-inserter {
-	position: relative;
-	height: 16px;
-	margin: 0;
+// Inline mover in a path row: two small chevrons stacked, like the block mover.
+.evcert-mover--inline {
 	display: flex;
-	align-items: center;
-	justify-content: center;
-	&::before {
-		content: "";
-		position: absolute;
-		left: 0;
-		right: 0;
-		top: 50%;
-		height: 1.5px;
-		background: var(--wp-admin-theme-color, #3858e9);
-		opacity: 0;
-		transition: opacity 0.1s;
-	}
+	flex-direction: column;
+	flex-shrink: 0;
 	.components-button {
-		position: relative;
-		width: 24px;
-		height: 24px;
+		height: 16px;
 		min-width: 24px;
 		padding: 0;
-		border-radius: 2px;
-		background: #1e1e1e;
-		color: #fff;
-		opacity: 0;
-		transition: opacity 0.1s;
+		justify-content: center;
 		svg {
-			width: 18px;
-			height: 18px;
+			width: 16px;
+			height: 16px;
 		}
 	}
-	&:hover::before,
-	&:focus-within::before,
-	&:hover .components-button,
-	.components-button:focus {
-		opacity: 1;
-	}
 }
-// At the end: the block appender (a dark + square).
-.evcert-path-appender.components-button {
-	align-self: flex-start;
-	margin-top: 12px;
-	width: 32px;
-	height: 32px;
-	min-width: 32px;
-	padding: 0;
-	justify-content: center;
-	border-radius: 2px;
-	background: #1e1e1e;
-	color: #fff;
-	&:hover:not(:disabled) {
-		background: var(--wp-admin-theme-color, #3858e9);
-		color: #fff;
-	}
-}
-// Each path like a block: an outline when selected and its own toolbar.
-.evcert-path-block {
-	margin: 0;
-	padding: 8px;
-	border: 1px solid #ddd;
-	border-radius: 2px;
-	&.is-selected {
-		border-color: var(--wp-admin-theme-color, #3858e9);
-		box-shadow: 0 0 0 1px var(--wp-admin-theme-color, #3858e9);
-	}
-	textarea {
-		font-family: Menlo, Consolas, monaco, monospace;
-		font-size: 12px;
-	}
-	.components-base-control__label {
-		display: none;
-	}
-}
-.evcert-path-block__toolbar.components-accessible-toolbar {
-	width: max-content;
-	max-width: 100%;
-	margin-bottom: 8px;
-	border: 1px solid #1e1e1e;
-	border-radius: 2px;
-	background: #fff;
-	.components-toolbar-group {
-		min-width: max-content;
-		min-height: 46px;
-		border: 0;
-		border-right: 1px solid #ddd;
-		&:last-child {
-			border-right: 0;
-		}
-	}
-	.components-dropdown,
-	.components-dropdown-menu {
-		display: flex;
-		height: 100%;
-	}
-	.evcert-svg-path__swatch {
-		align-self: center;
-		margin: 0 6px;
-	}
-}
-.evcert-path-block__title {
-	margin-left: 4px;
-}
-// Mover: two small chevrons stacked, like the block mover.
-.evcert-mover.components-toolbar-group,
-.evcert-path-block__mover.components-toolbar-group {
+.evcert-mover.components-toolbar-group {
 	flex-direction: column;
 	justify-content: center;
 	padding: 0 4px;
@@ -1158,6 +1060,30 @@
 			width: 18px;
 			height: 18px;
 		}
+	}
+}
+.evcert-svg-path__link {
+	flex: 1;
+	min-width: 0;
+}
+.evcert-svg-path__d-link.components-button {
+	display: block;
+	width: 100%;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	text-align: left;
+	font-family: Menlo, Consolas, monaco, monospace;
+	font-size: 12px;
+}
+.evcert-svg-path__popover {
+	width: 420px;
+	max-width: calc(100vw - 32px);
+	padding: 12px;
+	textarea {
+		font-family: Menlo, Consolas, monaco, monospace;
+		font-size: 12px;
+		min-height: 160px;
 	}
 }
 .evcert-svg-editor__footer {
