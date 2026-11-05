@@ -4,7 +4,7 @@
  * the other elements, and a floating Dock with everything else.
  */
 import apiFetch from '@wordpress/api-fetch';
-import { Button, ColorPalette, DropdownMenu, MenuGroup, MenuItem, Popover, Spinner, RangeControl, SelectControl, TextControl, ToggleControl } from '@wordpress/components';
+import { Button, ColorPalette, DropdownMenu, MenuGroup, MenuItem, Popover, Snackbar, Spinner, RangeControl, SelectControl, TextControl, ToggleControl } from '@wordpress/components';
 import { chevronLeft, drawerRight, listView, moreVertical, plus, redo as redoIcon, undo as undoIcon } from '@wordpress/icons';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
@@ -37,12 +37,13 @@ import ElementToolbar from './ElementToolbar';
 import FieldText, { type FieldTextCommands } from './FieldText';
 import Inserter from './Inserter';
 import { ImagePlaceholder } from './ImageSource';
+import ImportModal, { type Imported } from './ImportModal';
 import Inspector from './Inspector';
 import PreviewDropdown from './PreviewDropdown';
 import SvgEditor from './SvgEditor';
 import type { Picked } from './media';
 import ListView from './ListView';
-import base from '../../templates/base-design.json';
+import { baseDesign, withRequired } from './base';
 import './style.scss';
 
 declare global {
@@ -303,7 +304,7 @@ function Shape( { el, design, mode, sample }: { el: Element; design: Design; mod
 
 export default function Editor() {
 	const config = window.evcertEditor;
-	const [ history, dispatch ] = useReducer( historyReducer, { past: [], present: base as unknown as Design, future: [] } );
+	const [ history, dispatch ] = useReducer( historyReducer, { past: [], present: baseDesign(), future: [] } );
 	// The stored design, and the design as the current view shows it (the print page or a screen).
 	const stored = history.present;
 	const [ view, setView ] = useState< View >( { device: 'page', orientation: 'landscape' } );
@@ -324,6 +325,8 @@ export default function Editor() {
 	const textCommands = useRef< FieldTextCommands | null >( null );
 	const [ marks, setMarks ] = useState( { b: false, i: false } );
 	const [ drawing, setDrawing ] = useState< string | null >( null );
+	const [ notice, setNotice ] = useState< string | null >( null );
+	const [ importing, setImporting ] = useState( false );
 	const clickToEdit = useRef< Element | null >( null );
 	const [ editAnchor, setEditAnchor ] = useState< HTMLElement | null >( null );
 	useEffect( () => {
@@ -350,7 +353,6 @@ export default function Editor() {
 	const svgRef = useRef< SVGSVGElement >( null );
 	const wrapRef = useRef< HTMLDivElement >( null );
 	const dragRef = useRef< Drag >( null );
-	const fileRef = useRef< HTMLInputElement >( null );
 	const savedRef = useRef< Design | null >( null );
 	const selRef = useRef< SVGRectElement >( null );
 	const [ anchor, setAnchor ] = useState< SVGRectElement | null >( null );
@@ -360,14 +362,14 @@ export default function Editor() {
 	useEffect( () => {
 		apiFetch< { title: { raw: string }; content: { raw: string } } >( { path: `/wp/v2/evcert-designs/${ config.design }?context=edit` } )
 			.then( ( post ) => {
-				let loaded = base as unknown as Design;
+				let loaded = baseDesign();
 				try {
 					const parsed = JSON.parse( post.content.raw );
 					if ( parsed && Array.isArray( parsed.elements ) ) {
 						loaded = parsed;
 					}
 				} catch ( e ) {}
-				loaded = migrate( loaded );
+				loaded = withRequired( migrate( loaded ) );
 				savedRef.current = loaded;
 				dispatch( { type: 'load', design: loaded } );
 				setTitle( post.title.raw );
@@ -517,26 +519,27 @@ export default function Editor() {
 	};
 
 	const exportJson = () => {
-		const blob = new Blob( [ JSON.stringify( { ...stored, $schema: 'events-certificate/design/1' }, null, '\t' ) ], { type: 'application/json' } );
+		const blob = new Blob( [ JSON.stringify( { $schema: 'events-certificate/design/1', title, ...stored }, null, '\t' ) ], { type: 'application/json' } );
 		const a = document.createElement( 'a' );
 		a.href = URL.createObjectURL( blob );
 		a.download = `${ ( title || 'certificate' ).toLowerCase().replace( /[^a-z0-9]+/g, '-' ) }.certificate.json`;
 		a.click();
 		URL.revokeObjectURL( a.href );
 	};
-	const importJson = async ( file: File ) => {
-		try {
-			const parsed = JSON.parse( await file.text() );
-			if ( parsed?.version !== 1 || ! Array.isArray( parsed.elements ) || ! parsed.page ) {
-				throw new Error( 'format' );
-			}
-			delete parsed.$schema;
-			replaceDesign( migrate( { ...( base as unknown as Design ), ...parsed } ) );
-			setSelected( null );
-		} catch ( e ) {
-			// eslint-disable-next-line no-alert
-			window.alert( __( 'This file is not a certificate design.', 'events-certificate' ) );
+	/** Replaces the whole design with an imported one, back on the print page with nothing selected. */
+	const applyImport = ( { design: imported, title: importedTitle }: Imported ) => {
+		if ( editing ) {
+			setEditing( null );
 		}
+		setDraft( null );
+		setDrawing( null );
+		setSelected( null );
+		setView( { device: 'page', orientation: view.orientation } );
+		replaceDesign( withRequired( migrate( { ...baseDesign(), ...imported, version: 1 } as Design ) ) );
+		if ( importedTitle ) {
+			setTitle( importedTitle );
+		}
+		setNotice( __( 'Design imported. Save to keep it.', 'events-certificate' ) );
 	};
 	/** An image picked for an element: keeps the element's width and, unless it covers, the image's ratio. */
 	const pickImage = ( id: string, picked: Picked ) => {
@@ -662,8 +665,8 @@ export default function Editor() {
 							<>
 								<MenuGroup label={ __( 'Design', 'events-certificate' ) }>
 									<MenuItem onClick={ () => { exportJson(); onClose(); } }>{ __( 'Export (JSON)', 'events-certificate' ) }</MenuItem>
-									<MenuItem onClick={ () => { fileRef.current?.click(); onClose(); } }>{ __( 'Import…', 'events-certificate' ) }</MenuItem>
-									<MenuItem onClick={ () => { replaceDesign( base as unknown as Design ); onClose(); } }>{ __( 'Restore the Base design', 'events-certificate' ) }</MenuItem>
+									<MenuItem onClick={ () => { setImporting( true ); onClose(); } }>{ __( 'Import…', 'events-certificate' ) }</MenuItem>
+									<MenuItem onClick={ () => { replaceDesign( baseDesign() ); onClose(); } }>{ __( 'Restore the Base design', 'events-certificate' ) }</MenuItem>
 								</MenuGroup>
 								<MenuGroup label={ __( 'View', 'events-certificate' ) }>
 									<MenuItem onClick={ () => { fit(); onClose(); } }>{ __( 'Fit to screen', 'events-certificate' ) }</MenuItem>
@@ -930,7 +933,12 @@ export default function Editor() {
 				const el = design.elements.find( ( e ) => e.id === drawing );
 				return el && el.type === 'svg' ? <SvgEditor el={ el } design={ design } mode={ mode } onApply={ ( patch ) => update( el.id, patch as Partial< Element > ) } onClose={ () => setDrawing( null ) } /> : null;
 			} )() }
-			<input ref={ fileRef } type="file" accept="application/json,.json" hidden onChange={ ( event ) => event.target.files?.[ 0 ] && importJson( event.target.files[ 0 ] ) } />
+			{ importing && <ImportModal onImport={ applyImport } onClose={ () => setImporting( false ) } /> }
+			{ notice && (
+				<div className="evcert-snackbar">
+					<Snackbar onRemove={ () => setNotice( null ) }>{ notice }</Snackbar>
+				</div>
+			) }
 		</div>
 	);
 }

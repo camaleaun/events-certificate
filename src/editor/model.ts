@@ -111,7 +111,7 @@ export function color( design: Design, value: string | undefined, mode: Mode ): 
 }
 
 /** Slots the certificate can't do without: they can be moved, not removed. */
-export const REQUIRED_SLOTS = [ 'name', 'authenticity' ];
+export const REQUIRED_SLOTS = [ 'name', 'authenticity', 'code', 'verify' ];
 
 export const PLACEHOLDERS = [ 'name', 'event', 'location', 'issued_date', 'signer_name', 'signer_role', 'code', 'hours', 'role' ];
 
