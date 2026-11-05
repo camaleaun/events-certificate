@@ -179,28 +179,17 @@ class List_Table extends \WP_List_Table {
 		$per_page = $this->get_items_per_page( 'evcert_certificates_per_page', 20 );
 		$status   = $this->current_status();
 
-		$where = array( "status <> 'draft'" );
-		$args  = array();
-		if ( '' !== $status ) {
-			$where[] = 'status = %s';
-			$args[]  = $status;
-		}
-		if ( '' !== $search ) {
-			$like    = '%' . $wpdb->esc_like( $search ) . '%';
-			$where[] = '(name LIKE %s OR email LIKE %s OR code LIKE %s)';
-			array_push( $args, $like, $like, $like );
-		}
-		$sql_where = implode( ' AND ', $where );
+		$like   = '' === $search ? '' : '%' . $wpdb->esc_like( $search ) . '%';
+		$offset = ( $this->get_pagenum() - 1 ) * $per_page;
+		// Fixed SQL: empty filters match everything; the sort column is an identifier (%i), the order one of two strings.
 
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- the plugin's own table; $sql_where holds only placeholders, $orderby and $order are whitelisted.
-		$total       = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i WHERE $sql_where", array_merge( array( Certificates\table() ), $args ) ) );
-		$this->items = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT * FROM %i WHERE $sql_where ORDER BY $orderby $order, id DESC LIMIT %d OFFSET %d",
-				array_merge( array( Certificates\table() ), $args, array( $per_page, ( $this->get_pagenum() - 1 ) * $per_page ) )
-			),
-			ARRAY_A
-		);
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery -- the plugin's own table, not cached.
+		$total = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i WHERE status <> 'draft' AND ( %s = '' OR status = %s ) AND ( %s = '' OR name LIKE %s OR email LIKE %s OR code LIKE %s )", Certificates\table(), $status, $status, $like, $like, $like, $like ) );
+		if ( 'ASC' === $order ) {
+			$this->items = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM %i WHERE status <> 'draft' AND ( %s = '' OR status = %s ) AND ( %s = '' OR name LIKE %s OR email LIKE %s OR code LIKE %s ) ORDER BY %i ASC, id DESC LIMIT %d OFFSET %d", Certificates\table(), $status, $status, $like, $like, $like, $like, $orderby, $per_page, $offset ), ARRAY_A );
+		} else {
+			$this->items = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM %i WHERE status <> 'draft' AND ( %s = '' OR status = %s ) AND ( %s = '' OR name LIKE %s OR email LIKE %s OR code LIKE %s ) ORDER BY %i DESC, id DESC LIMIT %d OFFSET %d", Certificates\table(), $status, $status, $like, $like, $like, $like, $orderby, $per_page, $offset ), ARRAY_A );
+		}
 		// phpcs:enable
 
 		$this->set_pagination_args(
