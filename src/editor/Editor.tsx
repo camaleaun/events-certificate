@@ -29,7 +29,7 @@ import {
 	type Run,
 	type TextEl,
 } from './model';
-import DesignPanel from './DesignPanel';
+import DesignPanel, { setSample } from './DesignPanel';
 import ElementToolbar from './ElementToolbar';
 import FieldText, { type FieldTextCommands } from './FieldText';
 import Inserter from './Inserter';
@@ -722,6 +722,7 @@ export default function Editor() {
 												style={ textStyle( el, shown, mode ) }
 												commands={ textCommands }
 												onMarks={ setMarks }
+												preview={ { defaults: config.sample, overrides: design.sample || {}, set: ( key, value ) => commit( { ...design, sample: setSample( design.sample, key, value ) } ) } }
 												onDone={ stopEditing }
 											/>
 										</foreignObject>
@@ -863,7 +864,7 @@ export default function Editor() {
 						{ sidebarTab === 'element' && current && (
 							<Inspector el={ current } stored={ currentStored } design={ design } mode={ mode } tab={ tab } locale={ LOCALE } sample={ sample } onChange={ ( patch ) => update( current.id, patch ) } onBox={ ( b ) => setBox( current.id, b ) } onImage={ ( picked ) => pickImage( current.id, picked ) } />
 						) }
-						{ sidebarTab === 'design' && <DesignPanel design={ design } mode={ mode } title={ title } status={ statusLabel } sample={ sample } onTitle={ setTitle } onChange={ commit } /> }
+						{ sidebarTab === 'design' && <DesignPanel design={ design } mode={ mode } title={ title } status={ statusLabel } sample={ sample } defaults={ config.sample } onTitle={ setTitle } onChange={ commit } /> }
 					</aside>
 				) }
 			</div>

@@ -25,7 +25,8 @@ import { color, type Design, type Mode } from './model';
 
 const MM = 2.83465;
 
-const PREVIEW_FIELDS = (): Array< [ string, string ] > => [
+/** Fields whose preview value can be changed (the others come from the site or the certificate). */
+export const PREVIEW_FIELDS = (): Array< [ string, string ] > => [
 	[ 'name', __( 'Participant', 'events-certificate' ) ],
 	[ 'event', __( 'Event', 'events-certificate' ) ],
 	[ 'location', __( 'Location', 'events-certificate' ) ],
@@ -46,6 +47,7 @@ type Props = {
 	title: string;
 	status: string;
 	sample: Record< string, string >;
+	defaults: Record< string, string >;
 	onTitle: ( title: string ) => void;
 	onChange: ( design: Design ) => void;
 };
@@ -76,7 +78,7 @@ export function DropdownRow( { label, value, children }: { label: string; value:
 	);
 }
 
-export default function DesignPanel( { design, mode, title, status, sample, onTitle, onChange }: Props ) {
+export default function DesignPanel( { design, mode, title, status, sample, defaults, onTitle, onChange }: Props ) {
 	const { page } = design;
 	const landscape = page.w >= page.h;
 	const sizeKey = ( Object.keys( SIZES ) as Array< keyof typeof SIZES > ).find( ( k ) => ( [ SIZES[ k ].w, SIZES[ k ].h ].sort().join() === [ page.w, page.h ].sort().join() ) ) || 'a4';
@@ -184,6 +186,15 @@ export default function DesignPanel( { design, mode, title, status, sample, onTi
 			</div>
 		</div>
 	);
+}
+
+/** Sets one preview value; an empty one goes back to the default. */
+export function setSample( current: Record< string, string > | undefined, key: string, value: string ): Record< string, string > | undefined {
+	const next = { ...( current || {} ), [ key ]: value };
+	if ( ! value ) {
+		delete next[ key ];
+	}
+	return Object.keys( next ).length ? next : undefined;
 }
 
 const TRANSPARENT = '#ffffff00';

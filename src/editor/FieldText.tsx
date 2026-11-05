@@ -4,10 +4,13 @@
  * options (a date's format), Bold/Italic from buttons or ⌘B/⌘I. The value is a
  * list of runs, never text with braces.
  */
-import { Button, Dropdown, MenuGroup, MenuItem, Popover, SelectControl } from '@wordpress/components';
+import { Button, Dropdown, MenuGroup, MenuItem, Popover, SelectControl, TextControl } from '@wordpress/components';
 import { useEffect, useLayoutEffect, useRef, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { fieldValue, type Run } from './model';
+
+/** Fields with an editable preview value (same list as the Certificate tab's Preview data). */
+const PREVIEW_KEYS = [ 'name', 'event', 'location', 'hours', 'role', 'details', 'signer_name', 'signer_role' ];
 
 export type FieldInfo = { label: string; formats?: { key: string; label: string }[] };
 
@@ -151,9 +154,11 @@ type FieldTextProps = {
 	onDone?: () => void;
 	// Bold/italic state of the selection or of the selected field, for the toolbar's toggles.
 	onMarks?: ( marks: { b: boolean; i: boolean } ) => void;
+	// Preview values editable from a field's popover (the Certificate tab's Preview data).
+	preview?: { defaults: Record< string, string >; overrides: Record< string, string >; set: ( key: string, value: string ) => void };
 };
 
-export default function FieldText( { label, runs, onChange, sample, locale, inline, style, commands, onDone, onMarks }: FieldTextProps ) {
+export default function FieldText( { label, runs, onChange, sample, locale, inline, style, commands, onDone, onMarks, preview }: FieldTextProps ) {
 	const info = fields();
 	const ref = useRef< HTMLDivElement >( null );
 	const last = useRef< string >( '' );
@@ -289,7 +294,19 @@ export default function FieldText( { label, runs, onChange, sample, locale, inli
 					<Popover anchor={ chip.el } onClose={ () => setChip( null ) } placement="bottom-start" focusOnMount={ false }>
 						<div className="evcert-chip-popover">
 							<strong>{ chipInfo.label }</strong>
-							<p className="evcert-chip-sample">{ fieldValue( chipField, chip.el.dataset.format, sample, locale ) }</p>
+							{ preview && PREVIEW_KEYS.includes( chipField ) ? (
+								<TextControl
+									__next40pxDefaultSize
+									__nextHasNoMarginBottom
+									label={ __( 'Preview value', 'events-certificate' ) }
+									help={ __( 'Only while designing: each certificate shows its own data.', 'events-certificate' ) }
+									value={ preview.overrides[ chipField ] || '' }
+									placeholder={ preview.defaults[ chipField ] }
+									onChange={ ( v ) => preview.set( chipField, v ) }
+								/>
+							) : (
+								<p className="evcert-chip-sample">{ fieldValue( chipField, chip.el.dataset.format, sample, locale ) }</p>
+							) }
 							{ chipInfo.formats && (
 								<SelectControl
 									__next40pxDefaultSize
