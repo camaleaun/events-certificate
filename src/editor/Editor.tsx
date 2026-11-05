@@ -537,13 +537,22 @@ export default function Editor() {
 					</button>
 				</div>
 				<div className="evcert-header-right">
-					<span className={ `evcert-status is-${ status }` }>{ statusLabel }</span>
 					<Button onClick={ () => setMode( mode === 'light' ? 'dark' : 'light' ) } label={ mode === 'light' ? __( 'Preview in dark mode', 'events-certificate' ) : __( 'Preview in light mode', 'events-certificate' ) }>
 						{ mode === 'light' ? '☀︎' : '☾' }
 					</Button>
 					<Button size="compact" icon={ drawerRight } isPressed={ !! sidebarTab } onClick={ () => setSidebar( sidebarTab ? null : current ? 'element' : 'design' ) } label={ __( 'Settings', 'events-certificate' ) } />
-					<Button variant="primary" size="compact" className="evcert-save" onClick={ save } disabled={ status === 'saving' || status === 'loading' } accessibleWhenDisabled>
-						{ __( 'Save', 'events-certificate' ) }
+					<Button
+						variant="primary"
+						size="compact"
+						className="evcert-save"
+						onClick={ save }
+						isBusy={ status === 'saving' }
+						disabled={ status !== 'dirty' && status !== 'error' }
+						accessibleWhenDisabled
+						label={ status === 'error' ? __( 'Couldn’t save. Try again.', 'events-certificate' ) : undefined }
+						showTooltip={ status === 'error' }
+					>
+						{ status === 'saving' ? __( 'Saving…', 'events-certificate' ) : __( 'Save', 'events-certificate' ) }
 					</Button>
 					<DropdownMenu icon={ moreVertical } label={ __( 'Options', 'events-certificate' ) } popoverProps={ { placement: 'bottom-end' } }>
 						{ ( { onClose } ) => (
