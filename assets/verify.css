@@ -1,107 +1,76 @@
-/* The certificate page (includes/verify.php). Follows the system's light/dark mode. */
+/*
+ * The certificate page (includes/verify.php): the certificate fills the
+ * screen; the tools float in a Dock like Playground's toolbar, which docks to
+ * the left or right corner as one icon. Light/dark follows the system until
+ * chosen with the Dock's toggle.
+ */
 :root {
 	color-scheme: light dark;
 	--fg: #1e1e1e;
 	--muted: #757575;
-	--bg: #f0f0f1;
+	--bg: #e9e9ea;
 	--card: #fff;
-	--line: #dcdcde;
 	--accent: #3858e9;
-	--ok: #008a20;
-	--warn: #996800;
-	--bad: #cc1818;
-}
-/* Dark: chosen with the toggle, or the system's when nothing was chosen. */
-:root[data-mode="dark"] {
-	--fg: #f0f0f1;
-	--muted: #a7aaad;
-	--bg: #101113;
-	--card: #1d1f23;
-	--line: #2c3338;
-	--accent: #8ea2ff;
 	--ok: #4ab866;
 	--warn: #f0c33c;
 	--bad: #f86368;
+	--dock: #1e1e1e;
+	--dock-fg: #f0f0f0;
+	--dock-muted: #a7aaad;
+	--dock-hover: #2f2f2f;
+	--dock-field: #3c3c3c;
+}
+:root[data-mode="dark"] {
 	color-scheme: dark;
+	--fg: #f0f0f1;
+	--muted: #a7aaad;
+	--bg: #0b0c0e;
+	--card: #1d1f23;
+	--accent: #8ea2ff;
 }
 :root[data-mode="light"] { color-scheme: light; }
 @media (prefers-color-scheme: dark) {
 	:root:not([data-mode="light"]) {
 		--fg: #f0f0f1;
 		--muted: #a7aaad;
-		--bg: #101113;
+		--bg: #0b0c0e;
 		--card: #1d1f23;
-		--line: #2c3338;
 		--accent: #8ea2ff;
-		--ok: #4ab866;
-		--warn: #f0c33c;
-		--bad: #f86368;
 	}
 }
+
 * { box-sizing: border-box; }
+html, body { height: 100%; }
 body.evcert-verify {
 	margin: 0;
 	background: var(--bg);
 	color: var(--fg);
-	font: 15px/1.5 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	font: 14px/1.5 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
-.evcert-verify a { color: var(--accent); }
-.evcert-verify__bar {
-	position: sticky;
-	top: 0;
-	z-index: 2;
+.screen-reader-text {
+	position: absolute !important;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(1px, 1px, 1px, 1px);
+	white-space: nowrap;
+}
+
+/* The certificate, as large as the screen allows; the Dock floats over it. */
+.evcert-verify__stage {
+	position: fixed;
+	inset: 0;
 	display: flex;
-	flex-wrap: wrap;
 	align-items: center;
-	gap: 8px 16px;
-	padding: 12px 24px;
-	background: var(--card);
-	border-bottom: 1px solid var(--line);
+	justify-content: center;
+	padding: 24px;
 }
-.evcert-verify__site { font-weight: 600; color: var(--fg) !important; text-decoration: none; }
-.evcert-verify__what { color: var(--muted); }
-.evcert-verify__langs { margin-left: auto; display: flex; gap: 4px; }
-.evcert-verify__mode-toggle {
-	width: 32px;
-	height: 32px;
-	border: 0;
-	border-radius: 2px;
-	background: transparent;
-	color: var(--fg);
-	font-size: 18px;
-	cursor: pointer;
-}
-.evcert-verify__mode-toggle:hover { background: var(--line); }
-.evcert-verify__langs + .evcert-verify__mode-toggle { margin-left: 0; }
-.evcert-verify__what + .evcert-verify__mode-toggle { margin-left: auto; }
-.evcert-verify__langs a {
-	padding: 4px 10px;
-	border-radius: 2px;
-	text-decoration: none;
-	color: var(--fg);
-}
-.evcert-verify__langs a[aria-current] { background: var(--fg); color: var(--card); }
-.evcert-verify__main { max-width: 1100px; margin: 0 auto; padding: 24px; }
-.evcert-verify__status {
-	padding: 16px 20px;
-	margin-bottom: 24px;
-	background: var(--card);
-	border-left: 4px solid var(--muted);
-	border-radius: 2px;
-}
-.evcert-verify__status h1 { margin: 0 0 4px; font-size: 20px; }
-.evcert-verify__status p { margin: 0; color: var(--muted); }
-.evcert-verify__status.is-valid { border-color: var(--ok); }
-.evcert-verify__status.is-valid h1::before { content: "✓ "; color: var(--ok); }
-.evcert-verify__status.is-replaced { border-color: var(--warn); }
-.evcert-verify__status.is-revoked { border-color: var(--bad); }
 .evcert-verify__art {
 	position: relative;
-	width: 100%;
-	aspect-ratio: 1 / var(--evcert-ratio);
-	overflow: hidden;
+	flex: none;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08), 0 12px 40px rgba(0, 0, 0, 0.12);
 	background: var(--card);
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+	overflow: hidden;
 }
 .evcert-verify__mode { position: absolute; inset: 0; }
 .evcert-verify__mode .evcert-page { transform-origin: 0 0; transform: scale(var(--evcert-scale, 1)); }
@@ -113,40 +82,187 @@ body.evcert-verify {
 	:root:not([data-mode="light"]) .evcert-verify__mode.is-dark { display: block; }
 }
 .evcert-verify__art strong { font-weight: 600; }
-.evcert-verify__data {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-	gap: 16px;
-	margin: 24px 0;
+
+/* Dock. */
+.evcert-dock {
+	position: fixed;
+	z-index: 10;
+	left: 50%;
+	bottom: 16px;
+	transform: translateX(-50%);
+	color: var(--dock-fg);
 }
-.evcert-verify__data dt { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
-.evcert-verify__data dd { margin: 2px 0 0; font-weight: 500; overflow-wrap: anywhere; }
-.evcert-verify__actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.evcert-verify__button {
+.evcert-dock__bar {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 8px;
+	background: var(--dock);
+	border-radius: 14px;
+	box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+.evcert-dock__row {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 0 2px;
+}
+.evcert-dock__status {
 	display: inline-flex;
 	align-items: center;
-	min-height: 40px;
-	padding: 0 16px;
-	border: 1px solid var(--accent);
-	border-radius: 2px;
+	gap: 4px;
+	height: 32px;
+	padding: 0 10px 0 6px;
+	border: 0;
+	border-radius: 8px;
+	background: var(--dock-field);
+	color: var(--dock-fg);
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+}
+.evcert-dock__status svg { width: 20px; height: 20px; }
+.evcert-dock__status.is-valid svg, .evcert-dock__heading.is-valid { color: var(--ok); }
+.evcert-dock__status.is-replaced svg, .evcert-dock__heading.is-replaced { color: var(--warn); }
+.evcert-dock__status.is-revoked svg, .evcert-dock__heading.is-revoked { color: var(--bad); }
+.evcert-dock__code {
+	color: var(--dock-muted);
+	font: 12px/1 ui-monospace, Menlo, Consolas, monospace;
+	letter-spacing: 0.02em;
+	white-space: nowrap;
+}
+.evcert-dock__spacer { flex: 1; min-width: 12px; }
+.evcert-dock__icon,
+.evcert-dock__tool {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border: 0;
 	background: transparent;
-	color: var(--accent) !important;
+	color: var(--dock-fg) !important;
 	font: inherit;
 	text-decoration: none;
 	cursor: pointer;
 }
-.evcert-verify__button.is-primary { background: var(--accent); color: var(--card) !important; }
-.evcert-verify__form { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.evcert-verify__form label { width: 100%; font-weight: 500; }
+.evcert-dock__icon { width: 32px; height: 32px; border-radius: 8px; }
+.evcert-dock__icon svg { width: 20px; height: 20px; }
+.evcert-dock__tools { display: flex; gap: 2px; }
+.evcert-dock__tool {
+	flex-direction: column;
+	gap: 2px;
+	min-width: 64px;
+	height: 56px;
+	padding: 4px 10px;
+	border-radius: 10px;
+	font-size: 12px;
+}
+.evcert-dock__tool.is-icon { min-width: 48px; }
+.evcert-dock__glyph { font-size: 20px; line-height: 24px; }
+.evcert-dock__icon:hover,
+.evcert-dock__tool:hover,
+.evcert-dock__tool[aria-expanded="true"],
+.evcert-dock__status:hover { background: var(--dock-hover); }
+.evcert-dock :focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* Popovers above the Dock. */
+.evcert-dock__pop {
+	position: absolute;
+	bottom: calc(100% + 8px);
+	right: 0;
+	min-width: 260px;
+	max-width: min(360px, calc(100vw - 32px));
+	padding: 14px 16px;
+	background: var(--dock);
+	border-radius: 12px;
+	box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+.evcert-dock__pop[hidden] { display: none; }
+.evcert-dock__heading { margin: 0 0 4px; font-weight: 600; }
+.evcert-dock__note { margin: 0 0 10px; color: var(--dock-muted); }
+.evcert-dock__note a { color: #8ea2ff; }
+.evcert-dock__pop dl { margin: 0; display: grid; gap: 8px; }
+.evcert-dock__pop dt { color: var(--dock-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+.evcert-dock__pop dd { margin: 0; overflow-wrap: anywhere; }
+.evcert-dock__pop.is-menu { min-width: 180px; padding: 6px; }
+.evcert-dock__pop.is-menu a {
+	display: block;
+	padding: 8px 12px;
+	border-radius: 8px;
+	color: var(--dock-fg);
+	text-decoration: none;
+}
+.evcert-dock__pop.is-menu a:hover { background: var(--dock-hover); }
+.evcert-dock__pop.is-menu a[aria-current]::after { content: " ✓"; color: var(--ok); }
+
+/* Docked: one icon in a bottom corner. */
+.evcert-dock__fab {
+	display: none;
+	width: 48px;
+	height: 48px;
+	border: 0;
+	border-radius: 50%;
+	background: var(--dock);
+	color: var(--dock-fg);
+	box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+	cursor: pointer;
+	align-items: center;
+	justify-content: center;
+}
+.evcert-dock__fab svg { width: 26px; height: 26px; }
+.evcert-dock__fab.is-valid svg { color: var(--ok); }
+.evcert-dock__fab.is-replaced svg { color: var(--warn); }
+.evcert-dock__fab.is-revoked svg { color: var(--bad); }
+.evcert-dock[data-docked="left"],
+.evcert-dock[data-docked="right"] { transform: none; }
+.evcert-dock[data-docked="left"] { left: 16px; right: auto; }
+.evcert-dock[data-docked="right"] { left: auto; right: 16px; }
+.evcert-dock[data-docked="left"] .evcert-dock__bar,
+.evcert-dock[data-docked="right"] .evcert-dock__bar,
+.evcert-dock[data-docked="left"] .evcert-dock__pop,
+.evcert-dock[data-docked="right"] .evcert-dock__pop { display: none; }
+.evcert-dock[data-docked="left"] .evcert-dock__fab,
+.evcert-dock[data-docked="right"] .evcert-dock__fab { display: inline-flex; }
+
+@media (max-width: 600px) {
+	.evcert-verify__stage { padding: 12px; }
+	.evcert-dock { bottom: 8px; }
+	.evcert-dock__code { display: none; }
+	.evcert-dock__tool { min-width: 52px; padding: 4px 6px; }
+}
+
+/* No certificate: a card with the code form. */
+.evcert-verify__card {
+	max-width: 520px;
+	margin: 12vh auto 0;
+	padding: 32px;
+	background: var(--card);
+	border-radius: 12px;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+.evcert-verify__card h1 { margin: 0 0 8px; font-size: 22px; }
+.evcert-verify__card p { color: var(--muted); }
+.evcert-verify__site { margin: 0 0 16px; font-weight: 600; color: var(--fg) !important; }
+.evcert-verify__form { display: flex; gap: 8px; margin-top: 16px; }
 .evcert-verify__form input {
 	flex: 1;
-	min-width: 220px;
-	min-height: 40px;
+	min-width: 0;
+	min-height: 44px;
 	padding: 0 12px;
 	border: 1px solid var(--muted);
-	border-radius: 2px;
+	border-radius: 8px;
 	background: var(--card);
 	color: var(--fg);
 	font: 16px/1 ui-monospace, Menlo, Consolas, monospace;
 	text-transform: uppercase;
+}
+.evcert-verify__button {
+	min-height: 44px;
+	padding: 0 18px;
+	border: 0;
+	border-radius: 8px;
+	background: var(--accent);
+	color: #fff;
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
 }

@@ -216,11 +216,40 @@ function status( array $cert ) {
 }
 
 /**
- * Prints the page.
+ * Icons from @wordpress/icons (24×24 path data), drawn inline.
+ */
+const ICONS = array(
+	'download' => 'M18 11.3l-1-1.1-4 4V3h-1.5v11.3L7 10.2l-1 1.1 6.2 5.8 5.8-5.8zm.5 3.7v3.5h-13V15H4v5h16v-5h-1.5z',
+	'link'     => 'M10 17.389H8.444A5.194 5.194 0 1 1 8.444 7H10v1.5H8.444a3.694 3.694 0 0 0 0 7.389H10v1.5ZM14 7h1.556a5.194 5.194 0 0 1 0 10.39H14v-1.5h1.556a3.694 3.694 0 0 0 0-7.39H14V7Zm-4.5 6h5v-1.5h-5V13Z',
+	'globe'    => 'M12 4c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8Zm6.5 8c0 .6 0 1.2-.2 1.8h-2.7c0-.6.2-1.1.2-1.8s0-1.2-.2-1.8h2.7c.2.6.2 1.1.2 1.8Zm-.9-3.2h-2.4c-.3-.9-.7-1.8-1.1-2.4-.1-.2-.2-.4-.3-.5 1.6.5 3 1.6 3.8 3ZM12.8 17c-.3.5-.6 1-.8 1.3-.2-.3-.5-.8-.8-1.3-.3-.5-.6-1.1-.8-1.7h3.3c-.2.6-.5 1.2-.8 1.7Zm-2.9-3.2c-.1-.6-.2-1.1-.2-1.8s0-1.2.2-1.8H14c.1.6.2 1.1.2 1.8s0 1.2-.2 1.8H9.9ZM11.2 7c.3-.5.6-1 .8-1.3.2.3.5.8.8 1.3.3.5.6 1.1.8 1.7h-3.3c.2-.6.5-1.2.8-1.7Zm-1-1.2c-.1.2-.2.3-.3.5-.4.7-.8 1.5-1.1 2.4H6.4c.8-1.4 2.2-2.5 3.8-3Zm-1.8 8H5.7c-.2-.6-.2-1.1-.2-1.8s0-1.2.2-1.8h2.7c0 .6-.2 1.1-.2 1.8s0 1.2.2 1.8Zm-2 1.4h2.4c.3.9.7 1.8 1.1 2.4.1.2.2.4.3.5-1.6-.5-3-1.6-3.8-3Zm7.4 3c.1-.2.2-.3.3-.5.4-.7.8-1.5 1.1-2.4h2.4c-.8 1.4-2.2 2.5-3.8 3Z',
+	'info'     => 'M5.5 12a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0ZM12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm.75 4v1.5h-1.5V8h1.5Zm0 8v-5h-1.5v5h1.5Z',
+	'left'     => 'M18 4H6c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM8.5 18.5H6c-.3 0-.5-.2-.5-.5V6c0-.3.2-.5.5-.5h2.5v13zm10-.5c0 .3-.2.5-.5.5h-8v-13h8c.3 0 .5.2.5.5v12z',
+	'right'    => 'M18 4H6c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-4 14.5H6c-.3 0-.5-.2-.5-.5V6c0-.3.2-.5.5-.5h8v13zm4.5-.5c0 .3-.2.5-.5.5h-2.5v-13H18c.3 0 .5.2.5.5v12z',
+	'shield'   => 'M12 3.176l6.75 3.068v4.574c0 3.9-2.504 7.59-6.035 8.755a2.283 2.283 0 01-1.43 0c-3.53-1.164-6.035-4.856-6.035-8.755V6.244L12 3.176zM6.75 7.21v3.608c0 3.313 2.145 6.388 5.005 7.33.159.053.331.053.49 0 2.86-.942 5.005-4.017 5.005-7.33V7.21L12 4.824 6.75 7.21z',
+	'check'    => 'M16.5 7.5 10 13.9l-2.5-2.4-1 1 3.5 3.6 7.5-7.6z',
+);
+
+/**
+ * An icon.
  *
- * @param array<string, mixed>|null $cert   Certificate, or null.
- * @param string                    $code   Code asked for.
- * @param string                    $locale Display locale.
+ * @param string $name Key of ICONS.
+ * @return string
+ */
+function icon( $name ) {
+	// Icons with a hole (info) need the even-odd rule, as in @wordpress/icons.
+	$rule = 'info' === $name ? ' fill-rule="evenodd" clip-rule="evenodd"' : '';
+
+	return '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path fill="currentColor"' . $rule . ' d="' . esc_attr( ICONS[ $name ] ?? '' ) . '"/></svg>';
+}
+
+/**
+ * Prints the page: the certificate fills the screen; everything else is in a
+ * floating Dock (like Playground's toolbar) that docks to the left or right
+ * corner as one icon.
+ *
+ * @param array<string, mixed>|null $cert    Certificate, or null.
+ * @param string                    $code    Code asked for.
+ * @param string                    $locale  Display locale.
  * @param bool                      $invalid Whether a typed code was invalid.
  */
 function render_page( $cert, $code, $locale, $invalid ) {
@@ -230,6 +259,20 @@ function render_page( $cert, $code, $locale, $invalid ) {
 	wp_register_script( 'evcert-verify', $base . '/assets/verify.js', array(), \EventsCertificate\VERSION, true );
 
 	$title = $cert ? sprintf( /* translators: %s: person's name. */ __( 'Certificate: %s', 'events-certificate' ), $cert['name'] ) : __( 'Check a certificate', 'events-certificate' );
+	if ( $cert ) {
+		list( $class, $heading, $detail ) = status( $cert );
+		$short                            = array(
+			'is-valid'    => __( 'Authentic', 'events-certificate' ),
+			'is-replaced' => __( 'Replaced', 'events-certificate' ),
+			'is-revoked'  => __( 'Revoked', 'events-certificate' ),
+		)[ $class ];
+		$design                           = Certificates\design( $cert );
+		$values                           = Render\values( $cert );
+	}
+	$allowed = array(
+		'a'      => array( 'href' => true ),
+		'strong' => array(),
+	);
 	?>
 <!DOCTYPE html>
 <html lang="<?php echo esc_attr( str_replace( '_', '-', $locale ) ); ?>">
@@ -240,74 +283,83 @@ function render_page( $cert, $code, $locale, $invalid ) {
 	<title><?php echo esc_html( $title . ' – ' . get_bloginfo( 'name' ) ); ?></title>
 	<?php wp_print_styles( array( 'evcert-verify' ) ); ?>
 </head>
-<body class="evcert-verify">
-	<header class="evcert-verify__bar">
-		<a class="evcert-verify__site" href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php echo esc_html( get_bloginfo( 'name' ) ); ?></a>
-		<span class="evcert-verify__what"><?php esc_html_e( 'Certificate check', 'events-certificate' ); ?></span>
-		<?php if ( $cert && count( locales() ) > 1 ) : ?>
-			<nav class="evcert-verify__langs" aria-label="<?php esc_attr_e( 'Language', 'events-certificate' ); ?>">
-				<?php foreach ( locales() as $l ) : ?>
-					<a href="<?php echo esc_url( page_url( $cert['code'], $l ) ); ?>" lang="<?php echo esc_attr( str_replace( '_', '-', $l ) ); ?>" <?php echo $l === $locale ? 'aria-current="true"' : ''; ?>><?php echo esc_html( locale_name( $l ) ); ?></a>
-				<?php endforeach; ?>
-			</nav>
-		<?php endif; ?>
-		<button type="button" class="evcert-verify__mode-toggle" data-evcert-mode data-to-light="<?php esc_attr_e( 'Light mode', 'events-certificate' ); ?>" data-to-dark="<?php esc_attr_e( 'Dark mode', 'events-certificate' ); ?>">☀︎</button>
-	</header>
-	<main class="evcert-verify__main">
-		<?php if ( $cert ) : ?>
-			<?php list( $class, $heading, $detail ) = status( $cert ); ?>
-			<section class="evcert-verify__status <?php echo esc_attr( $class ); ?>" role="status">
-				<h1><?php echo esc_html( $heading ); ?></h1>
-				<?php if ( $detail ) : ?>
-					<p>
-					<?php
-					echo wp_kses(
-						$detail,
-						array(
-							'a'      => array( 'href' => true ),
-							'strong' => array(),
-						)
-					);
-					?>
-						</p>
-				<?php endif; ?>
-			</section>
-			<?php
-			$design = Certificates\design( $cert );
-			$values = Render\values( $cert );
-			$ratio  = $design['page']['h'] / $design['page']['w'];
-			?>
-			<div class="evcert-verify__art" style="<?php echo esc_attr( sprintf( '--evcert-w:%.2F;--evcert-ratio:%.5F', $design['page']['w'], $ratio ) ); ?>">
+<body class="evcert-verify<?php echo $cert ? ' has-certificate' : ''; ?>">
+	<?php if ( $cert ) : ?>
+		<h1 class="screen-reader-text"><?php echo esc_html( $title ); ?></h1>
+		<main class="evcert-verify__stage">
+			<div class="evcert-verify__art" style="<?php echo esc_attr( sprintf( '--evcert-w:%.2F;--evcert-h:%.2F', $design['page']['w'], $design['page']['h'] ) ); ?>">
 				<div class="evcert-verify__mode is-light"><?php echo Render\artwork( $design, $values, array( 'mode' => 'light' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from escaped parts in Render\element_html(). ?></div>
 				<div class="evcert-verify__mode is-dark"><?php echo Render\artwork( $design, $values, array( 'mode' => 'dark' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- as above. ?></div>
 			</div>
-			<dl class="evcert-verify__data">
-				<div><dt><?php esc_html_e( 'Name', 'events-certificate' ); ?></dt><dd><?php echo esc_html( $cert['name'] ); ?></dd></div>
-				<div><dt><?php esc_html_e( 'Event', 'events-certificate' ); ?></dt><dd><?php echo esc_html( $cert['event_title'] ); ?></dd></div>
-				<?php if ( '' !== $values['hours'] ) : ?>
-					<div><dt><?php esc_html_e( 'Workload', 'events-certificate' ); ?></dt><dd><?php echo esc_html( Render\field_value( 'hours', '', $values ) ); ?></dd></div>
+		</main>
+
+		<nav class="evcert-dock" data-evcert-dock aria-label="<?php esc_attr_e( 'Certificate tools', 'events-certificate' ); ?>">
+			<button type="button" class="evcert-dock__fab <?php echo esc_attr( $class ); ?>" data-evcert-dock-to="center" aria-label="<?php echo esc_attr( $heading . ' — ' . __( 'Show tools', 'events-certificate' ) ); ?>" title="<?php echo esc_attr( $heading ); ?>"><?php echo icon( 'shield' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?></button>
+			<div class="evcert-dock__bar">
+				<div class="evcert-dock__row">
+					<button type="button" class="evcert-dock__status <?php echo esc_attr( $class ); ?>" data-evcert-pop="details" aria-expanded="false" title="<?php echo esc_attr( $heading ); ?>">
+						<?php echo icon( 'is-valid' === $class ? 'check' : 'shield' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?>
+						<span><?php echo esc_html( $short ); ?></span>
+					</button>
+					<code class="evcert-dock__code"><?php echo esc_html( $cert['code'] ); ?></code>
+					<span class="evcert-dock__spacer"></span>
+					<button type="button" class="evcert-dock__icon" data-evcert-dock-to="left" aria-label="<?php esc_attr_e( 'Dock to the left corner', 'events-certificate' ); ?>" title="<?php esc_attr_e( 'Dock to the left corner', 'events-certificate' ); ?>"><?php echo icon( 'left' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?></button>
+					<button type="button" class="evcert-dock__icon" data-evcert-dock-to="right" aria-label="<?php esc_attr_e( 'Dock to the right corner', 'events-certificate' ); ?>" title="<?php esc_attr_e( 'Dock to the right corner', 'events-certificate' ); ?>"><?php echo icon( 'right' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?></button>
+				</div>
+				<div class="evcert-dock__tools">
+					<?php if ( 'issued' === $cert['status'] ) : ?>
+						<a class="evcert-dock__tool" href="<?php echo esc_url( page_url( $cert['code'], $locale, array( 'format' => 'pdf' ) ) ); ?>"><?php echo icon( 'download' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?><span>PDF</span></a>
+					<?php endif; ?>
+					<button type="button" class="evcert-dock__tool" data-evcert-copy="<?php echo esc_attr( page_url( $cert['code'], $locale ) ); ?>" data-evcert-copied="<?php esc_attr_e( 'Copied', 'events-certificate' ); ?>"><?php echo icon( 'link' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?><span><?php esc_html_e( 'Link', 'events-certificate' ); ?></span></button>
+					<?php
+					// Language: a globe with a name. With two languages it switches to the other (named); with more it opens a menu (named after the current one).
+					$others = array_values( array_diff( locales(), array( $locale ) ) );
+					?>
+					<?php if ( 1 === count( $others ) ) : ?>
+						<a class="evcert-dock__tool" href="<?php echo esc_url( page_url( $cert['code'], $others[0] ) ); ?>" hreflang="<?php echo esc_attr( str_replace( '_', '-', $others[0] ) ); ?>" lang="<?php echo esc_attr( str_replace( '_', '-', $others[0] ) ); ?>"><?php echo icon( 'globe' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?><span><?php echo esc_html( locale_name( $others[0] ) ); ?></span></a>
+					<?php elseif ( count( $others ) > 1 ) : ?>
+						<button type="button" class="evcert-dock__tool" data-evcert-pop="langs" aria-expanded="false" aria-label="<?php echo esc_attr( __( 'Language', 'events-certificate' ) . ': ' . locale_name( $locale ) ); ?>"><?php echo icon( 'globe' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?><span><?php echo esc_html( locale_name( $locale ) ); ?></span></button>
+					<?php endif; ?>
+					<button type="button" class="evcert-dock__tool" data-evcert-mode data-to-light="<?php esc_attr_e( 'Light', 'events-certificate' ); ?>" data-to-dark="<?php esc_attr_e( 'Dark', 'events-certificate' ); ?>"><span class="evcert-dock__glyph" aria-hidden="true">☀︎</span><span class="evcert-dock__mode-label"><?php esc_html_e( 'Light', 'events-certificate' ); ?></span></button>
+					<button type="button" class="evcert-dock__tool" data-evcert-pop="details" aria-expanded="false"><?php echo icon( 'info' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?><span><?php esc_html_e( 'Details', 'events-certificate' ); ?></span></button>
+				</div>
+			</div>
+
+			<div class="evcert-dock__pop" data-evcert-popover="details" hidden>
+				<p class="evcert-dock__heading <?php echo esc_attr( $class ); ?>"><?php echo esc_html( $heading ); ?></p>
+				<?php if ( $detail ) : ?>
+					<p class="evcert-dock__note"><?php echo wp_kses( $detail, $allowed ); ?></p>
 				<?php endif; ?>
-				<div><dt><?php esc_html_e( 'Issued on', 'events-certificate' ); ?></dt><dd><?php echo esc_html( Render\format_date( (int) $values['issued_ts'], 'site' ) ); ?></dd></div>
-				<div><dt><?php esc_html_e( 'Code', 'events-certificate' ); ?></dt><dd><code><?php echo esc_html( $cert['code'] ); ?></code></dd></div>
-			</dl>
-			<p class="evcert-verify__actions">
-				<?php if ( 'issued' === $cert['status'] ) : ?>
-					<a class="evcert-verify__button is-primary" href="<?php echo esc_url( page_url( $cert['code'], $locale, array( 'format' => 'pdf' ) ) ); ?>"><?php esc_html_e( 'Download PDF', 'events-certificate' ); ?></a>
-				<?php endif; ?>
-				<button type="button" class="evcert-verify__button" data-evcert-copy="<?php echo esc_attr( page_url( $cert['code'], $locale ) ); ?>" data-evcert-copied="<?php esc_attr_e( 'Link copied', 'events-certificate' ); ?>"><?php esc_html_e( 'Copy link', 'events-certificate' ); ?></button>
-			</p>
-		<?php else : ?>
-			<section class="evcert-verify__status <?php echo '' !== $code || $invalid ? 'is-revoked' : ''; ?>">
-				<h1><?php echo esc_html( '' !== $code || $invalid ? __( 'Certificate not found', 'events-certificate' ) : __( 'Check a certificate', 'events-certificate' ) ); ?></h1>
-				<p><?php echo esc_html( '' !== $code || $invalid ? __( 'No certificate has this code. Check it and try again: it has 16 letters and numbers, like 2611-04K7-M29Q-XAP3.', 'events-certificate' ) : __( 'Type the code printed on the certificate, below its QR code.', 'events-certificate' ) ); ?></p>
-			</section>
+				<dl>
+					<div><dt><?php esc_html_e( 'Name', 'events-certificate' ); ?></dt><dd><?php echo esc_html( $cert['name'] ); ?></dd></div>
+					<div><dt><?php esc_html_e( 'Event', 'events-certificate' ); ?></dt><dd><?php echo esc_html( $cert['event_title'] ); ?></dd></div>
+					<?php if ( '' !== $values['hours'] ) : ?>
+						<div><dt><?php esc_html_e( 'Workload', 'events-certificate' ); ?></dt><dd><?php echo esc_html( Render\field_value( 'hours', '', $values ) ); ?></dd></div>
+					<?php endif; ?>
+					<div><dt><?php esc_html_e( 'Issued on', 'events-certificate' ); ?></dt><dd><?php echo esc_html( Render\format_date( (int) $values['issued_ts'], 'site' ) ); ?></dd></div>
+					<div><dt><?php esc_html_e( 'Code', 'events-certificate' ); ?></dt><dd><code><?php echo esc_html( $cert['code'] ); ?></code></dd></div>
+				</dl>
+			</div>
+			<?php if ( count( locales() ) > 2 ) : ?>
+				<div class="evcert-dock__pop is-menu" data-evcert-popover="langs" hidden>
+					<?php foreach ( locales() as $l ) : ?>
+						<a href="<?php echo esc_url( page_url( $cert['code'], $l ) ); ?>" lang="<?php echo esc_attr( str_replace( '_', '-', $l ) ); ?>" <?php echo $l === $locale ? 'aria-current="true"' : ''; ?>><?php echo esc_html( locale_name( $l ) ); ?></a>
+					<?php endforeach; ?>
+				</div>
+			<?php endif; ?>
+		</nav>
+	<?php else : ?>
+		<main class="evcert-verify__card">
+			<p class="evcert-verify__site"><?php echo esc_html( get_bloginfo( 'name' ) ); ?></p>
+			<h1><?php echo esc_html( '' !== $code || $invalid ? __( 'Certificate not found', 'events-certificate' ) : __( 'Check a certificate', 'events-certificate' ) ); ?></h1>
+			<p><?php echo esc_html( '' !== $code || $invalid ? __( 'No certificate has this code. Check it and try again: it has 16 letters and numbers, like 2611-04K7-M29Q-XAP3.', 'events-certificate' ) : __( 'Type the code printed on the certificate, below its QR code.', 'events-certificate' ) ); ?></p>
 			<form class="evcert-verify__form" method="get" action="<?php echo esc_url( home_url( user_trailingslashit( Settings\value( 'slug' ) ) ) ); ?>">
-				<label for="evcert-code"><?php esc_html_e( 'Certificate code', 'events-certificate' ); ?></label>
+				<label class="screen-reader-text" for="evcert-code"><?php esc_html_e( 'Certificate code', 'events-certificate' ); ?></label>
 				<input id="evcert-code" name="code" type="text" required autocomplete="off" spellcheck="false" placeholder="2611-04K7-M29Q-XAP3" value="<?php echo esc_attr( $code ); ?>">
-				<button type="submit" class="evcert-verify__button is-primary"><?php esc_html_e( 'Check', 'events-certificate' ); ?></button>
+				<button type="submit" class="evcert-verify__button"><?php esc_html_e( 'Check', 'events-certificate' ); ?></button>
 			</form>
-		<?php endif; ?>
-	</main>
+		</main>
+	<?php endif; ?>
 	<?php wp_print_scripts( array( 'evcert-verify' ) ); ?>
 </body>
 </html>

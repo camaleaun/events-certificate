@@ -162,6 +162,13 @@ function rect_path( $x, $y, $w, $h, $radius = array(), $shape = 'round' ) {
 		array( array( $x, $y + $h ), array( 1, 0 ), array( 0, -1 ) ),
 	);
 	$d       = '';
+	// A quarter circle from $a to $b bulging toward $toward, as a cubic Bézier (k = 0.5523).
+	$quarter = static function ( $a, $b, $toward ) use ( $f ) {
+		$k = 0.5523;
+		return 'C' . $f( $a[0] + ( $toward[0] - $a[0] ) * $k ) . ' ' . $f( $a[1] + ( $toward[1] - $a[1] ) * $k )
+			. ' ' . $f( $b[0] + ( $toward[0] - $b[0] ) * $k ) . ' ' . $f( $b[1] + ( $toward[1] - $b[1] ) * $k )
+			. ' ' . $f( $b[0] ) . ' ' . $f( $b[1] );
+	};
 	foreach ( $corners as $i => $corner ) {
 		list( $c, $in, $out ) = $corner;
 		$rr                   = max( 0, min( (float) ( $radius[ $i ] ?? 0 ), $w / 2, $h / 2 ) );
@@ -173,7 +180,9 @@ function rect_path( $x, $y, $w, $h, $radius = array(), $shape = 'round' ) {
 		}
 		switch ( $shape ) {
 			case 'scoop':
-				$d .= 'A' . $f( $rr ) . ' ' . $f( $rr ) . ' 0 0 0 ' . $f( $end[0] ) . ' ' . $f( $end[1] );
+				// Quarter circles as cubic curves (dompdf's SVG library draws arcs wrong): concave, around the inner point.
+				$inner = array( $start[0] + $end[0] - $c[0], $start[1] + $end[1] - $c[1] );
+				$d    .= $quarter( $start, $end, $inner );
 				break;
 			case 'bevel':
 				$d .= 'L' . $f( $end[0] ) . ' ' . $f( $end[1] );
@@ -186,7 +195,7 @@ function rect_path( $x, $y, $w, $h, $radius = array(), $shape = 'round' ) {
 				$d .= 'C' . $f( $c[0] + ( $start[0] - $c[0] ) * $k ) . ' ' . $f( $c[1] + ( $start[1] - $c[1] ) * $k ) . ' ' . $f( $c[0] + ( $end[0] - $c[0] ) * $k ) . ' ' . $f( $c[1] + ( $end[1] - $c[1] ) * $k ) . ' ' . $f( $end[0] ) . ' ' . $f( $end[1] );
 				break;
 			default:
-				$d .= 'A' . $f( $rr ) . ' ' . $f( $rr ) . ' 0 0 1 ' . $f( $end[0] ) . ' ' . $f( $end[1] );
+				$d .= $quarter( $start, $end, $c );
 		}
 	}
 

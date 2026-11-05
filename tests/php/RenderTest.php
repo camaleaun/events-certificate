@@ -63,8 +63,9 @@ class RenderTest extends Test_Case {
 	 */
 	public function test_rect_path() {
 		$this->assertSame( 'M0 0L10 0L10 10L0 10Z', Render\rect_path( 0, 0, 10, 10 ) );
-		$this->assertStringContainsString( 'A5 5 0 0 1', Render\rect_path( 0, 0, 10, 10, array( 50, 0, 0, 0 ) ) );
-		$this->assertStringContainsString( 'A2 2 0 0 0', Render\rect_path( 0, 0, 10, 10, array( 2, 2, 2, 2 ), 'scoop' ) );
+		// Round corners are cubic curves bulging toward the corner (dompdf draws SVG arcs wrong).
+		$this->assertSame( 'M0 5C0 2.24 2.24 0 5 0L10 0L10 10L0 10Z', Render\rect_path( 0, 0, 10, 10, array( 50, 0, 0, 0 ) ) );
+		$this->assertStringNotContainsString( 'A', Render\rect_path( 0, 0, 10, 10, array( 2, 2, 2, 2 ), 'scoop' ) );
 	}
 
 	/**
