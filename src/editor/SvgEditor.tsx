@@ -45,7 +45,6 @@ export default function SvgEditor( { el, design, mode, onApply, onClose }: Props
 								__next40pxDefaultSize
 								__nextHasNoMarginBottom
 								label={ __( 'Title', 'events-certificate' ) }
-								help={ __( 'Names the drawing for screen readers. Leave empty when it is decoration.', 'events-certificate' ) }
 								value={ title }
 								onChange={ setTitle }
 							/>
@@ -58,12 +57,10 @@ export default function SvgEditor( { el, design, mode, onApply, onClose }: Props
 									<NumberControl __next40pxDefaultSize label={ __( 'Width', 'events-certificate' ) } min={ 1 } value={ vw } onChange={ ( v ) => Number( v ) > 0 && setVw( Number( v ) ) } />
 									<NumberControl __next40pxDefaultSize label={ __( 'Height', 'events-certificate' ) } min={ 1 } value={ vh } onChange={ ( v ) => Number( v ) > 0 && setVh( Number( v ) ) } />
 								</HStack>
-								<p className="evcert-meta">{ __( 'The coordinate space of the paths.', 'events-certificate' ) }</p>
 							</>
 						) }
 					</DropdownRow>
 					<PathList paths={ paths } current={ current } design={ design } mode={ mode } onPaths={ setPaths } onFocus={ setFocus } placement="bottom-start" onImport={ ( svg ) => { setVw( svg.vw ); setVh( svg.vh ); setPaths( svg.paths ); } } />
-					<p className="evcert-meta">{ __( 'Paths further down are drawn on top. Without a fill a path uses the current color. Pasting SVG code into a path replaces the drawing with its viewBox and paths; nothing else is kept.', 'events-certificate' ) }</p>
 				</div>
 			</div>
 			<div className="evcert-actions evcert-svg-editor__footer">

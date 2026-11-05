@@ -84,7 +84,6 @@ export function ColorItem( { label, value, design, mode, onChange, clearTo = '' 
 					<ColorPalette value={ value?.startsWith( '$' ) ? undefined : value } onChange={ ( c ) => onChange( c || clearTo ) } clearable={ false } />
 					{ /* One Clear for any color, theme or custom: back to the element's default (none, or the text color). */ }
 					<div className="evcert-color-popover__footer">
-						<span />
 						<Button variant="tertiary" size="small" disabled={ ( value || '' ) === clearTo } accessibleWhenDisabled onClick={ () => onChange( clearTo ) }>
 							{ __( 'Clear', 'events-certificate' ) }
 						</Button>
@@ -131,17 +130,12 @@ export default function Inspector( { el, stored, design, mode, tab, locale, samp
 				</div>
 			</div>
 
-			{ el.type === 'text' && (
-				<div className="evcert-inspector__section evcert-meta">{ __( 'Click the selected text again (or press Enter) to edit it on the canvas. Fields are inserted from the toolbar. Locked texts can still be edited, not moved.', 'events-certificate' ) }</div>
-			) }
-
 			{ tab === 'art' && el.type === 'image' && (
 				<ToolsPanel label={ __( 'Settings', 'events-certificate' ) } resetAll={ () => onChange( { ratio: 'auto', fit: 'cover' } as Partial< Element > ) }>
 					<ToolsPanelItem label={ __( 'Alternative text', 'events-certificate' ) } hasValue={ () => !! el.alt } onDeselect={ () => onChange( { alt: '' } as Partial< Element > ) } isShownByDefault>
 						<TextareaControl
 							__nextHasNoMarginBottom
 							label={ __( 'Alternative text', 'events-certificate' ) }
-							help={ __( 'Describe the purpose of the image. Read aloud on the certificate page; leave empty if the image is purely decorative.', 'events-certificate' ) }
 							value={ el.alt || '' }
 							onChange={ ( alt ) => onChange( { alt } as Partial< Element > ) }
 						/>
@@ -185,7 +179,6 @@ export default function Inspector( { el, stored, design, mode, tab, locale, samp
 							isBlock
 							label={ __( 'Scale', 'events-certificate' ) }
 							value={ el.fit || 'cover' }
-							help={ el.fit === 'contain' ? __( 'Image is contained without distortion.', 'events-certificate' ) : __( 'Image covers the space evenly.', 'events-certificate' ) }
 							onChange={ ( fit ) => onChange( { fit } as Partial< Element > ) }
 						>
 							<ToggleGroupControlOption value="cover" label={ __( 'Cover', 'events-certificate' ) } />
@@ -201,7 +194,6 @@ export default function Inspector( { el, stored, design, mode, tab, locale, samp
 					<ToggleControl
 						__nextHasNoMarginBottom
 						label={ __( "Signer's signature", 'events-certificate' ) }
-						help={ __( 'On certificates, draws the signature of the organizer who signs (Organizers > Certificate) in this box; this drawing shows when there is none.', 'events-certificate' ) }
 						checked={ el.slot === 'signature' }
 						onChange={ ( on ) => onChange( { slot: on ? 'signature' : undefined } as Partial< Element > ) }
 					/>
@@ -276,7 +268,7 @@ export default function Inspector( { el, stored, design, mode, tab, locale, samp
 						</ToggleGroupControl>
 					</ToolsPanelItem>
 					<ToolsPanelItem label={ __( 'Shrink to fit', 'events-certificate' ) } hasValue={ () => !! el.fit } onDeselect={ () => onChange( { fit: false } ) } isShownByDefault>
-						<ToggleControl __nextHasNoMarginBottom label={ __( 'Shrink to fit (one line)', 'events-certificate' ) } help={ __( 'For names: long ones get smaller instead of wrapping.', 'events-certificate' ) } checked={ !! el.fit } onChange={ ( fit ) => onChange( { fit } ) } />
+						<ToggleControl __nextHasNoMarginBottom label={ __( 'Shrink to fit (one line)', 'events-certificate' ) } checked={ !! el.fit } onChange={ ( fit ) => onChange( { fit } ) } />
 					</ToolsPanelItem>
 				</ToolsPanel>
 			) }

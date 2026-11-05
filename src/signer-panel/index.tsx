@@ -143,7 +143,6 @@ function CertificatePanel() {
 					onPaths={ ( paths ) => setSignature( { vw: el.vw, vh: el.vh, paths } ) }
 					onImport={ ( svg ) => setSignature( svg ) }
 				/>
-				<p className="evcert-meta">{ __( 'Filled paths only, like the certificate editor: paste SVG code into a path to import it. Convert strokes to filled outlines first.', 'events-certificate' ) }</p>
 			</div>
 
 			{ editing && (

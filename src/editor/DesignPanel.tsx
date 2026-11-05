@@ -155,12 +155,12 @@ export default function DesignPanel( { design, mode, title, status, sample, defa
 				</DropdownRow>
 				<DropdownRow label={ __( 'Safe margin', 'events-certificate' ) } value={ `${ Math.round( page.safe / MM ) } mm` }>
 					{ () => (
-						<NumberControl __next40pxDefaultSize label={ __( 'Safe margin', 'events-certificate' ) } help={ __( 'Keep text and the QR code inside it: printers and trimming eat the edges.', 'events-certificate' ) } min={ 0 } max={ 40 } value={ Math.round( page.safe / MM ) } suffix={ <span className="evcert-suffix">mm</span> } onChange={ ( v ) => setPage( { safe: ( Number( v ) || 0 ) * MM } ) } />
+						<NumberControl __next40pxDefaultSize label={ __( 'Safe margin', 'events-certificate' ) } min={ 0 } max={ 40 } value={ Math.round( page.safe / MM ) } suffix={ <span className="evcert-suffix">mm</span> } onChange={ ( v ) => setPage( { safe: ( Number( v ) || 0 ) * MM } ) } />
 					) }
 				</DropdownRow>
 				<DropdownRow label={ __( 'Bleed', 'events-certificate' ) } value={ `${ Math.round( page.bleed / MM ) } mm` }>
 					{ () => (
-						<NumberControl __next40pxDefaultSize label={ __( 'Bleed', 'events-certificate' ) } help={ __( 'How far backgrounds may run past the edge, for print shops.', 'events-certificate' ) } min={ 0 } max={ 10 } value={ Math.round( page.bleed / MM ) } suffix={ <span className="evcert-suffix">mm</span> } onChange={ ( v ) => setPage( { bleed: ( Number( v ) || 0 ) * MM } ) } />
+						<NumberControl __next40pxDefaultSize label={ __( 'Bleed', 'events-certificate' ) } min={ 0 } max={ 10 } value={ Math.round( page.bleed / MM ) } suffix={ <span className="evcert-suffix">mm</span> } onChange={ ( v ) => setPage( { bleed: ( Number( v ) || 0 ) * MM } ) } />
 					) }
 				</DropdownRow>
 			</div>
@@ -171,7 +171,6 @@ export default function DesignPanel( { design, mode, title, status, sample, defa
 
 			<div className="evcert-inspector__section">
 				<h2 className="evcert-section-heading">{ __( 'Preview data', 'events-certificate' ) }</h2>
-				<p className="evcert-meta">{ __( 'Sample values for the fields while designing. Each certificate shows its own data.', 'events-certificate' ) }</p>
 				{ PREVIEW_FIELDS().map( ( [ key, label ] ) => (
 					<DropdownRow key={ key } label={ label } value={ sample[ key ] || '—' }>
 						{ () => (
@@ -242,7 +241,6 @@ function Palette( { design, onChange }: { design: Design; onChange: ( design: De
 					} }
 				/>
 			</div>
-			<p className="evcert-meta">{ __( 'Elements use these colors, so editing one here changes every element that uses it. A color added here gets the same value in both modes until you change one.', 'events-certificate' ) }</p>
 		</>
 	);
 }

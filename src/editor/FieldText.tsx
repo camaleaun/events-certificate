@@ -337,7 +337,6 @@ export default function FieldText( { label, runs, onChange, sample, locale, inli
 									__next40pxDefaultSize
 									__nextHasNoMarginBottom
 									label={ __( 'Preview value', 'events-certificate' ) }
-									help={ __( 'Only while designing: each certificate shows its own data.', 'events-certificate' ) }
 									value={ preview.overrides[ chipField ] || '' }
 									placeholder={ preview.defaults[ chipField ] }
 									onChange={ ( v ) => preview.set( chipField, v ) }

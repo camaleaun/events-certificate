@@ -71,7 +71,6 @@ export function FillSwatch( { value, current, design, mode, onChange }: { value?
 					<ColorPalette value={ value && ! variable ? value : undefined } clearable={ false } onChange={ ( c ) => onChange( c || undefined ) } />
 					{ /* One Clear for any color (theme or custom): no fill means the current color. */ }
 					<div className="evcert-color-popover__footer">
-						<p className="evcert-meta">{ __( 'Clear to use the current color.', 'events-certificate' ) }</p>
 						<Button variant="tertiary" size="small" disabled={ ! value } accessibleWhenDisabled onClick={ () => onChange( undefined ) }>
 							{ __( 'Clear', 'events-certificate' ) }
 						</Button>
@@ -217,14 +216,12 @@ export default function SvgPanel( { el, design, mode, onChange }: Props ) {
 								<NumberControl __next40pxDefaultSize label={ __( 'Width', 'events-certificate' ) } min={ 1 } value={ el.vw } onChange={ ( v ) => Number( v ) > 0 && onChange( { vw: Number( v ) } ) } />
 								<NumberControl __next40pxDefaultSize label={ __( 'Height', 'events-certificate' ) } min={ 1 } value={ el.vh } onChange={ ( v ) => Number( v ) > 0 && onChange( { vh: Number( v ) } ) } />
 							</HStack>
-							<p className="evcert-meta">{ __( 'The coordinate space of the paths. The element’s size on the page is set in Dimensions.', 'events-certificate' ) }</p>
 						</>
 					) }
 				</DropdownRow>
 			</div>
 			<div className="evcert-inspector__section">
 				<PathList paths={ paths } current={ current } design={ design } mode={ mode } onPaths={ setPaths } onImport={ ( svg ) => onChange( { ...svg, markup: undefined, fill: undefined } ) } />
-				<p className="evcert-meta">{ __( 'Each path is the d value of an SVG <path>. Without a fill it uses the current color, set in Color. Pasting SVG code into a path fills in the viewBox and the paths; nothing else is kept.', 'events-certificate' ) }</p>
 			</div>
 		</div>
 	);
