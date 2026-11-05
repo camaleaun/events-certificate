@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Events Certificate
  * Plugin URI:        https://github.com/camaleaun/events-certificate
- * Description:       Issue verifiable attendance certificates for events: design them on a canvas, import attendees (CampTix, GatherPress, CSV or by hand) and let anyone check a certificate by its code or QR code.
+ * Description:       Verifiable attendance certificates for events, with a QR code anyone can check. Attendees from CampTix, GatherPress, a Meetup.com or other CSV export, or added by hand.
  * Version:           0.1.0-dev
  * Requires at least: 7.0
  * Requires PHP:      7.4

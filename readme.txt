@@ -8,7 +8,7 @@ Stable tag: 0.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Verifiable attendance certificates for events, with a QR code and a public verification page anyone can check.
+Verifiable attendance certificates with a QR code. Attendees from CampTix, GatherPress, Meetup.com CSV exports or added by hand.
 
 == Description ==
 
@@ -19,7 +19,7 @@ This plugin is in early development.
 **Planned**
 
 * A canvas editor for the certificate artwork, with a mobile and a social image version.
-* Attendees from CampTix, GatherPress, a CSV file (Meetup.com exports included) or added by hand.
+* Attendees from CampTix (WordCamps), GatherPress, a Meetup.com attendee export or any other CSV, or added by hand: one at a time or pasted from a spreadsheet.
 * Certificates frozen when issued and drawn again on demand: no PDF files kept on the server.
 * Verification pages in the languages you choose, so people from other countries can check a certificate.
 * Optional identity documents stored like passwords: the site never keeps the number, only a way to check it.
