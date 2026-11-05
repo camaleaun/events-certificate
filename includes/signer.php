@@ -2,8 +2,9 @@
 /**
  * The signer: the lead organizer who signs the certificates, with their role
  * (per language) and signature. On WordCamp sites it is one of the
- * Organizers (wcb_organizer, from wc-post-types): a "Signer" panel on
- * the organizer's screen marks them and holds the role and the signature.
+ * Organizers (wcb_organizer, from wc-post-types): a "Certificate" panel in
+ * the organizer's block editor sidebar (src/signer-panel) marks them and
+ * holds the role per language and the signature, in post meta.
  * The signature is restricted SVG, like the editor's (docs/decisions/0005):
  * a viewBox and filled paths, nothing else.
  *
@@ -20,13 +21,9 @@ use EventsCertificate\Verify;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Option with the organizer (post ID) who signs.
+ * Organizer meta: signs (bool), role per locale (object) and signature ({vw, vh, paths}).
  */
-const OPTION = 'evcert_signer';
-
-/**
- * Organizer meta: role per locale (array) and signature ({vw, vh, paths}).
- */
+const SIGNS_META     = '_evcert_signs';
 const ROLE_META      = '_evcert_signer_role';
 const SIGNATURE_META = '_evcert_signature';
 
@@ -39,15 +36,220 @@ const ORGANIZER = 'wcb_organizer';
  * Hooks.
  */
 function bootstrap() {
-	add_action( 'add_meta_boxes_' . ORGANIZER, __NAMESPACE__ . '\add_meta_box' );
-	add_action( 'save_post_' . ORGANIZER, __NAMESPACE__ . '\save' );
+	add_action( 'init', __NAMESPACE__ . '\register_meta', 20 );
+	add_action( 'enqueue_block_editor_assets', __NAMESPACE__ . '\enqueue' );
+	add_action( 'added_post_meta', __NAMESPACE__ . '\one_signer', 10, 4 );
+	add_action( 'updated_post_meta', __NAMESPACE__ . '\one_signer', 10, 4 );
 }
 
 /**
- * The Signer panel in the organizer's sidebar.
+ * Registers the organizer meta for the block editor (REST), protected and sanitized.
  */
-function add_meta_box() {
-	\add_meta_box( 'evcert-signer', __( 'Signer', 'events-certificate' ), __NAMESPACE__ . '\render_meta_box', ORGANIZER, 'side', 'default', array( '__back_compat_meta_box' => false ) );
+function register_meta() {
+	if ( ! post_type_exists( ORGANIZER ) ) {
+		return;
+	}
+	$auth = static function ( $allowed, $meta_key, $post_id ) {
+		return current_user_can( 'edit_post', $post_id );
+	};
+	register_post_meta(
+		ORGANIZER,
+		SIGNS_META,
+		array(
+			'type'          => 'boolean',
+			'single'        => true,
+			'default'       => false,
+			'show_in_rest'  => true,
+			'auth_callback' => $auth,
+		)
+	);
+	register_post_meta(
+		ORGANIZER,
+		ROLE_META,
+		array(
+			'type'              => 'object',
+			'single'            => true,
+			'default'           => array(),
+			'sanitize_callback' => __NAMESPACE__ . '\sanitize_roles',
+			'auth_callback'     => $auth,
+			'show_in_rest'      => array(
+				'schema' => array(
+					'type'                 => 'object',
+					'additionalProperties' => array( 'type' => 'string' ),
+				),
+			),
+		)
+	);
+	register_post_meta(
+		ORGANIZER,
+		SIGNATURE_META,
+		array(
+			'type'              => 'object',
+			'single'            => true,
+			'default'           => null,
+			'sanitize_callback' => __NAMESPACE__ . '\sanitize_signature',
+			'auth_callback'     => $auth,
+			'show_in_rest'      => array(
+				'schema' => array(
+					'type'       => array( 'object', 'null' ),
+					'properties' => array(
+						'vw'    => array( 'type' => 'number' ),
+						'vh'    => array( 'type' => 'number' ),
+						'paths' => array(
+							'type'  => 'array',
+							'items' => array(
+								'type'       => 'object',
+								'properties' => array(
+									'd'    => array( 'type' => 'string' ),
+									'fill' => array( 'type' => 'string' ),
+									'rule' => array( 'type' => 'string' ),
+								),
+							),
+						),
+					),
+				),
+			),
+		)
+	);
+}
+
+/**
+ * Keeps the roles of the site's languages, as plain text.
+ *
+ * @param mixed $value Roles.
+ * @return array<string, string>
+ */
+function sanitize_roles( $value ) {
+	$clean = array();
+	foreach ( (array) $value as $locale => $role ) {
+		if ( in_array( $locale, Verify\locales(), true ) && '' !== trim( (string) $role ) ) {
+			$clean[ $locale ] = sanitize_text_field( (string) $role );
+		}
+	}
+
+	return $clean;
+}
+
+/**
+ * Keeps a signature's restricted fields: a positive viewBox and paths with
+ * path data, a color fill (or none, the current color) and the fill rule.
+ *
+ * @param mixed $value Signature.
+ * @return array<string, mixed>|null
+ */
+function sanitize_signature( $value ) {
+	if ( ! is_array( $value ) || empty( $value['paths'] ) ) {
+		return null;
+	}
+	$paths = array();
+	foreach ( (array) $value['paths'] as $path ) {
+		$d = trim( preg_replace( '/\s+/', ' ', (string) ( $path['d'] ?? '' ) ) );
+		if ( ! Render\is_path_data( $d ) ) {
+			continue;
+		}
+		$clean = array( 'd' => $d );
+		$fill  = strtolower( trim( (string) ( $path['fill'] ?? '' ) ) );
+		if ( preg_match( '/^(#[0-9a-f]{3,8}|rgba?\([\d\s.,%]+\))$/', $fill ) ) {
+			$clean['fill'] = $fill;
+		}
+		if ( 'evenodd' === ( $path['rule'] ?? '' ) ) {
+			$clean['rule'] = 'evenodd';
+		}
+		$paths[] = $clean;
+	}
+	$vw = (float) ( $value['vw'] ?? 0 );
+	$vh = (float) ( $value['vh'] ?? 0 );
+
+	return $paths && $vw > 0 && $vh > 0 ? array(
+		'vw'    => $vw,
+		'vh'    => $vh,
+		'paths' => $paths,
+	) : null;
+}
+
+/**
+ * One signer per site: marking an organizer unmarks the others.
+ *
+ * @param int    $meta_id    Meta ID.
+ * @param int    $post_id    Post ID.
+ * @param string $meta_key   Meta key.
+ * @param mixed  $meta_value Meta value.
+ */
+function one_signer( $meta_id, $post_id, $meta_key, $meta_value ) {
+	if ( SIGNS_META !== $meta_key || ! $meta_value || ORGANIZER !== get_post_type( $post_id ) ) {
+		return;
+	}
+	foreach ( signers() as $other ) {
+		if ( $other !== (int) $post_id ) {
+			update_post_meta( $other, SIGNS_META, false );
+		}
+	}
+}
+
+/**
+ * Organizers marked as signers (normally one).
+ *
+ * @return int[]
+ */
+function signers() {
+	return array_map(
+		'intval',
+		get_posts(
+			array(
+				'post_type'   => ORGANIZER,
+				'post_status' => 'any',
+				'numberposts' => 5,
+				'fields'      => 'ids',
+				'orderby'     => 'modified',
+				'meta_query'  => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- a handful of organizers.
+					array(
+						'key'   => SIGNS_META,
+						'value' => '1',
+					),
+				),
+			)
+		)
+	);
+}
+
+/**
+ * Loads the Certificate panel on the organizer screen.
+ */
+function enqueue() {
+	$screen = get_current_screen();
+	if ( ! $screen || ORGANIZER !== $screen->post_type ) {
+		return;
+	}
+	$dir   = dirname( __DIR__ ) . '/build-signer/';
+	$asset = is_readable( $dir . 'index.min.asset.php' ) ? require $dir . 'index.min.asset.php' : null;
+	if ( ! $asset ) {
+		return;
+	}
+	$url = plugins_url( 'build-signer/', dirname( __DIR__ ) . '/events-certificate.php' );
+	wp_enqueue_script( 'evcert-signer-panel', $url . 'index.min.js', $asset['dependencies'], $asset['version'], true );
+	if ( is_readable( $dir . 'index.min.css' ) ) {
+		wp_enqueue_style( 'evcert-signer-panel', $url . 'index.min.css', array( 'wp-components' ), $asset['version'] );
+	}
+	$signer = current();
+	wp_add_inline_script(
+		'evcert-signer-panel',
+		'window.evcertSigner = ' . wp_json_encode(
+			array(
+				'locales' => array_map(
+					static function ( $locale ) {
+						return array(
+							'locale' => $locale,
+							'name'   => Verify\locale_name( $locale ),
+						);
+					},
+					Verify\locales()
+				),
+				'signer'  => $signer ? $signer['name'] : '',
+			)
+		) . ';',
+		'before'
+	);
+	wp_set_script_translations( 'evcert-signer-panel', 'events-certificate' );
 }
 
 /**
@@ -139,102 +341,21 @@ function signature_svg( array $signature, $color = 'currentColor' ) {
 }
 
 /**
- * Prints the Certificate panel.
- *
- * @param \WP_Post $post Organizer.
- */
-function render_meta_box( $post ) {
-	wp_nonce_field( 'evcert_signer_' . $post->ID, 'evcert_signer_nonce' );
-	$roles     = (array) get_post_meta( $post->ID, ROLE_META, true );
-	$signature = get_post_meta( $post->ID, SIGNATURE_META, true );
-	$current   = (int) get_option( OPTION );
-	?>
-	<p>
-		<label><input type="checkbox" name="evcert_signer" value="1" <?php checked( $current, $post->ID ); ?>> <?php esc_html_e( 'Signs the certificates', 'events-certificate' ); ?></label>
-		<?php if ( $current && $current !== $post->ID && get_post( $current ) ) : ?>
-			<br><span class="description">
-			<?php
-			/* translators: %s: name of the organizer who signs now. */
-			printf( esc_html__( 'Now signed by %s; checking this replaces them.', 'events-certificate' ), esc_html( get_the_title( $current ) ) );
-			?>
-			</span>
-		<?php endif; ?>
-	</p>
-	<?php foreach ( Verify\locales() as $locale ) : ?>
-		<p>
-			<label for="evcert_signer_role_<?php echo esc_attr( $locale ); ?>">
-				<?php
-				/* translators: %s: language name. */
-				printf( esc_html__( 'Role (%s)', 'events-certificate' ), esc_html( Verify\locale_name( $locale ) ) );
-				?>
-			</label>
-			<input type="text" class="widefat" id="evcert_signer_role_<?php echo esc_attr( $locale ); ?>" name="evcert_signer_role[<?php echo esc_attr( $locale ); ?>]" value="<?php echo esc_attr( $roles[ $locale ] ?? '' ); ?>" placeholder="<?php esc_attr_e( 'Event Coordinator', 'events-certificate' ); ?>">
-		</p>
-	<?php endforeach; ?>
-	<p>
-		<label for="evcert_signature"><?php esc_html_e( 'Signature (SVG)', 'events-certificate' ); ?></label>
-		<?php if ( is_array( $signature ) && ! empty( $signature['paths'] ) ) : ?>
-			<span style="display:block;margin:6px 0;padding:8px;background:#fff;border:1px solid #dcdcde;border-radius:2px;color:#1e1e1e;">
-				<img alt="<?php esc_attr_e( 'Signature', 'events-certificate' ); ?>" style="display:block;width:100%;height:60px;object-fit:contain;" src="<?php echo esc_attr( Render\svg_src( signature_svg( $signature, '#1e1e1e' ) ) ); ?>">
-			</span>
-			<label><input type="checkbox" name="evcert_signature_remove" value="1"> <?php esc_html_e( 'Remove the signature', 'events-certificate' ); ?></label>
-		<?php endif; ?>
-		<textarea class="widefat code" rows="3" id="evcert_signature" name="evcert_signature" placeholder="&lt;svg viewBox=&quot;0 0 120 44&quot;&gt;&lt;path d=&quot;M…&quot;/&gt;&lt;/svg&gt;"></textarea>
-		<span class="description"><?php esc_html_e( 'Paste the SVG code. Only the viewBox and filled paths are kept: convert strokes to filled outlines first (in Inkscape, Path → Stroke to Path).', 'events-certificate' ); ?></span>
-	</p>
-	<?php
-}
-
-/**
- * Saves the panel.
- *
- * @param int $post_id Organizer ID.
- */
-function save( $post_id ) {
-	if ( ! isset( $_POST['evcert_signer_nonce'] ) || ! wp_verify_nonce( sanitize_key( wp_unslash( $_POST['evcert_signer_nonce'] ) ), 'evcert_signer_' . $post_id ) || ! current_user_can( 'edit_post', $post_id ) || wp_is_post_revision( $post_id ) ) {
-		return;
-	}
-
-	if ( ! empty( $_POST['evcert_signer'] ) ) {
-		update_option( OPTION, $post_id, false );
-	} elseif ( (int) get_option( OPTION ) === $post_id ) {
-		delete_option( OPTION );
-	}
-
-	$roles = array();
-	foreach ( Verify\locales() as $locale ) {
-		$roles[ $locale ] = isset( $_POST['evcert_signer_role'][ $locale ] ) ? sanitize_text_field( wp_unslash( $_POST['evcert_signer_role'][ $locale ] ) ) : '';
-	}
-	update_post_meta( $post_id, ROLE_META, array_filter( $roles ) );
-
-	if ( ! empty( $_POST['evcert_signature_remove'] ) ) {
-		delete_post_meta( $post_id, SIGNATURE_META );
-	}
-	$code = isset( $_POST['evcert_signature'] ) ? trim( (string) wp_unslash( $_POST['evcert_signature'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- SVG code, read into restricted fields by parse_svg().
-	if ( '' !== $code ) {
-		$signature = parse_svg( $code );
-		if ( $signature ) {
-			update_post_meta( $post_id, SIGNATURE_META, $signature );
-		}
-	}
-}
-
-/**
  * The signer now: name, role per locale and signature, or null.
  *
  * @return array{name: string, roles: array<string, string>, signature: array<string, mixed>|null}|null
  */
 function current() {
-	$id   = (int) get_option( OPTION );
-	$post = $id ? get_post( $id ) : null;
-	if ( ! $post || ORGANIZER !== $post->post_type ) {
+	$ids  = signers();
+	$post = $ids ? get_post( $ids[0] ) : null;
+	if ( ! $post ) {
 		return null;
 	}
-	$signature = get_post_meta( $id, SIGNATURE_META, true );
+	$signature = get_post_meta( $post->ID, SIGNATURE_META, true );
 
 	return array(
 		'name'      => html_entity_decode( get_the_title( $post ), ENT_QUOTES, 'UTF-8' ),
-		'roles'     => array_filter( (array) get_post_meta( $id, ROLE_META, true ) ),
+		'roles'     => array_filter( (array) get_post_meta( $post->ID, ROLE_META, true ) ),
 		'signature' => is_array( $signature ) && ! empty( $signature['paths'] ) ? $signature : null,
 	);
 }

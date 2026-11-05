@@ -30,7 +30,7 @@
         }
     },
     "scripts": {
-        "lint": "parallel-lint --exclude vendor --exclude vendor-prefixed --exclude node_modules --exclude build --exclude docs .",
+        "lint": "parallel-lint --exclude vendor --exclude vendor-prefixed --exclude node_modules --exclude build --exclude build-signer --exclude docs .",
         "phpcs": "phpcs",
         "phpcbf": "phpcbf",
         "test": "phpunit",

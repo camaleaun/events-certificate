@@ -4,7 +4,7 @@
 	"description": "Development tools for the Events Certificate plugin.",
 	"license": "GPL-2.0-or-later",
 	"scripts": {
-		"build": "wp-build && node bin/postbuild.mjs",
+		"build": "wp-build && node bin/build-signer.mjs && node bin/postbuild.mjs",
 		"dev": "wp-build --watch",
 		"check-types": "tsc --noEmit"
 	},

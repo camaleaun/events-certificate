@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-05T11:32:04+00:00\n"
+"POT-Creation-Date: 2026-11-05T13:42:22+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: events-certificate\n"
@@ -76,7 +76,7 @@ msgid "Building accessible blocks"
 msgstr ""
 
 #: includes/admin-app.php:210
-#: includes/signer.php:167
+#: build-signer/index.js:451
 msgid "Event Coordinator"
 msgstr ""
 
@@ -272,6 +272,7 @@ msgstr ""
 #: includes/compat/camptix-front.php:281
 #: includes/compat/camptix-front.php:364
 #: includes/designs.php:97
+#: build-signer/index.js:436
 #: build/routes/editor/content.js:814
 #: build/routes/editor/content.js:819
 #: build/routes/editor/content.js:3510
@@ -351,44 +352,6 @@ msgstr ""
 msgid "Sponsor"
 msgstr ""
 
-#: includes/signer.php:50
-#: build/routes/editor/content.js:780
-msgid "Signer"
-msgstr ""
-
-#: includes/signer.php:149
-msgid "Signs the certificates"
-msgstr ""
-
-#. translators: %s: name of the organizer who signs now.
-#: includes/signer.php:154
-#, php-format
-msgid "Now signed by %s; checking this replaces them."
-msgstr ""
-
-#. translators: %s: language name.
-#: includes/signer.php:164
-#, php-format
-msgid "Role (%s)"
-msgstr ""
-
-#: includes/signer.php:171
-msgid "Signature (SVG)"
-msgstr ""
-
-#: includes/signer.php:174
-#: build/routes/editor/content.js:2933
-msgid "Signature"
-msgstr ""
-
-#: includes/signer.php:176
-msgid "Remove the signature"
-msgstr ""
-
-#: includes/signer.php:179
-msgid "Paste the SVG code. Only the viewBox and filled paths are kept: convert strokes to filled outlines first (in Inkscape, Path → Stroke to Path)."
-msgstr ""
-
 #: includes/verify.php:197
 msgid "Replaced by a corrected certificate"
 msgstr ""
@@ -466,6 +429,7 @@ msgid "Share"
 msgstr ""
 
 #: includes/verify.php:427
+#: build-signer/index.js:402
 msgid "Language"
 msgstr ""
 
@@ -523,6 +487,205 @@ msgstr ""
 msgid "Check"
 msgstr ""
 
+#. translators: %s: color name.
+#: build-signer/index.js:208
+#: build/routes/editor/content.js:1718
+#, js-format
+msgid "Fill: %s"
+msgstr ""
+
+#: build-signer/index.js:209
+#: build-signer/index.js:218
+#: build/routes/editor/content.js:1719
+#: build/routes/editor/content.js:1726
+#: build/routes/editor/content.js:2021
+msgid "Current color"
+msgstr ""
+
+#: build-signer/index.js:219
+#: build/routes/editor/content.js:1727
+#: build/routes/editor/content.js:1874
+msgid "Theme"
+msgstr ""
+
+#: build-signer/index.js:233
+#: build/routes/editor/content.js:1741
+#: build/routes/editor/content.js:1888
+msgid "Custom"
+msgstr ""
+
+#. translators: %d: path number.
+#: build-signer/index.js:248
+#: build/routes/editor/content.js:1755
+#, js-format
+msgid "Path %d data (d)"
+msgstr ""
+
+#: build-signer/index.js:270
+#: build/routes/editor/content.js:1777
+msgid "Only path commands and numbers, starting with M."
+msgstr ""
+
+#: build-signer/index.js:288
+#: build/routes/editor/content.js:1795
+msgid "Paths"
+msgstr ""
+
+#: build-signer/index.js:289
+#: build/routes/editor/content.js:1796
+msgid "Add path"
+msgstr ""
+
+#: build-signer/index.js:299
+#: build/routes/editor/content.js:1806
+msgid "Add path data"
+msgstr ""
+
+#: build-signer/index.js:304
+#: build/routes/editor/content.js:1811
+msgid "Move up"
+msgstr ""
+
+#: build-signer/index.js:305
+#: build/routes/editor/content.js:1812
+msgid "Move down"
+msgstr ""
+
+#: build-signer/index.js:307
+#: build/routes/editor/content.js:1814
+msgid "Path options"
+msgstr ""
+
+#: build-signer/index.js:312
+#: build/routes/editor/content.js:1819
+msgid "Move to bottom (behind)"
+msgstr ""
+
+#: build-signer/index.js:316
+#: build/routes/editor/content.js:1823
+msgid "Move to top (in front)"
+msgstr ""
+
+#: build-signer/index.js:320
+#: build/routes/editor/content.js:1558
+#: build/routes/editor/content.js:1827
+msgid "Duplicate"
+msgstr ""
+
+#: build-signer/index.js:325
+#: build/routes/editor/content.js:1583
+#: build/routes/editor/content.js:1832
+msgid "Delete"
+msgstr ""
+
+#. translators: %s: element name.
+#: build-signer/index.js:341
+#: build/routes/editor/content.js:2311
+#, js-format
+msgid "Edit SVG: %s"
+msgstr ""
+
+#: build-signer/index.js:345
+#: build/routes/editor/content.js:2315
+msgid "Preview"
+msgstr ""
+
+#: build-signer/index.js:352
+#: build-signer/index.js:458
+#: build/routes/editor/content.js:1842
+#: build/routes/editor/content.js:2322
+msgid "ViewBox"
+msgstr ""
+
+#: build-signer/index.js:354
+#: build-signer/index.js:459
+#: build/routes/editor/content.js:1844
+#: build/routes/editor/content.js:2025
+#: build/routes/editor/content.js:2100
+#: build/routes/editor/content.js:2101
+#: build/routes/editor/content.js:2102
+#: build/routes/editor/content.js:2324
+msgid "Width"
+msgstr ""
+
+#: build-signer/index.js:355
+#: build-signer/index.js:460
+#: build/routes/editor/content.js:1845
+#: build/routes/editor/content.js:2106
+#: build/routes/editor/content.js:2107
+#: build/routes/editor/content.js:2108
+#: build/routes/editor/content.js:2325
+msgid "Height"
+msgstr ""
+
+#: build-signer/index.js:357
+#: build/routes/editor/content.js:2327
+msgid "The coordinate space of the paths."
+msgstr ""
+
+#: build-signer/index.js:364
+#: build/routes/editor/content.js:2334
+msgid "Paths further down are drawn on top. Without a fill a path uses the current color. Pasting SVG code into a path replaces the drawing with its viewBox and paths; nothing else is kept."
+msgstr ""
+
+#: build-signer/index.js:368
+#: build/routes/editor/content.js:1680
+#: build/routes/editor/content.js:2338
+msgid "Cancel"
+msgstr ""
+
+#: build-signer/index.js:372
+#: build/routes/editor/content.js:1417
+#: build/routes/editor/content.js:2342
+msgid "Apply"
+msgstr ""
+
+#: build-signer/index.js:386
+#: build/routes/editor/content.js:1600
+#: build/routes/editor/content.js:1898
+#: build/routes/editor/content.js:2019
+#: build/routes/editor/content.js:2937
+#: build/routes/editor/content.js:3606
+msgid "Text"
+msgstr ""
+
+#. translators: %s: language name.
+#: build-signer/index.js:399
+#, js-format
+msgid "Edit in %s"
+msgstr ""
+
+#: build-signer/index.js:434
+#: build-signer/index.js:454
+#: build/routes/editor/content.js:2933
+msgid "Signature"
+msgstr ""
+
+#: build-signer/index.js:441
+msgid "Signs the certificates"
+msgstr ""
+
+#. translators: %s: name of the organizer who signs now.
+#: build-signer/index.js:444
+#, js-format
+msgid "Now signed by %s; checking this replaces them."
+msgstr ""
+
+#: build-signer/index.js:451
+#: build/routes/editor/content.js:778
+#: build/routes/editor/content.js:956
+msgid "Role"
+msgstr ""
+
+#: build-signer/index.js:455
+#: build/routes/editor/content.js:1535
+msgid "Edit"
+msgstr ""
+
+#: build-signer/index.js:473
+msgid "Filled paths only, like the certificate editor: paste SVG code into a path to import it. Convert strokes to filled outlines first."
+msgstr ""
+
 #: build/routes/editor/content.js:774
 msgid "Participant"
 msgstr ""
@@ -536,9 +699,8 @@ msgstr ""
 msgid "Workload (hours)"
 msgstr ""
 
-#: build/routes/editor/content.js:778
-#: build/routes/editor/content.js:956
-msgid "Role"
+#: build/routes/editor/content.js:780
+msgid "Signer"
 msgstr ""
 
 #: build/routes/editor/content.js:781
@@ -747,11 +909,6 @@ msgstr ""
 msgid "Paste or type URL"
 msgstr ""
 
-#: build/routes/editor/content.js:1417
-#: build/routes/editor/content.js:2342
-msgid "Apply"
-msgstr ""
-
 #: build/routes/editor/content.js:1428
 #: build/routes/editor/content.js:1604
 #: build/routes/editor/content.js:1903
@@ -807,10 +964,6 @@ msgstr ""
 msgid "Edit SVG"
 msgstr ""
 
-#: build/routes/editor/content.js:1535
-msgid "Edit"
-msgstr ""
-
 #: build/routes/editor/content.js:1549
 msgid "Bring forward"
 msgstr ""
@@ -835,11 +988,6 @@ msgstr ""
 msgid "Options"
 msgstr ""
 
-#: build/routes/editor/content.js:1558
-#: build/routes/editor/content.js:1827
-msgid "Duplicate"
-msgstr ""
-
 #: build/routes/editor/content.js:1562
 #: build/routes/editor/content.js:2376
 msgid "Bring to front"
@@ -857,19 +1005,6 @@ msgstr ""
 
 #: build/routes/editor/content.js:1578
 msgid "Required: it can be moved, not deleted."
-msgstr ""
-
-#: build/routes/editor/content.js:1583
-#: build/routes/editor/content.js:1832
-msgid "Delete"
-msgstr ""
-
-#: build/routes/editor/content.js:1600
-#: build/routes/editor/content.js:1898
-#: build/routes/editor/content.js:2019
-#: build/routes/editor/content.js:2937
-#: build/routes/editor/content.js:3606
-msgid "Text"
 msgstr ""
 
 #: build/routes/editor/content.js:1601
@@ -953,99 +1088,8 @@ msgid_plural "%1$s elements, page %2$s × %3$s pt. The current design will be re
 msgstr[0] ""
 msgstr[1] ""
 
-#: build/routes/editor/content.js:1680
-#: build/routes/editor/content.js:2338
-msgid "Cancel"
-msgstr ""
-
 #: build/routes/editor/content.js:1686
 msgid "Replace design"
-msgstr ""
-
-#. translators: %s: color name.
-#: build/routes/editor/content.js:1718
-#, js-format
-msgid "Fill: %s"
-msgstr ""
-
-#: build/routes/editor/content.js:1719
-#: build/routes/editor/content.js:1726
-#: build/routes/editor/content.js:2021
-msgid "Current color"
-msgstr ""
-
-#: build/routes/editor/content.js:1727
-#: build/routes/editor/content.js:1874
-msgid "Theme"
-msgstr ""
-
-#: build/routes/editor/content.js:1741
-#: build/routes/editor/content.js:1888
-msgid "Custom"
-msgstr ""
-
-#. translators: %d: path number.
-#: build/routes/editor/content.js:1755
-#, js-format
-msgid "Path %d data (d)"
-msgstr ""
-
-#: build/routes/editor/content.js:1777
-msgid "Only path commands and numbers, starting with M."
-msgstr ""
-
-#: build/routes/editor/content.js:1795
-msgid "Paths"
-msgstr ""
-
-#: build/routes/editor/content.js:1796
-msgid "Add path"
-msgstr ""
-
-#: build/routes/editor/content.js:1806
-msgid "Add path data"
-msgstr ""
-
-#: build/routes/editor/content.js:1811
-msgid "Move up"
-msgstr ""
-
-#: build/routes/editor/content.js:1812
-msgid "Move down"
-msgstr ""
-
-#: build/routes/editor/content.js:1814
-msgid "Path options"
-msgstr ""
-
-#: build/routes/editor/content.js:1819
-msgid "Move to bottom (behind)"
-msgstr ""
-
-#: build/routes/editor/content.js:1823
-msgid "Move to top (in front)"
-msgstr ""
-
-#: build/routes/editor/content.js:1842
-#: build/routes/editor/content.js:2322
-msgid "ViewBox"
-msgstr ""
-
-#: build/routes/editor/content.js:1844
-#: build/routes/editor/content.js:2025
-#: build/routes/editor/content.js:2100
-#: build/routes/editor/content.js:2101
-#: build/routes/editor/content.js:2102
-#: build/routes/editor/content.js:2324
-msgid "Width"
-msgstr ""
-
-#: build/routes/editor/content.js:1845
-#: build/routes/editor/content.js:2106
-#: build/routes/editor/content.js:2107
-#: build/routes/editor/content.js:2108
-#: build/routes/editor/content.js:2325
-msgid "Height"
 msgstr ""
 
 #: build/routes/editor/content.js:1847
@@ -1423,24 +1467,6 @@ msgstr ""
 
 #: build/routes/editor/content.js:2292
 msgid "Moving, resizing or hiding here changes this screen only. Text and style are shared."
-msgstr ""
-
-#. translators: %s: element name.
-#: build/routes/editor/content.js:2311
-#, js-format
-msgid "Edit SVG: %s"
-msgstr ""
-
-#: build/routes/editor/content.js:2315
-msgid "Preview"
-msgstr ""
-
-#: build/routes/editor/content.js:2327
-msgid "The coordinate space of the paths."
-msgstr ""
-
-#: build/routes/editor/content.js:2334
-msgid "Paths further down are drawn on top. Without a fill a path uses the current color. Pasting SVG code into a path replaces the drawing with its viewBox and paths; nothing else is kept."
 msgstr ""
 
 #: build/routes/editor/content.js:2354

@@ -4,6 +4,7 @@
 .phpunit.result.cache
 /node_modules/
 /build/
+/build-signer/
 
 # Translations compiled locally (the .pot is committed; .po files live in the language repositories).
 /languages/*.po
