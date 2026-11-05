@@ -36,12 +36,14 @@ require_once __DIR__ . '/includes/admin-app.php';
 require_once __DIR__ . '/includes/certificates.php';
 require_once __DIR__ . '/includes/render.php';
 require_once __DIR__ . '/includes/verify.php';
+require_once __DIR__ . '/includes/share-image.php';
 require_once __DIR__ . '/includes/compat/camptix.php';
 require_once __DIR__ . '/includes/compat/camptix-front.php';
 
 Install\bootstrap();
 Designs\bootstrap();
 Verify\bootstrap();
+ShareImage\bootstrap();
 Admin\bootstrap();
 AdminApp\bootstrap();
 

@@ -17,6 +17,7 @@ use EventsCertificate\Certificates;
 use EventsCertificate\Code;
 use EventsCertificate\Render;
 use EventsCertificate\Settings;
+use EventsCertificate\ShareImage;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -210,11 +211,7 @@ function status( array $cert ) {
 	return array(
 		'is-valid',
 		__( 'Certificate on record', 'events-certificate' ),
-		sprintf(
-			/* translators: %s: site name. */
-			esc_html__( 'Issued by %s. Compare it with the copy you received: the name, event, dates and code must be exactly the ones shown here. Any difference means the copy was altered.', 'events-certificate' ),
-			'<strong>' . esc_html( get_bloginfo( 'name' ) ) . '</strong>'
-		),
+		'',
 	);
 }
 
@@ -339,6 +336,28 @@ function render_page( $cert, $code, $locale, $invalid ) {
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta name="robots" content="noindex, nofollow">
 	<title><?php echo esc_html( $title . ' – ' . get_bloginfo( 'name' ) ); ?></title>
+	<?php if ( $cert ) : ?>
+		<?php
+		// Social previews (LinkedIn, Facebook, X, WhatsApp): the certificate image when generated, else the site icon.
+		$og_image = ShareImage\url( $cert['code'], $locale );
+		$og_image = $og_image ? $og_image : get_site_icon_url( 512 );
+		?>
+		<meta property="og:type" content="website">
+		<meta property="og:site_name" content="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>">
+		<meta property="og:title" content="<?php echo esc_attr( $title ); ?>">
+		<meta property="og:description" content="<?php echo esc_attr( $cert['event_title'] ); ?>">
+		<meta property="og:url" content="<?php echo esc_url( page_url( $cert['code'], $locale ) ); ?>">
+		<meta property="og:locale" content="<?php echo esc_attr( $locale ); ?>">
+		<?php if ( $og_image ) : ?>
+			<meta property="og:image" content="<?php echo esc_url( $og_image ); ?>">
+			<?php if ( ShareImage\url( $cert['code'], $locale ) ) : ?>
+				<meta property="og:image:width" content="<?php echo esc_attr( (string) ShareImage\WIDTH ); ?>">
+				<meta property="og:image:height" content="<?php echo esc_attr( (string) ShareImage\HEIGHT ); ?>">
+				<meta property="og:image:alt" content="<?php echo esc_attr( $title ); ?>">
+			<?php endif; ?>
+		<?php endif; ?>
+		<meta name="twitter:card" content="<?php echo ShareImage\url( $cert['code'], $locale ) ? 'summary_large_image' : 'summary'; ?>">
+	<?php endif; ?>
 	<?php wp_print_styles( array( 'evcert-verify' ) ); ?>
 </head>
 <body class="evcert-verify<?php echo $cert ? ' has-certificate' : ''; ?>">
@@ -351,15 +370,45 @@ function render_page( $cert, $code, $locale, $invalid ) {
 			</div>
 		</main>
 
+		<?php
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- the attendee's edit token is the credential, checked in ShareImage\can_send().
+		$attendee_id = isset( $_GET['tix_attendee_id'] ) ? absint( $_GET['tix_attendee_id'] ) : 0;
+		$edit_token  = isset( $_GET['tix_edit_token'] ) ? sanitize_text_field( wp_unslash( $_GET['tix_edit_token'] ) ) : '';
+		// phpcs:enable
+		$make_image = 'issued' === $cert['status'] && ! ShareImage\url( $cert['code'], $locale ) && ShareImage\can_send( $cert, $attendee_id, $edit_token );
+		?>
+		<?php if ( $make_image ) : ?>
+			<div hidden data-evcert-share-image="
+			<?php
+			echo esc_attr(
+				(string) wp_json_encode(
+					array(
+						'endpoint'        => rest_url( 'evcert/v1/share-image' ),
+						'nonce'           => wp_create_nonce( 'wp_rest' ),
+						'code'            => $cert['code'],
+						'locale'          => $locale,
+						'width'           => ShareImage\WIDTH,
+						'height'          => ShareImage\HEIGHT,
+						'fonts'           => plugins_url( 'fonts/', dirname( __DIR__ ) . '/events-certificate.php' ),
+						'tix_attendee_id' => $attendee_id,
+						'tix_edit_token'  => $edit_token,
+					)
+				)
+			);
+			?>
+			"></div>
+		<?php endif; ?>
 		<nav class="evcert-dock" data-evcert-dock aria-label="<?php esc_attr_e( 'Certificate tools', 'events-certificate' ); ?>">
 			<button type="button" class="evcert-dock__fab <?php echo esc_attr( $class ); ?>" data-evcert-dock-to="center" aria-label="<?php echo esc_attr( $heading . ' — ' . __( 'Show tools', 'events-certificate' ) ); ?>" title="<?php echo esc_attr( $heading ); ?>"><?php echo icon( 'shield' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?></button>
 			<div class="evcert-dock__bar">
 				<div class="evcert-dock__row">
-					<button type="button" class="evcert-dock__status <?php echo esc_attr( $class ); ?>" data-evcert-pop="details" aria-expanded="false" title="<?php echo esc_attr( $heading ); ?>">
-						<?php echo icon( 'shield' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?>
-						<span><?php echo esc_html( $short ); ?></span>
-					</button>
-					<code class="evcert-dock__code"><?php echo esc_html( $cert['code'] ); ?></code>
+					<?php if ( 'is-valid' !== $class ) : ?>
+						<button type="button" class="evcert-dock__status <?php echo esc_attr( $class ); ?>" data-evcert-pop="details" aria-expanded="false" title="<?php echo esc_attr( $heading ); ?>">
+							<?php echo icon( 'shield' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?>
+							<span><?php echo esc_html( $short ); ?></span>
+						</button>
+					<?php endif; ?>
+					<button type="button" class="evcert-dock__code" data-evcert-pop="details" aria-expanded="false" aria-label="<?php echo esc_attr( __( 'Code', 'events-certificate' ) . ': ' . $cert['code'] ); ?>"><?php echo esc_html( $cert['code'] ); ?></button>
 					<span class="evcert-dock__spacer"></span>
 					<button type="button" class="evcert-dock__icon" data-evcert-dock-to="left" aria-label="<?php esc_attr_e( 'Dock to the left corner', 'events-certificate' ); ?>" title="<?php esc_attr_e( 'Dock to the left corner', 'events-certificate' ); ?>"><?php echo icon( 'left' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?></button>
 					<button type="button" class="evcert-dock__icon" data-evcert-dock-to="right" aria-label="<?php esc_attr_e( 'Dock to the right corner', 'events-certificate' ); ?>" title="<?php esc_attr_e( 'Dock to the right corner', 'events-certificate' ); ?>"><?php echo icon( 'right' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?></button>
@@ -384,9 +433,11 @@ function render_page( $cert, $code, $locale, $invalid ) {
 			</div>
 
 			<div class="evcert-dock__pop" data-evcert-popover="details" hidden>
-				<p class="evcert-dock__heading <?php echo esc_attr( $class ); ?>"><?php echo esc_html( $heading ); ?></p>
-				<?php if ( $detail ) : ?>
-					<p class="evcert-dock__note"><?php echo wp_kses( $detail, $allowed ); ?></p>
+				<?php if ( 'is-valid' !== $class ) : ?>
+					<p class="evcert-dock__heading <?php echo esc_attr( $class ); ?>"><?php echo esc_html( $heading ); ?></p>
+					<?php if ( $detail ) : ?>
+						<p class="evcert-dock__note"><?php echo wp_kses( $detail, $allowed ); ?></p>
+					<?php endif; ?>
 				<?php endif; ?>
 				<dl>
 					<div><dt><?php esc_html_e( 'Name', 'events-certificate' ); ?></dt><dd><?php echo esc_html( $cert['name'] ); ?></dd></div>

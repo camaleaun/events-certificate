@@ -275,7 +275,7 @@ function render_step( $attendee, $error = '' ) {
 						<tr><td class="tix-left"><?php esc_html_e( 'Name', 'events-certificate' ); ?></td><td class="tix-right"><strong><?php echo esc_html( $current['name'] ); ?></strong></td></tr>
 						<tr><td class="tix-left"><?php esc_html_e( 'Code', 'events-certificate' ); ?></td><td class="tix-right"><code><?php echo esc_html( $current['code'] ); ?></code></td></tr>
 						<tr><td class="tix-left"><?php esc_html_e( 'Issued on', 'events-certificate' ); ?></td><td class="tix-right"><?php echo esc_html( wp_date( get_option( 'date_format' ), strtotime( $current['issued_at'] . ' UTC' ) ) ); ?></td></tr>
-						<tr><td class="tix-left"><?php esc_html_e( 'Address', 'events-certificate' ); ?></td><td class="tix-right"><a href="<?php echo esc_url( Certificates\url( $current['code'] ) ); ?>"><?php echo esc_html( Certificates\url( $current['code'] ) ); ?></a></td></tr>
+						<tr><td class="tix-left"><?php esc_html_e( 'Address', 'events-certificate' ); ?></td><td class="tix-right"><a href="<?php echo esc_url( own_certificate_link( $attendee, $current['code'] ) ); ?>"><?php echo esc_html( Certificates\url( $current['code'] ) ); ?></a></td></tr>
 					</tbody>
 				</table>
 			<?php endif; ?>
@@ -314,6 +314,24 @@ function render_step( $attendee, $error = '' ) {
 	</div><!-- #tix -->
 	<?php
 	return (string) ob_get_clean();
+}
+
+/**
+ * The attendee's own link to their certificate page: with their edit token,
+ * so their visit can make the share image (includes/share-image.php).
+ *
+ * @param \WP_Post $attendee Attendee.
+ * @param string   $code     Certificate code.
+ * @return string
+ */
+function own_certificate_link( $attendee, $code ) {
+	return add_query_arg(
+		array(
+			'tix_attendee_id' => $attendee->ID,
+			'tix_edit_token'  => get_post_meta( $attendee->ID, 'tix_edit_token', true ),
+		),
+		Certificates\url( $code )
+	);
 }
 
 /**

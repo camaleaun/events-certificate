@@ -165,11 +165,126 @@
 	}
 	label();
 
+	// Share image (og:image): drawn here, where the certificate already shows exactly, and sent once
+	// per language when the page says it's missing and this viewer may send it (includes/share-image.php).
+	var FONTS = [ 'Lora-Regular', 'Lora-Medium', 'Lora-SemiBold', 'Inter-Regular', 'Inter-Medium', 'Inter-SemiBold' ];
+	function toDataUrl( blob ) {
+		return new Promise( function ( resolve, reject ) {
+			var reader = new FileReader();
+			reader.onload = function () {
+				resolve( reader.result );
+			};
+			reader.onerror = reject;
+			reader.readAsDataURL( blob );
+		} );
+	}
+	function fontFaces( base ) {
+		return Promise.all(
+			FONTS.map( function ( file ) {
+				var parts = file.split( '-' );
+				var weight = { Regular: 400, Medium: 500, SemiBold: 600 }[ parts[ 1 ] ];
+				return fetch( base + file + '.ttf' )
+					.then( function ( r ) {
+						return r.blob();
+					} )
+					.then( toDataUrl )
+					.then( function ( url ) {
+						return "@font-face{font-family:'" + parts[ 0 ] + "';font-weight:" + weight + ";src:url(" + url + ") format('truetype');}";
+					} );
+			} )
+		).then( function ( rules ) {
+			return rules.join( '' );
+		} );
+	}
+	function makeShareImage( config ) {
+		var page = document.querySelector( '.evcert-verify__mode.is-light .evcert-page' );
+		if ( ! page ) {
+			return;
+		}
+		var clone = page.cloneNode( true );
+		clone.style.transform = 'none';
+		var w = parseFloat( page.style.width ) * PX_PER_PT;
+		var h = parseFloat( page.style.height ) * PX_PER_PT;
+		// Images must be inline for an SVG drawn as an image; uploads become data URIs too.
+		var images = Array.prototype.filter.call( clone.querySelectorAll( 'img' ), function ( img ) {
+			return img.getAttribute( 'src' ).indexOf( 'data:' ) !== 0;
+		} );
+		return Promise.all(
+			images.map( function ( img ) {
+				return fetch( img.src )
+					.then( function ( r ) {
+						return r.blob();
+					} )
+					.then( toDataUrl )
+					.then( function ( url ) {
+						img.setAttribute( 'src', url );
+					} )
+					.catch( function () {
+						img.remove();
+					} );
+			} )
+		)
+			.then( function () {
+				return fontFaces( config.fonts );
+			} )
+			.then( function ( css ) {
+				var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '"><foreignObject width="100%" height="100%"><div xmlns="http://www.w3.org/1999/xhtml"><style>' + css + 'b,strong{font-weight:600}</style>' + new XMLSerializer().serializeToString( clone ) + '</div></foreignObject></svg>';
+				return new Promise( function ( resolve, reject ) {
+					var img = new Image();
+					img.onload = function () {
+						resolve( img );
+					};
+					img.onerror = reject;
+					img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent( svg );
+				} );
+			} )
+			.then( function ( img ) {
+				var canvas = document.createElement( 'canvas' );
+				canvas.width = config.width;
+				canvas.height = config.height;
+				var ctx = canvas.getContext( '2d' );
+				ctx.fillStyle = '#e9e9ea';
+				ctx.fillRect( 0, 0, canvas.width, canvas.height );
+				var pad = 36;
+				var scale = Math.min( ( canvas.width - pad * 2 ) / w, ( canvas.height - pad * 2 ) / h );
+				var dw = w * scale;
+				var dh = h * scale;
+				var x = ( canvas.width - dw ) / 2;
+				var y = ( canvas.height - dh ) / 2;
+				ctx.shadowColor = 'rgba(0,0,0,0.18)';
+				ctx.shadowBlur = 24;
+				ctx.shadowOffsetY = 6;
+				ctx.fillStyle = '#ffffff';
+				ctx.fillRect( x, y, dw, dh );
+				ctx.shadowColor = 'transparent';
+				ctx.drawImage( img, x, y, dw, dh );
+				return fetch( config.endpoint, {
+					method: 'POST',
+					credentials: 'same-origin',
+					headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': config.nonce },
+					body: JSON.stringify( {
+						code: config.code,
+						locale: config.locale,
+						image: canvas.toDataURL( 'image/png' ),
+						tix_attendee_id: config.tix_attendee_id,
+						tix_edit_token: config.tix_edit_token,
+					} ),
+				} );
+			} )
+			.catch( function () {} );
+	}
+
 	var docked = store( 'evcert-dock' );
 	if ( docked === 'left' || docked === 'right' ) {
 		dockTo( docked );
 	}
 	layout();
 	window.addEventListener( 'resize', layout );
-	( document.fonts ? document.fonts.ready : Promise.resolve() ).then( fit );
+	( document.fonts ? document.fonts.ready : Promise.resolve() ).then( function () {
+		fit();
+		var share = document.querySelector( '[data-evcert-share-image]' );
+		if ( share ) {
+			makeShareImage( JSON.parse( share.getAttribute( 'data-evcert-share-image' ) ) );
+		}
+	} );
 } )();

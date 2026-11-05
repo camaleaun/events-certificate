@@ -126,7 +126,13 @@ body.evcert-verify {
 .evcert-dock__status.is-replaced svg, .evcert-dock__heading.is-replaced { color: var(--warn); }
 .evcert-dock__status.is-revoked svg, .evcert-dock__heading.is-revoked { color: var(--bad); }
 .evcert-dock__code {
-	color: var(--dock-muted);
+	height: 32px;
+	padding: 0 10px;
+	border: 0;
+	border-radius: 8px;
+	background: var(--dock-field);
+	cursor: pointer;
+	color: var(--dock-fg);
 	font: 12px/1 ui-monospace, Menlo, Consolas, monospace;
 	letter-spacing: 0.02em;
 	white-space: nowrap;
@@ -161,7 +167,8 @@ body.evcert-verify {
 .evcert-dock__icon:hover,
 .evcert-dock__tool:hover,
 .evcert-dock__tool[aria-expanded="true"],
-.evcert-dock__status:hover { background: var(--dock-hover); }
+.evcert-dock__status:hover,
+.evcert-dock__code:hover { background: var(--dock-hover); }
 .evcert-dock :focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 /* Popovers above the Dock. */
@@ -246,7 +253,6 @@ body.evcert-verify {
 @media (max-width: 600px) {
 	.evcert-verify__stage { padding: 12px; }
 	.evcert-dock { bottom: 8px; }
-	.evcert-dock__code { display: none; }
 	.evcert-dock__tool { min-width: 52px; padding: 4px 6px; }
 }
 
