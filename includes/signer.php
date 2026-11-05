@@ -139,7 +139,7 @@ function sanitize_roles( $value ) {
  * @return array<string, mixed>|null
  */
 function sanitize_signature( $value ) {
-	if ( ! is_array( $value ) || empty( $value['paths'] ) ) {
+	if ( ! is_array( $value ) ) {
 		return null;
 	}
 	$paths = array();
@@ -161,7 +161,8 @@ function sanitize_signature( $value ) {
 	$vw = (float) ( $value['vw'] ?? 0 );
 	$vh = (float) ( $value['vh'] ?? 0 );
 
-	return $paths && $vw > 0 && $vh > 0 ? array(
+	// The viewBox is kept even before any path (set first, drawn after); certificates only use a signature with paths.
+	return $vw > 0 && $vh > 0 ? array(
 		'vw'    => $vw,
 		'vh'    => $vh,
 		'paths' => $paths,

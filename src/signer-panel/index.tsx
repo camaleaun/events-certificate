@@ -92,10 +92,12 @@ function CertificatePanel() {
 	if ( postType !== 'wcb_organizer' || ! meta ) {
 		return null;
 	}
-	const signature = meta._evcert_signature && meta._evcert_signature.paths?.length ? meta._evcert_signature : null;
+	// What is stored (the viewBox may be set before any path); only a signature with paths is drawn.
+	const stored = meta._evcert_signature && meta._evcert_signature.vw ? meta._evcert_signature : null;
+	const signature = stored && stored.paths?.length ? stored : null;
 	const set = ( patch: Meta ) => setMeta( { ...meta, ...patch } );
-	const setSignature = ( next: Signature | null ) => set( { _evcert_signature: next && next.paths.length ? next : null } );
-	const el = { id: 'signature', type: 'svg', name: __( 'Signature', 'events-certificate' ), x: 0, y: 0, w: 120, h: 44, vw: signature?.vw || 120, vh: signature?.vh || 44, paths: signature?.paths || [], color: '$text' } as SvgEl;
+	const setSignature = ( next: Signature | null ) => set( { _evcert_signature: next } );
+	const el = { id: 'signature', type: 'svg', name: __( 'Signature', 'events-certificate' ), x: 0, y: 0, w: 120, h: 44, vw: stored?.vw || 120, vh: stored?.vh || 44, paths: stored?.paths || [], color: '$text' } as SvgEl;
 	const { signer } = window.evcertSigner;
 
 	return (
