@@ -134,12 +134,12 @@ function add_settings_fields( $page ) {
 		array( 'label_for' => 'evcert_force_public' )
 	);
 	add_settings_field(
-		'evcert_verify_slug',
-		__( 'Verification address', 'events-certificate' ),
-		__NAMESPACE__ . '\render_verify_slug_field',
+		'evcert_slug',
+		__( 'Certificate address', 'events-certificate' ),
+		__NAMESPACE__ . '\render_slug_field',
 		$page,
 		'evcert_authenticity',
-		array( 'label_for' => 'evcert_verify_slug' )
+		array( 'label_for' => 'evcert_slug' )
 	);
 
 	add_settings_section(
@@ -201,16 +201,16 @@ function render_force_public_field() {
 }
 
 /**
- * Field: verification URL base.
+ * Field: certificate URL base.
  */
-function render_verify_slug_field() {
+function render_slug_field() {
 	printf(
-		'<input type="text" id="evcert_verify_slug" name="%2$s[verify_slug]" value="%3$s" class="regular-text code"><p class="description">%4$s<br><code>%1$s%3$s/&lt;%5$s&gt;/</code></p>',
+		'<input type="text" id="evcert_slug" name="%2$s[slug]" value="%3$s" class="regular-text code"><p class="description">%4$s<br><code>%1$s%3$s/&lt;%5$s&gt;/</code></p>',
 		esc_html( trailingslashit( home_url() ) ),
 		esc_attr( Settings\OPTION ),
-		esc_attr( Settings\value( 'verify_slug' ) ),
+		esc_attr( Settings\value( 'slug' ) ),
 		esc_html__( 'The address printed on certificates and in their QR code. Change it before issuing: printed certificates keep the old one.', 'events-certificate' ),
-		/* translators: Stands for a certificate code in an example address, as in https://example.com/verify/<code>/. */
+		/* translators: Stands for a certificate code in an example address, as in https://example.com/certificate/<code>/. */
 		esc_html_x( 'code', 'certificate code placeholder', 'events-certificate' )
 	);
 }

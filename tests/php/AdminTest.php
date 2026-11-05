@@ -19,7 +19,7 @@ class AdminTest extends Test_Case {
 	public function test_sanitize_posted_keeps_saved_settings_when_not_posted() {
 		$saved = static function () {
 			return array(
-				'verify_slug'  => 'verificar',
+				'slug'         => 'certificado',
 				'force_public' => true,
 			);
 		};
@@ -27,19 +27,19 @@ class AdminTest extends Test_Case {
 		remove_filter( 'pre_option_' . Settings\OPTION, '\EventsCertificate\Settings\defaults', 1 );
 
 		$kept = Admin\sanitize_posted( null );
-		$this->assertSame( 'verificar', $kept['verify_slug'] );
+		$this->assertSame( 'certificado', $kept['slug'] );
 		$this->assertTrue( $kept['force_public'] );
 
 		// A posted form without the checkbox turns it off.
-		$posted = Admin\sanitize_posted( array( 'verify_slug' => 'Verificar Certificado' ) );
-		$this->assertSame( 'verificar-certificado', $posted['verify_slug'] );
+		$posted = Admin\sanitize_posted( array( 'slug' => 'Certificado Válido' ) );
+		$this->assertSame( 'certificado-valido', $posted['slug'] );
 		$this->assertFalse( $posted['force_public'] );
 
 		remove_filter( 'pre_option_' . Settings\OPTION, $saved, 5 );
 	}
 
-	public function test_empty_slug_falls_back_to_verify() {
-		$this->assertSame( 'verify', Settings\sanitize( array( 'verify_slug' => '  ' ) )['verify_slug'] );
+	public function test_empty_slug_falls_back_to_certificate() {
+		$this->assertSame( 'certificate', Settings\sanitize( array( 'slug' => '  ' ) )['slug'] );
 	}
 
 	public function test_certificates_goes_right_after_attendees_in_camptix_menu() {

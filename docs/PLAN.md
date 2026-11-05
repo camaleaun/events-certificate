@@ -58,7 +58,7 @@ colando várias linhas.
 | Fontes | Helvetica/Courier/Times + DejaVu Condensed só quando há UTF-8 (perde negrito) | Sempre fontes Unicode (DejaVu Sans/Serif, regular e negrito) e um filtro para TTF próprio |
 | Cache de fontes | tFPDF grava `.mtx.php`/`.cw.dat` e faz `mkdir` dentro do plugin | Subclasse que **não grava nada**: as métricas ficam em memória durante a requisição |
 | Acesso | Público por opt-in, dono ou admin | Quem tem o código vê o PDF e a verificação; a busca por e-mail lista ou envia os links |
-| Verificação | Não existe | Página `?evcert_verify=CODIGO`, mais o código impresso no PDF |
+| Verificação | Não existe | Página `?evcert_certificate=CODIGO`, mais o código impresso no PDF |
 | Placeholders | `{{learner}}` etc. com `str_replace` e um filtro | `{name}`, `{event}`, `{date}`, `{hours}`, `{role}`, `{details}`, `{location}`, `{code}`, `{verify_url}`, com filtro |
 
 Bug do Sensei que não vamos repetir: em `pdf-certificate.php:394` o array de
@@ -204,7 +204,7 @@ O plugin não impõe um CPT de evento. O certificado sempre pertence a um
   `gatherpress_event`, com carga horária, exigir check-in e um link para emitir e
   ver os certificados. A data e o local vêm do próprio evento.
 - **WordCamp:** em multisite, cada subsite tem a sua tabela (`$wpdb->prefix`) e a
-  sua URL de autenticidade (`2026.saopaulo.wordcamp.org/verify/…`). Não há nada
+  sua URL de autenticidade (`2026.saopaulo.wordcamp.org/certificate/…`). Não há nada
   em nível de rede.
 
 ### 2.1.1 Site comunitário com vários grupos (ex.: wp-brasil.org)
@@ -257,7 +257,7 @@ A mesma lógica de overrides por campo (2.5) se aplica, nível a nível.
 **Emissão e verificação**
 - O carimbo diz quem emitiu: "Emitido por **Meetup WordPress Curitiba** via
   wp-brasil.org em 2026-11-04 19:30 UTC−03:00".
-- Todos os códigos ficam em `wp-brasil.org/verify/…`, num registro único para
+- Todos os códigos ficam em `wp-brasil.org/certificate/…`, num registro único para
   todas as cidades.
 
 **Migração de um grupo para o events.wordpress.org (com redirecionamento)**
@@ -274,8 +274,8 @@ quando o grupo migra.
    - Antes de ativar, o plugin **confere** se a URL nova responde por alguns
      códigos do grupo. É uma requisição feita pelo admin, para um destino que ele
      informou, e entra na seção *External services* do readme.
-4. Daí em diante, `wp-brasil.org/verify/CODIGO` de um certificado desse grupo
-   responde **301** para `events.wordpress.org/curitiba/verify/CODIGO/` (a base
+4. Daí em diante, `wp-brasil.org/certificate/CODIGO` de um certificado desse grupo
+   responde **301** para `events.wordpress.org/curitiba/certificate/CODIGO/` (a base
    nova + o mesmo código). O mesmo vale para `/pdf/` e `/image/`.
 5. O wp-brasil.org **mantém a entrada** (código → grupo, dados e status) como
    reserva:
@@ -738,12 +738,17 @@ e é "corrigir e reemitir", com código novo (2.2).
 ### 2.3 Autenticidade (estilo gov.br, funcionando para estrangeiros)
 
 **URL**
-- O slug padrão é `verify`, em inglês. Ele pode ser trocado em *Configurações →
-  Links permanentes* (seção "Certificados", como as bases do WooCommerce).
-- Exemplos: `https://site/verify/` (formulário para digitar o código) e
-  `https://site/verify/2611-04K7-M29Q-XAP3/` (resultado).
+- O slug padrão é `certificate`, em inglês, e serve para tudo: a página do
+  certificado com a autenticidade (`/certificate/<código>/`), o formulário para
+  digitar o código (`/certificate/`), o PDF (`…/<código>/pdf/`) e a imagem
+  (`…/<código>/image/`). Ele pode ser trocado na aba de configurações dos
+  certificados ("Endereço do certificado"; no CampTix, Ingressos → Configuração →
+  Certificados). Foi escolhido em vez de `verify`, que é genérico, colide com
+  outros plugins e não diz o que se verifica.
+- Exemplos: `https://site/certificate/` (formulário para digitar o código) e
+  `https://site/certificate/2611-04K7-M29Q-XAP3/` (resultado).
 - Usa uma rewrite rule própria, com flush só quando o slug muda.
-- Com links permanentes "simples", cai para `?evcert_verify=CODIGO`, que funciona
+- Com links permanentes "simples", cai para `?evcert_certificate=CODIGO`, que funciona
   em qualquer configuração.
 - Um aviso aparece se já existir uma página ou post com o mesmo slug.
 
@@ -756,7 +761,7 @@ e é "corrigir e reemitir", com código novo (2.2).
 **No PDF**, uma caixa no rodapé, posicionável como os outros blocos:
 - o QR code com a URL completa (desenhado em **vetor** com `Rect()` do tFPDF, nítido
   e sem imagem temporária);
-- o texto "Verifique a autenticidade em `site/verify` com o código `XXXX`" no
+- o texto "Verifique a autenticidade em `site/certificate` com o código `XXXX`" no
   idioma do site, com a linha em inglês embaixo quando o site não está em `en_*`
   (pode ser desligado);
 - a data de emissão em ISO (`2026-11-04`).
@@ -772,7 +777,7 @@ e é "corrigir e reemitir", com código novo (2.2).
 - O seletor de idioma (visível no topo, com os idiomas definidos no site, 2.3.4) troca o idioma de toda a página
   (`switch_to_locale`), e o plugin já vem com a tradução em inglês.
 - O formulário de código usa nonce, honeypot e um limite por IP (transient).
-- Filtros: `evcert_verify_slug`, `evcert_verify_fields`, `evcert_code_format`.
+- Filtros: `evcert_certificate_slug`, `evcert_verify_fields`, `evcert_code_format`.
 
 **Privacidade**
 - A página mostra o nome (precisa mostrar para autenticar) e **nunca o e-mail**.
@@ -792,7 +797,7 @@ e é "corrigir e reemitir", com código novo (2.2).
   | Modo | Frente | Verso (página 2) |
   |---|---|---|
   | **Mesma página** | o elemento *Autenticidade* (QR + código + URL), posicionado na arte | não existe |
-  | **Verso** (padrão sugerido) | só a **linha mínima** (estilo TCU: "Verify at site/verify · code XXXX"), para a frente impressa sozinha continuar verificável; pode ser desligada | a **página de autenticação** (estilo Receita), bilíngue: QR grande, URL, código, impressão digital, hash SHA-256 completo e o carimbo de emissão |
+  | **Verso** (padrão sugerido) | só a **linha mínima** (estilo TCU: "Verify at site/certificate · code XXXX"), para a frente impressa sozinha continuar verificável; pode ser desligada | a **página de autenticação** (estilo Receita), bilíngue: QR grande, URL, código, impressão digital, hash SHA-256 completo e o carimbo de emissão |
   | **Os dois** | o elemento na arte | a página de autenticação |
 
   - O verso tem o mesmo tamanho e a mesma orientação da frente, para imprimir
@@ -837,7 +842,7 @@ compartilha, nunca o PDF.
   Imagick.
 - **Prévia do link (`og:image`)** na página de verificação, com `og:title`
   "{name} — {event}" e `og:description`:
-  - `og:image` aponta para `/verify/CODIGO/image/`, que **gera o PNG sob
+  - `og:image` aponta para `/certificate/CODIGO/image/`, que **gera o PNG sob
     demanda** quando o servidor tem Imagick com SVG. Ele responde com
     `Cache-Control: public, max-age=…` e `ETag` = impressão digital, e não grava
     nada em disco: quem guarda a cópia são as redes, o navegador e um CDN, se
@@ -868,7 +873,7 @@ saber com segurança quem é o dono.
 
 | Ação | Quem pode |
 |---|---|
-| Página de verificação `/verify/CODIGO/` (status, nome, evento, datas, carga horária, código, impressão digital, link do perfil) | **público** |
+| Página de verificação `/certificate/CODIGO/` (status, nome, evento, datas, carga horária, código, impressão digital, link do perfil) | **público** |
 | Visualizar a arte do certificado na página e na prévia das redes (`/image/`) | **público**: é o que se compartilha |
 | Botões de compartilhar e "Add to LinkedIn" | **público** |
 | **Baixar o PDF / "segunda via"** (`/pdf/`) | **só o dono logado** (`user_login` = `wporg_username`) e os organizadores. Os outros veem "Entre com a sua conta do WordPress.org para baixar" |
@@ -1000,14 +1005,14 @@ certificado pertence. Quanto mais curta a URL, mais fácil de digitar e menor o 
 | | WordCamp (CampTix) | Meetup com GatherPress | Meetup sem GatherPress (standalone) |
 |---|---|---|---|
 | Site | um subsite por edição: `saopaulo.wordcamp.org/2026/` | um site do grupo com vários eventos: `wpsp.org` | idem |
-| **Verificação** (no QR) | `saopaulo.wordcamp.org/2026/verify/2611-04K7-M29Q-XAP3/` | `wpsp.org/verify/2611-04K7-M29Q-XAP3/` | idem |
-| Verificação sem código (digitar) | `…/2026/verify/` | `wpsp.org/verify/` | idem |
-| PDF | `…/verify/CODIGO/pdf/` (`?sides=front` = só a frente) | idem | idem |
-| Imagem para redes | `…/verify/CODIGO/image/` | idem | idem |
+| **Verificação** (no QR) | `saopaulo.wordcamp.org/2026/certificate/2611-04K7-M29Q-XAP3/` | `wpsp.org/certificate/2611-04K7-M29Q-XAP3/` | idem |
+| Verificação sem código (digitar) | `…/2026/certificate/` | `wpsp.org/certificate/` | idem |
+| PDF | `…/certificate/CODIGO/pdf/` (`?sides=front` = só a frente) | idem | idem |
+| Imagem para redes | `…/certificate/CODIGO/image/` | idem | idem |
 | **"Pegue seu certificado"** (busca por e-mail) | uma página do site, por exemplo `…/2026/certificates/`, com o bloco/shortcode | o bloco **dentro da página do evento** (`wpsp.org/event/meetup-novembro/`, que já sabe o evento), ou uma página geral `wpsp.org/certificates/` com um seletor de evento | página geral, com `event="ID"` ou o seletor |
-| Fallback com links "simples" | `?evcert_verify=CODIGO` | idem | idem |
+| Fallback com links "simples" | `?evcert_certificate=CODIGO` | idem | idem |
 
-- `verify` é o padrão em inglês e pode ser trocado em *Links permanentes*.
+- `certificate` é o padrão em inglês e pode ser trocado em *Links permanentes*.
   `/pdf/` e `/image/` são sufixos fixos.
 - **No WordCamp.org há um porém real:** os organizadores **não instalam
   plugins**, pois a rede wordcamp.org é mantida pelo time Meta, que roda o próprio
@@ -1054,7 +1059,7 @@ seria enviar dados a terceiros.
 - os **códigos continuam sendo gerados** na emissão. Se o banco migrar para o
   domínio público, os mesmos certificados passam a sair com o QR e a URL reais,
   porque o PDF é redesenhado no download;
-- `/verify/CODIGO` responde com uma página "verificação indisponível neste
+- `/certificate/CODIGO` responde com uma página "verificação indisponível neste
   ambiente", sem dados do certificado;
 - a tela de configurações mostra o motivo detectado ("host .local", "Playground"…)
   e a opção de forçar.
@@ -1392,7 +1397,7 @@ O certificado aparece em lugares com formatos muito diferentes. A arte tem
 |---|---|
 | Pegar o próprio certificado (sites com login do WordPress.org) | **"Meus certificados" logado**: só a própria pessoa vê a lista |
 | Pegar o próprio certificado (sites sem login) | busca por **usuário ou e-mail → os links vão para o e-mail cadastrado**. **Nada é listado na tela.** A resposta é sempre igual ("se houver, enviamos"), para não revelar quem participou |
-| Conferir um certificado | **só com o código** (`/verify/CODIGO`). Quem tem o código recebeu da própria pessoa. Não existe busca pública por nome, usuário ou documento |
+| Conferir um certificado | **só com o código** (`/certificate/CODIGO`). Quem tem o código recebeu da própria pessoa. Não existe busca pública por nome, usuário ou documento |
 | Mostrar "meus certificados" publicamente | **opt-in da pessoa**, desligado por padrão: uma página pública com os certificados que ela escolher, como num perfil |
 | Link para o perfil do WordPress.org na verificação | **opt-in da pessoa**, desligado por padrão |
 | Compartilhar nas redes | decisão da pessoa, um certificado por vez |
@@ -1770,8 +1775,8 @@ admin.
 4. **GatherPress:** um painel *Certificados* na barra lateral do
    `gatherpress_event` (um plugin do editor via `registerPlugin`), com o resumo, o
    link para a lista filtrada e "Personalizar a arte deste evento".
-5. **Links permanentes:** o campo "Base de verificação de certificados" (padrão
-   `verify`), com a Settings API do core, porque a tela é do core.
+5. **O endereço do certificado** (slug, padrão `certificate`) fica nas
+   configurações dos certificados, e não em Links permanentes.
 
 **Capabilities:** `evcert_manage` (site), `evcert_manage_group` (escopo por grupo
 via `map_meta_cap`) e `evcert_edit_design`. Os admins recebem todas.
@@ -1797,7 +1802,7 @@ events-certificate/
 │   ├── fonts.php
 │   ├── pdf.php                    # JSON → PDF (motor do spike) + página de autenticação
 │   ├── groups.php                 # CPT evcert_group / evcert_event, capabilities por grupo
-│   ├── verify.php                 # rewrite /verify/, página pública, /pdf/, /image/, robots, OG
+│   ├── verify.php                 # rewrite /certificate/, página pública, /pdf/, /image/, robots, OG
 │   ├── lookup.php                 # bloco/shortcode "Pegue seu certificado", "Meus certificados"
 │   ├── mail.php                   # fila de e-mails (WP-Cron)
 │   ├── import.php                 # CSV/colar: parser, encoding, sinônimos, mapeamento
@@ -1854,7 +1859,7 @@ events-certificate/
    - teste: acentos, conferência com `pdftotext`, QR lido por `zbarimg` com a URL
      correta, fundos PNG/JPG/WebP.
 3. **Verificação:**
-   - slug padrão e personalizado, fallback `?evcert_verify=`, os estados
+   - slug padrão e personalizado, fallback `?evcert_certificate=`, os estados
      válido/revogado/não encontrado, `?lang=en`, limite por IP e noindex;
    - curl com links permanentes ligados e desligados, e com troca de slug.
 4. **Tela de certificados:** emitir, revogar/corrigir, lote, adicionar e colar,
@@ -1866,7 +1871,7 @@ events-certificate/
 7. **GatherPress:** ID do evento, RSVPs (attending, not_attending, waiting e
    check-in), painel no editor e bloco de busca dentro do evento.
 8. **Playground:** blueprint de demonstração; confirmar que não aparecem nem o QR nem
-   o código e que `/verify` dá 404 no CLI e no playground.wordpress.net.
+   o código e que `/certificate` dá 404 no CLI e no playground.wordpress.net.
 8.5. **Compartilhamento:**
    - LinkedIn (adicionar ao perfil e post), links das redes, Web Share API com
      arquivo, "Baixar imagem" e `og:image` sob demanda (Imagick ou uma imagem existente);

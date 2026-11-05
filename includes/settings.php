@@ -20,7 +20,8 @@ const OPTION = 'evcert_settings';
  *
  * - force_public: treat this site as public even when it looks local
  *   (a staging site behind a public URL), so certificates get a real QR code.
- * - verify_slug: the URL base of verification pages (/verify/CODE/).
+ * - slug: the URL base of certificate pages (/certificate/CODE/), where
+ *   anyone sees a certificate and checks it is authentic.
  * - delete_data: drop the tables on uninstall. Off by default: printed
  *   certificates point to their verification page.
  *
@@ -29,7 +30,7 @@ const OPTION = 'evcert_settings';
 function defaults() {
 	return array(
 		'force_public' => false,
-		'verify_slug'  => 'verify',
+		'slug'         => 'certificate',
 		'delete_data'  => false,
 	);
 }
@@ -49,8 +50,8 @@ function sanitize( $value ) {
 		$clean[ $key ] = array_key_exists( $key, $value ) ? (bool) $value[ $key ] : $defaults[ $key ];
 	}
 
-	$slug                 = array_key_exists( 'verify_slug', $value ) ? sanitize_title( (string) $value['verify_slug'] ) : '';
-	$clean['verify_slug'] = '' !== $slug ? $slug : $defaults['verify_slug'];
+	$slug          = array_key_exists( 'slug', $value ) ? sanitize_title( (string) $value['slug'] ) : '';
+	$clean['slug'] = '' !== $slug ? $slug : $defaults['slug'];
 
 	return $clean;
 }
