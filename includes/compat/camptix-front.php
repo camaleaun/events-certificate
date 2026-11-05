@@ -128,7 +128,7 @@ function attendee_data( $attendee ) {
 	$data = array(
 		'context'        => 'site',
 		'event_id'       => 0,
-		'name'           => $tix ? $tix->format_name_string( '%first% %last%', $first, $last ) : trim( "$first $last" ),
+		'name'           => trim( $tix ? $tix->format_name_string( '%first% %last%', $first, $last ) : "$first $last" ),
 		'email'          => (string) get_post_meta( $attendee->ID, 'tix_email', true ),
 		'wporg_username' => $username,
 		'role'           => 'attendee',
