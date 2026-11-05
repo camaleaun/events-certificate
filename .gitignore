@@ -13,3 +13,6 @@
 
 # Reference material (third-party PDFs and Figma assets with trademarks): kept locally, never published.
 /docs/references/
+
+# Strauss phar: downloaded by each developer (composer prefix-namespaces).
+/bin/strauss.phar

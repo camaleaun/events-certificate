@@ -39,6 +39,7 @@ function bootstrap() {
 	require_once $build;
 
 	add_action( 'admin_menu', __NAMESPACE__ . '\add_page' );
+	add_action( 'load-admin_page_' . SLUG, __NAMESPACE__ . '\set_title' );
 	add_action( 'admin_enqueue_scripts', __NAMESPACE__ . '\enqueue' );
 	add_filter( 'admin_body_class', __NAMESPACE__ . '\body_class' );
 	add_action( 'evcert_certificates_screen', __NAMESPACE__ . '\render_editor_link', 5 );
@@ -114,6 +115,15 @@ function add_page() {
 	if ( available() ) {
 		add_submenu_page( '', __( 'Certificate design', 'events-certificate' ), '', Admin\CAPABILITY, SLUG, RENDER );
 	}
+}
+
+/**
+ * The browser tab title, like the block editor's: "Edit certificate ‹ Site
+ * name — WordPress". A page with no menu item has no title of its own, and
+ * core builds the tab title from the $title global.
+ */
+function set_title() {
+	$GLOBALS['title'] = __( 'Edit certificate', 'events-certificate' ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- core reads the screen title from $title.
 }
 
 /**

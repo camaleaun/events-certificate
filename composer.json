@@ -38,13 +38,33 @@
             "@lint",
             "@phpcs",
             "@test"
-        ]
+        ],
+        "prefix-namespaces": "php bin/strauss.phar"
     },
     "scripts-descriptions": {
         "lint": "PHP syntax check of every file.",
         "phpcs": "WordPress Coding Standards and PHP 7.4+ compatibility.",
         "phpcbf": "Fix what PHPCS can fix automatically.",
         "test": "PHPUnit tests (loads the WordPress site the plugin is installed in; set WP_LOAD for another).",
-        "check": "Lint, PHPCS and tests."
+        "check": "Lint, PHPCS and tests.",
+        "prefix-namespaces": "Copy dompdf and php-qrcode into vendor-prefixed/ with the EventsCertificate\\Vendor\\ prefix (needs bin/strauss.phar, see bin/README)."
+    },
+    "extra": {
+        "strauss": {
+            "target_directory": "vendor-prefixed",
+            "namespace_prefix": "EventsCertificate\\Vendor\\",
+            "classmap_prefix": "EventsCertificate_Vendor_",
+            "constant_prefix": "EVCERT_VENDOR_",
+            "packages": [
+                "dompdf/dompdf",
+                "chillerlan/php-qrcode"
+            ],
+            "delete_vendor_packages": false,
+            "exclude_from_copy": {
+                "file_patterns": [
+                    "/dompdf\\/lib\\/fonts\\/DejaVu/"
+                ]
+            }
+        }
     }
 }
