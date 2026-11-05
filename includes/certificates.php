@@ -220,6 +220,30 @@ function reissue( array $old, array $changes ) {
 }
 
 /**
+ * Revokes a certificate: its code then says it was revoked, with the reason.
+ *
+ * @param int    $id     Certificate ID.
+ * @param string $reason Why (shown on the certificate page).
+ * @return bool Whether it changed.
+ */
+function revoke( $id, $reason = '' ) {
+	global $wpdb;
+
+	return (bool) $wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- the plugin's own table.
+		table(),
+		array(
+			'status'         => 'revoked',
+			'revoked_reason' => sanitize_text_field( $reason ),
+			'updated_at'     => current_time( 'mysql', true ),
+		),
+		array(
+			'id'     => (int) $id,
+			'status' => 'issued',
+		)
+	);
+}
+
+/**
  * The public address of a certificate (its verification page).
  *
  * @param string $code Certificate code.

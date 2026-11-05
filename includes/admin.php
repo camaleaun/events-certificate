@@ -12,6 +12,8 @@
 
 namespace EventsCertificate\Admin;
 
+use EventsCertificate\Certificates;
+
 use EventsCertificate\Environment;
 use EventsCertificate\Install;
 use EventsCertificate\Settings;
@@ -65,10 +67,58 @@ function register_menu() {
 	$parent = menu_parent();
 
 	if ( '' === $parent ) {
-		add_menu_page( $title, $title, CAPABILITY, SLUG, __NAMESPACE__ . '\render_page', 'dashicons-awards', 26 );
+		$hook = add_menu_page( $title, $title, CAPABILITY, SLUG, __NAMESPACE__ . '\render_page', 'dashicons-awards', 26 );
 	} else {
-		add_submenu_page( $parent, $title, $title, CAPABILITY, SLUG, __NAMESPACE__ . '\render_page' );
+		$hook = add_submenu_page( $parent, $title, $title, CAPABILITY, SLUG, __NAMESPACE__ . '\render_page' );
 	}
+	if ( $hook ) {
+		add_action( 'load-' . $hook, __NAMESPACE__ . '\load_screen' );
+	}
+}
+
+/**
+ * Before the Certificates screen prints: the per-page screen option and the
+ * revoke action (row or bulk), then back to the list with a notice.
+ */
+function load_screen() {
+	add_screen_option(
+		'per_page',
+		array(
+			'label'   => __( 'Certificates per page', 'events-certificate' ),
+			'default' => 20,
+			'option'  => 'evcert_certificates_per_page',
+		)
+	);
+	add_filter( 'set_screen_option_evcert_certificates_per_page', __NAMESPACE__ . '\save_per_page', 10, 3 );
+
+	$table  = new List_Table();
+	$action = $table->current_action();
+	if ( 'revoke' !== $action ) {
+		return;
+	}
+	check_admin_referer( 'bulk-certificates' );
+	if ( ! current_user_can( CAPABILITY ) ) {
+		wp_die( esc_html__( 'Sorry, you are not allowed to revoke certificates.', 'events-certificate' ) );
+	}
+	$ids     = isset( $_REQUEST['certificate'] ) ? array_map( 'absint', (array) wp_unslash( $_REQUEST['certificate'] ) ) : array();
+	$revoked = 0;
+	foreach ( array_filter( $ids ) as $id ) {
+		$revoked += Certificates\revoke( $id ) ? 1 : 0;
+	}
+	wp_safe_redirect( add_query_arg( 'revoked', $revoked, remove_query_arg( array( 'action', 'action2', 'certificate', '_wpnonce', '_wp_http_referer', 'revoked' ) ) ) );
+	exit;
+}
+
+/**
+ * Keeps the per-page screen option.
+ *
+ * @param mixed  $keep   Value to keep (false to not save).
+ * @param string $option Option name.
+ * @param int    $value  Value chosen.
+ * @return int
+ */
+function save_per_page( $keep, $option, $value ) {
+	return max( 1, min( 999, (int) $value ) );
 }
 
 /**
@@ -291,9 +341,10 @@ function counts() {
 
 	$table  = Install\tables()['certificates'];
 	$counts = array(
-		'draft'   => 0,
-		'issued'  => 0,
-		'revoked' => 0,
+		'draft'    => 0,
+		'issued'   => 0,
+		'replaced' => 0,
+		'revoked'  => 0,
 	);
 	$rows   = $wpdb->get_results( $wpdb->prepare( 'SELECT status, COUNT(*) AS total FROM %i GROUP BY status', $table ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 	foreach ( (array) $rows as $row ) {
@@ -304,29 +355,52 @@ function counts() {
 }
 
 /**
- * The Certificates screen. For now a summary: the management screen
- * (DataViews) comes with the build step.
+ * The Certificates screen: issued certificates in a list table, like
+ * CampTix's Attendees.
  */
 function render_page() {
 	if ( ! current_user_can( CAPABILITY ) ) {
 		return;
 	}
-	$counts = counts();
-	$labels = array(
-		'draft'   => __( 'Drafts', 'events-certificate' ),
-		'issued'  => __( 'Issued', 'events-certificate' ),
-		'revoked' => __( 'Revoked', 'events-certificate' ),
-	);
+	$table = new List_Table();
+	$table->prepare_items();
+	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- only a count for the notice.
+	$revoked = isset( $_GET['revoked'] ) ? absint( $_GET['revoked'] ) : null;
 	?>
 	<div class="wrap">
-		<h1><?php esc_html_e( 'Certificates', 'events-certificate' ); ?></h1>
-		<p><?php esc_html_e( 'Issue, send and revoke attendance certificates here. This screen is still being built.', 'events-certificate' ); ?></p>
-		<ul class="subsubsub">
-			<?php foreach ( $labels as $status => $label ) : ?>
-				<li><?php echo esc_html( $label ); ?> <span class="count">(<?php echo esc_html( number_format_i18n( $counts[ $status ] ) ); ?>)</span><?php echo 'revoked' === $status ? '' : ' |'; ?></li>
-			<?php endforeach; ?>
-		</ul>
-		<br class="clear">
+		<h1 class="wp-heading-inline"><?php esc_html_e( 'Certificates', 'events-certificate' ); ?></h1>
+		<?php
+		/**
+		 * Fires next to the Certificates screen title (links like Edit certificate design).
+		 */
+		do_action( 'evcert_certificates_title_actions' );
+		?>
+		<hr class="wp-header-end">
+		<?php if ( null !== $revoked ) : ?>
+			<div class="notice notice-success is-dismissible"><p>
+				<?php
+				/* translators: %s: number of certificates. */
+				echo esc_html( sprintf( _n( '%s certificate revoked.', '%s certificates revoked.', $revoked, 'events-certificate' ), number_format_i18n( $revoked ) ) );
+				?>
+			</p></div>
+		<?php endif; ?>
+		<?php $table->views(); ?>
+		<form method="get">
+			<input type="hidden" name="page" value="<?php echo esc_attr( SLUG ); ?>">
+			<?php if ( 'edit.php' === $GLOBALS['pagenow'] && isset( $_GET['post_type'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- keeps the parent screen in the form. ?>
+				<input type="hidden" name="post_type" value="<?php echo esc_attr( sanitize_key( wp_unslash( $_GET['post_type'] ) ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>">
+			<?php endif; ?>
+			<?php
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- keeps the status view in the search.
+			if ( isset( $_GET['status'] ) ) :
+				?>
+				<input type="hidden" name="status" value="<?php echo esc_attr( sanitize_key( wp_unslash( $_GET['status'] ) ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>">
+			<?php endif; ?>
+			<?php
+			$table->search_box( __( 'Search certificates', 'events-certificate' ), 'evcert-search' );
+			$table->display();
+			?>
+		</form>
 		<?php
 		/**
 		 * Fires at the end of the Certificates screen, where the settings go

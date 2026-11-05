@@ -42,7 +42,7 @@ function register() {
 	add_filter( 'camptix_setup_sections', __NAMESPACE__ . '\add_setup_tab' );
 	add_action( 'camptix_menu_setup_controls', __NAMESPACE__ . '\setup_controls' );
 	remove_action( 'evcert_certificates_screen', 'EventsCertificate\Admin\render_settings_form' );
-	add_action( 'evcert_certificates_screen', __NAMESPACE__ . '\render_settings_link' );
+	add_action( 'evcert_certificates_title_actions', __NAMESPACE__ . '\render_settings_link' );
 	register_front();
 }
 
@@ -133,8 +133,8 @@ function setup_controls( $section ) {
  */
 function render_settings_link() {
 	printf(
-		'<p><a href="%s">%s</a></p>',
+		'<a class="page-title-action" href="%s">%s</a>',
 		esc_url( admin_url( MENU . '&page=camptix_options&tix_section=' . SECTION ) ),
-		esc_html__( 'Certificate settings', 'events-certificate' )
+		esc_html__( 'Settings', 'events-certificate' )
 	);
 }

@@ -32,6 +32,7 @@ require_once __DIR__ . '/includes/environment.php';
 require_once __DIR__ . '/includes/code.php';
 require_once __DIR__ . '/includes/designs.php';
 require_once __DIR__ . '/includes/admin.php';
+require_once __DIR__ . '/includes/class-list-table.php';
 require_once __DIR__ . '/includes/admin-app.php';
 require_once __DIR__ . '/includes/certificates.php';
 require_once __DIR__ . '/includes/render.php';

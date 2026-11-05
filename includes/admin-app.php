@@ -42,7 +42,7 @@ function bootstrap() {
 	add_action( 'load-admin_page_' . SLUG, __NAMESPACE__ . '\set_title' );
 	add_action( 'admin_enqueue_scripts', __NAMESPACE__ . '\enqueue' );
 	add_filter( 'admin_body_class', __NAMESPACE__ . '\body_class' );
-	add_action( 'evcert_certificates_screen', __NAMESPACE__ . '\render_editor_link', 5 );
+	add_action( 'evcert_certificates_title_actions', __NAMESPACE__ . '\render_editor_link', 5 );
 }
 
 /**
@@ -253,7 +253,7 @@ function render_editor_link() {
 		return;
 	}
 	printf(
-		'<p><a class="button button-primary" href="%s">%s</a></p>',
+		'<a class="page-title-action" href="%s">%s</a>',
 		esc_url( url( Designs\site_design_id() ) ),
 		esc_html__( 'Edit certificate design', 'events-certificate' )
 	);

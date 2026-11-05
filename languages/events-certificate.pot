@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-05T13:42:22+00:00\n"
+"POT-Creation-Date: 2026-11-05T14:04:06+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: events-certificate\n"
@@ -50,7 +50,7 @@ msgid "Edit certificate"
 msgstr ""
 
 #: includes/admin-app.php:198
-#: includes/admin.php:249
+#: includes/admin.php:299
 msgid "City, Country"
 msgstr ""
 
@@ -84,137 +84,140 @@ msgstr ""
 msgid "Edit certificate design"
 msgstr ""
 
-#: includes/admin.php:64
-#: includes/admin.php:322
+#: includes/admin.php:66
+#: includes/admin.php:371
 #: includes/compat/camptix.php:109
 msgid "Certificates"
 msgstr ""
 
-#: includes/admin.php:124
+#: includes/admin.php:87
+msgid "Certificates per page"
+msgstr ""
+
+#: includes/admin.php:101
+msgid "Sorry, you are not allowed to revoke certificates."
+msgstr ""
+
+#: includes/admin.php:174
 #: build/routes/editor/content.js:1905
 #: build/routes/editor/content.js:2927
 msgid "Authenticity"
 msgstr ""
 
-#: includes/admin.php:130
+#: includes/admin.php:180
 msgid "Public site"
 msgstr ""
 
-#: includes/admin.php:138
+#: includes/admin.php:188
 msgid "Certificate address"
 msgstr ""
 
-#: includes/admin.php:147
+#: includes/admin.php:197
 msgid "Issuing"
 msgstr ""
 
-#: includes/admin.php:153
+#: includes/admin.php:203
 msgid "Event location"
 msgstr ""
 
-#: includes/admin.php:161
+#: includes/admin.php:211
 msgid "Attendees get their own"
 msgstr ""
 
-#: includes/admin.php:170
+#: includes/admin.php:220
 msgid "Data"
 msgstr ""
 
-#: includes/admin.php:176
+#: includes/admin.php:226
 msgid "Uninstall"
 msgstr ""
 
-#: includes/admin.php:189
+#: includes/admin.php:239
 msgid "Certificates issued on this site carry a QR code and a code anyone can check on its verification page."
 msgstr ""
 
-#: includes/admin.php:194
+#: includes/admin.php:244
 msgid "it runs on WordPress Playground"
 msgstr ""
 
-#: includes/admin.php:195
+#: includes/admin.php:245
 msgid "its environment type is “local”"
 msgstr ""
 
-#: includes/admin.php:196
+#: includes/admin.php:246
 msgid "its address only works on this computer or network"
 msgstr ""
 
-#: includes/admin.php:197
+#: includes/admin.php:247
 msgid "its address is a private IP"
 msgstr ""
 
 #. translators: %s: reasons, e.g. "its address only works on this computer or network".
-#: includes/admin.php:207
+#: includes/admin.php:257
 #, php-format
 msgid "This site doesn’t look public (%s), so certificates show a placeholder where the QR code and the verification address go: nobody else could open them."
 msgstr ""
 
-#: includes/admin.php:221
+#: includes/admin.php:271
 msgid "Treat this site as public"
 msgstr ""
 
-#: includes/admin.php:222
+#: includes/admin.php:272
 msgid "For a staging site with a public address. Only turn it on when anyone can open this site’s pages."
 msgstr ""
 
-#: includes/admin.php:235
+#: includes/admin.php:285
 msgid "The address printed on certificates and in their QR code. Change it before issuing: printed certificates keep the old one."
 msgstr ""
 
 #. translators: Stands for a certificate code in an example address, as in https://example.com/certificate/<code>/.
-#: includes/admin.php:237
+#: includes/admin.php:287
 msgctxt "certificate code placeholder"
 msgid "code"
 msgstr ""
 
-#: includes/admin.php:250
+#: includes/admin.php:300
 msgid "Shown where the design uses the Location field. On WordCamp.org it comes from the WordCamp’s location."
 msgstr ""
 
-#: includes/admin.php:259
+#: includes/admin.php:309
 msgid "When marked as present at the event"
 msgstr ""
 
-#: includes/admin.php:260
+#: includes/admin.php:310
 msgid "With any confirmed ticket"
 msgstr ""
 
-#: includes/admin.php:261
+#: includes/admin.php:311
 msgid "No: only organizers issue certificates"
 msgstr ""
 
-#: includes/admin.php:268
+#: includes/admin.php:318
 msgid "From the link in their ticket e-mail, attendees check how their name goes on the certificate and get it with its code."
 msgstr ""
 
-#: includes/admin.php:279
+#: includes/admin.php:329
 msgid "Delete all certificates when the plugin is deleted"
 msgstr ""
 
-#: includes/admin.php:280
+#: includes/admin.php:330
 msgid "Printed certificates would no longer be verifiable. Leave it off unless you are sure."
 msgstr ""
 
-#: includes/admin.php:316
-msgid "Drafts"
+#. translators: %s: number of certificates.
+#: includes/admin.php:383
+#, php-format
+msgid "%s certificate revoked."
+msgid_plural "%s certificates revoked."
+msgstr[0] ""
+msgstr[1] ""
+
+#: includes/admin.php:400
+msgid "Search certificates"
 msgstr ""
 
-#: includes/admin.php:317
-msgid "Issued"
-msgstr ""
-
-#: includes/admin.php:318
-#: includes/verify.php:206
-#: includes/verify.php:322
-msgid "Revoked"
-msgstr ""
-
-#: includes/admin.php:323
-msgid "Issue, send and revoke attendance certificates here. This screen is still being built."
-msgstr ""
-
-#: includes/admin.php:348
+#: includes/admin.php:422
+#: includes/compat/camptix.php:138
 #: build/routes/editor/content.js:1920
 #: build/routes/editor/content.js:3522
 #: build/routes/editor/content.js:3709
@@ -227,6 +230,121 @@ msgstr ""
 
 #: includes/certificates.php:186
 msgid "The certificate could not be issued. Try again."
+msgstr ""
+
+#: includes/class-list-table.php:53
+msgctxt "certificate status"
+msgid "Issued"
+msgstr ""
+
+#: includes/class-list-table.php:54
+msgctxt "certificate status"
+msgid "Replaced"
+msgstr ""
+
+#: includes/class-list-table.php:55
+msgctxt "certificate status"
+msgid "Revoked"
+msgstr ""
+
+#: includes/class-list-table.php:66
+msgctxt "certificates view"
+msgid "Issued"
+msgstr ""
+
+#: includes/class-list-table.php:67
+msgctxt "certificates view"
+msgid "Replaced"
+msgstr ""
+
+#: includes/class-list-table.php:68
+msgctxt "certificates view"
+msgid "Revoked"
+msgstr ""
+
+#: includes/class-list-table.php:80
+#: includes/compat/camptix-front.php:290
+#: includes/verify.php:442
+#: build/routes/editor/content.js:819
+#: build/routes/editor/content.js:2932
+msgid "Name"
+msgstr ""
+
+#: includes/class-list-table.php:81
+#: includes/compat/camptix-front.php:291
+#: includes/verify.php:448
+#: build/routes/editor/content.js:2928
+msgid "Code"
+msgstr ""
+
+#: includes/class-list-table.php:82
+#: includes/verify.php:443
+#: build/routes/editor/content.js:775
+#: build/routes/editor/content.js:945
+msgid "Event"
+msgstr ""
+
+#: includes/class-list-table.php:83
+#: includes/verify.php:445
+#: build/routes/editor/content.js:950
+msgid "Workload"
+msgstr ""
+
+#: includes/class-list-table.php:84
+msgid "Source"
+msgstr ""
+
+#: includes/class-list-table.php:85
+msgid "Status"
+msgstr ""
+
+#: includes/class-list-table.php:86
+#: includes/compat/camptix-front.php:292
+#: includes/verify.php:447
+msgid "Issued on"
+msgstr ""
+
+#: includes/class-list-table.php:127
+msgctxt "certificates view"
+msgid "All"
+msgstr ""
+
+#: includes/class-list-table.php:153
+#: includes/class-list-table.php:258
+msgid "Revoke"
+msgstr ""
+
+#: includes/class-list-table.php:218
+msgid "No certificates found."
+msgstr ""
+
+#: includes/class-list-table.php:240
+#: build/routes/editor/content.js:2259
+#: build/routes/editor/content.js:3553
+msgid "View"
+msgstr ""
+
+#: includes/class-list-table.php:243
+msgid "PDF"
+msgstr ""
+
+#: includes/class-list-table.php:257
+msgid "Revoke this certificate? Its code will then say it was revoked."
+msgstr ""
+
+#: includes/class-list-table.php:311
+#: includes/render.php:227
+msgid "Attendee"
+msgstr ""
+
+#: includes/class-list-table.php:314
+msgid "Manual"
+msgstr ""
+
+#. translators: %s: code of the new certificate.
+#: includes/class-list-table.php:329
+#, php-format
+msgid "by %s"
 msgstr ""
 
 #: includes/compat/camptix-front.php:81
@@ -281,24 +399,6 @@ msgstr ""
 msgid "Certificate"
 msgstr ""
 
-#: includes/compat/camptix-front.php:290
-#: includes/verify.php:442
-#: build/routes/editor/content.js:819
-#: build/routes/editor/content.js:2932
-msgid "Name"
-msgstr ""
-
-#: includes/compat/camptix-front.php:291
-#: includes/verify.php:448
-#: build/routes/editor/content.js:2928
-msgid "Code"
-msgstr ""
-
-#: includes/compat/camptix-front.php:292
-#: includes/verify.php:447
-msgid "Issued on"
-msgstr ""
-
 #: includes/compat/camptix-front.php:293
 msgid "Address"
 msgstr ""
@@ -328,16 +428,8 @@ msgstr ""
 msgid "Issue certificate"
 msgstr ""
 
-#: includes/compat/camptix.php:138
-msgid "Certificate settings"
-msgstr ""
-
 #: includes/designs.php:45
 msgid "Certificate designs"
-msgstr ""
-
-#: includes/render.php:227
-msgid "Attendee"
 msgstr ""
 
 #: includes/render.php:229
@@ -360,6 +452,11 @@ msgstr ""
 #: includes/verify.php:200
 #, php-format
 msgid "This code was valid, but the certificate was corrected. See the current one: %s"
+msgstr ""
+
+#: includes/verify.php:206
+#: includes/verify.php:322
+msgid "Revoked"
 msgstr ""
 
 #: includes/verify.php:213
@@ -441,17 +538,6 @@ msgstr ""
 #: includes/verify.php:429
 #: build/routes/editor/content.js:898
 msgid "Dark"
-msgstr ""
-
-#: includes/verify.php:443
-#: build/routes/editor/content.js:775
-#: build/routes/editor/content.js:945
-msgid "Event"
-msgstr ""
-
-#: includes/verify.php:445
-#: build/routes/editor/content.js:950
-msgid "Workload"
 msgstr ""
 
 #: includes/verify.php:453
@@ -1454,11 +1540,6 @@ msgstr ""
 #: build/routes/editor/content.js:2245
 #: build/routes/editor/content.js:3762
 msgid "Mobile"
-msgstr ""
-
-#: build/routes/editor/content.js:2259
-#: build/routes/editor/content.js:3553
-msgid "View"
 msgstr ""
 
 #: build/routes/editor/content.js:2292

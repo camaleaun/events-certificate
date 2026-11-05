@@ -70,6 +70,19 @@ class CertificatesTest extends Test_Case {
 	}
 
 	/**
+	 * Revoking marks an issued certificate revoked, once.
+	 */
+	public function test_revoke() {
+		$cert = Certificates\issue( array( 'name' => 'Ana Lima' ) );
+
+		$this->assertTrue( Certificates\revoke( (int) $cert['id'], 'Issued by mistake' ) );
+		$this->assertFalse( Certificates\revoke( (int) $cert['id'] ) );
+		$cert = Certificates\get( (int) $cert['id'] );
+		$this->assertSame( 'revoked', $cert['status'] );
+		$this->assertSame( 'Issued by mistake', $cert['revoked_reason'] );
+	}
+
+	/**
 	 * The self-issue setting keeps only known values.
 	 */
 	public function test_self_issue_setting() {
