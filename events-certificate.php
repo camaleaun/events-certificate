@@ -26,11 +26,15 @@ require_once __DIR__ . '/includes/install.php';
 require_once __DIR__ . '/includes/settings.php';
 require_once __DIR__ . '/includes/environment.php';
 require_once __DIR__ . '/includes/code.php';
+require_once __DIR__ . '/includes/designs.php';
 require_once __DIR__ . '/includes/admin.php';
+require_once __DIR__ . '/includes/admin-app.php';
 require_once __DIR__ . '/includes/compat/camptix.php';
 
 Install\bootstrap();
+Designs\bootstrap();
 Admin\bootstrap();
+AdminApp\bootstrap();
 
 // Integrations with other plugins register on this action, after every
 // plugin has loaded; each checks that its plugin is active.

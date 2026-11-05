@@ -1276,6 +1276,28 @@ algoritmo de quebra, implementado em JS (editor) e em PHP (PDF), usando as
 linhas já quebradas. Isso também vale para o "encolher para caber" com nomes
 reais. Teste: a mesma lista de textos dá as mesmas quebras nos dois lados.
 
+#### Cores com modos Claro e Escuro, e fundo transparente
+
+- **Cores da arte como variáveis** (como as "variables" com modos do
+  Figma/FigCraft): Primária, Texto, Texto suave, Linha e Fundo, cada uma com um
+  valor **Claro** e um **Escuro**. Os elementos usam a variável (`{color:
+  "text"}`) ou uma cor fixa. O modelo Base já vem com as variáveis preenchidas
+  (Blueberry, Charcoal 0, Charcoal 4).
+- **O fundo da página pode ser transparente.** O PDF não pinta fundo nenhum e
+  fica com o papel ou o visualizador. O editor mostra o fundo transparente como
+  um xadrez.
+- **Onde cada modo é usado:**
+  - a **página pública** segue `prefers-color-scheme` do visitante (com o
+    seletor Claro/Escuro no Dock);
+  - o **PDF** sai **sempre no modo Claro**, que é o melhor para imprimir e o
+    documento de referência;
+  - as **imagens para redes** (Mobile e Social) podem sair em Escuro, que costuma
+    funcionar melhor em Stories.
+- **No editor:** a alternância **Claro / Escuro** no Dock troca a prévia, e o
+  inspector mostra a qual variável a cor está ligada.
+- **Contraste:** o editor avisa quando um texto fica com contraste baixo (WCAG
+  AA) em algum dos modos.
+
 #### Pranchetas: Documento (PDF), Mobile e Social
 
 O certificado aparece em lugares com formatos muito diferentes. A arte tem
@@ -1702,7 +1724,16 @@ algo para o usuário.
 **Ao fim de cada sessão de trabalho:** registrar o que se aprendeu nas skills
 `wp-plugin-lessons` / `wp-camaleaun-lessons` (a regra delas).
 
-## 4. Telas de admin (no padrão do Eizport)
+## 4. Telas de admin
+
+> **Decisão (revisão):** as telas de lista e de configurações seguem o **estilo
+> clássico do admin**, o mesmo do CampTix: `WP_List_Table` (busca, filtros,
+> ações por linha e em lote, paginação) e a Settings API. Dentro do menu
+> Ingressos elas ficam iguais às telas vizinhas (Participantes, Cupons,
+> Configuração). **DataViews/DataForm e o visual "Gutenberg" ficam só para o
+> editor de arte** (o canvas, em tela cheia, 2.6), que é a exceção. O texto
+> abaixo, quando fala em DataViews/DataForm para listas e configurações, vale
+> como `WP_List_Table` e Settings API.
 
 As telas são **@wordpress/build pages + routes**, com `@wordpress/admin-ui`
 (`Page`), DataViews (listas) e DataForm (formulários). Os dados passam pelas

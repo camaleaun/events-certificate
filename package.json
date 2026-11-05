@@ -1,0 +1,36 @@
+{
+	"name": "events-certificate",
+	"private": true,
+	"description": "Development tools for the Events Certificate plugin.",
+	"license": "GPL-2.0-or-later",
+	"scripts": {
+		"build": "wp-build && node bin/postbuild.mjs",
+		"dev": "wp-build --watch",
+		"check-types": "tsc --noEmit"
+	},
+	"devDependencies": {
+		"@types/react": "18.3.28",
+		"@wordpress/admin-ui": "2.6.0",
+		"@wordpress/api-fetch": "7.57.0",
+		"@wordpress/base-styles": "11.0.0",
+		"@wordpress/build": "0.19.0",
+		"@wordpress/components": "37.0.0",
+		"@wordpress/compose": "8.4.0",
+		"@wordpress/data": "10.51.0",
+		"@wordpress/element": "8.3.0",
+		"@wordpress/i18n": "6.24.0",
+		"@wordpress/icons": "15.2.0",
+		"@wordpress/notices": "5.51.0",
+		"@wordpress/ui": "0.18.0",
+		"typescript": "5.9.3"
+	},
+	"wpPlugin": {
+		"name": "evcert",
+		"scriptGlobal": false,
+		"packageNamespace": "evcert",
+		"handlePrefix": "evcert",
+		"pages": [
+			"evcert-editor"
+		]
+	}
+}
