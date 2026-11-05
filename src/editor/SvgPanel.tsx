@@ -131,7 +131,8 @@ const short = ( d: string ) => ( d.length > 28 ? `${ d.slice( 0, 28 ).trim() }â€
 /**
  * The paths, one row each (as compact as the palette's colors): the fill
  * swatch, the path data as a link that opens a popover with the whole value,
- * the block mover and an Options menu. One + in the heading adds a path.
+ * the block mover and an Options menu. The + below the list adds a path,
+ * like the block appender.
  */
 export function PathList( { paths, current, design, mode, onPaths, onImport, onFocus, placement = 'left-start' }: PathListProps ) {
 	const [ version, setVersion ] = useState( 0 );
@@ -148,10 +149,7 @@ export function PathList( { paths, current, design, mode, onPaths, onImport, onF
 	};
 	return (
 		<>
-			<HStack className="evcert-svg-panel__header">
-				<h2 className="evcert-section-heading">{ __( 'Paths', 'events-certificate' ) }</h2>
-				<Button size="small" icon={ plus } label={ __( 'Add path', 'events-certificate' ) } onClick={ () => replace( [ ...paths, { d: '' } ] ) } />
-			</HStack>
+			<h2 className="evcert-section-heading evcert-svg-panel__header">{ __( 'Paths', 'events-certificate' ) }</h2>
 			<ItemGroup isBordered isSeparated className="evcert-svg-paths">
 				{ paths.map( ( p, i ) => (
 					<Item key={ `${ version }-${ i }` } className="evcert-svg-path" onMouseEnter={ () => onFocus?.( i ) } onMouseLeave={ () => onFocus?.( null ) }>
@@ -194,6 +192,7 @@ export function PathList( { paths, current, design, mode, onPaths, onImport, onF
 					</Item>
 				) ) }
 			</ItemGroup>
+			<Button className="evcert-appender" icon={ plus } label={ __( 'Add path', 'events-certificate' ) } onClick={ () => replace( [ ...paths, { d: '' } ] ) } />
 		</>
 	);
 }
