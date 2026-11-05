@@ -146,6 +146,26 @@ function body_class( $classes ) {
 }
 
 /**
+ * The editor's translations. Its code is a script module that the page loads
+ * when it routes to it, so WordPress never prints its translations (it only
+ * does for enqueued modules); the module reads them from wp.i18n, so they are
+ * given to wp.i18n here, from the same JSON file a language pack ships for
+ * build/routes/editor/content.js.
+ */
+function editor_translations() {
+	$file = WP_LANG_DIR . '/plugins/events-certificate-' . determine_locale() . '-' . md5( 'build/routes/editor/content.js' ) . '.json';
+	$json = load_script_translations( $file, 'evcert/routes/editor/content', 'events-certificate' );
+	if ( ! $json ) {
+		return;
+	}
+	wp_add_inline_script(
+		'evcert-editor-data',
+		'( function ( t ) { var d = t.locale_data[ "events-certificate" ] || t.locale_data.messages; d[ "" ].domain = "events-certificate"; wp.i18n.setLocaleData( d, "events-certificate" ); } )( ' . $json . ' );',
+		'before'
+	);
+}
+
+/**
  * The editor's full-screen styles, its fonts and its data: the design to edit
  * (created from Base the first time) and where to go back.
  */
@@ -162,8 +182,9 @@ function enqueue() {
 	if ( ! $design || Designs\POST_TYPE !== get_post_type( $design ) ) {
 		$design = Designs\site_design_id();
 	}
-	wp_register_script( 'evcert-editor-data', false, array(), \EventsCertificate\VERSION, false );
+	wp_register_script( 'evcert-editor-data', false, array( 'wp-i18n' ), \EventsCertificate\VERSION, false );
 	wp_enqueue_script( 'evcert-editor-data' );
+	editor_translations();
 	wp_add_inline_script(
 		'evcert-editor-data',
 		'window.evcertEditor = ' . wp_json_encode(

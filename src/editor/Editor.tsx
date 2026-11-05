@@ -37,6 +37,7 @@ import ElementToolbar from './ElementToolbar';
 import FieldText, { type FieldTextCommands } from './FieldText';
 import Inserter from './Inserter';
 import { ImagePlaceholder } from './ImageSource';
+import { QR_PLACEHOLDER } from './qr-placeholder';
 import ImportModal, { type Imported } from './ImportModal';
 import Inspector from './Inspector';
 import PreviewDropdown from './PreviewDropdown';
@@ -282,13 +283,9 @@ function Shape( { el, design, mode, sample }: { el: Element; design: Design; mod
 		case 'qr':
 			// The authenticity slot: a QR-shaped placeholder (the real code is drawn on certificates).
 			return (
-				<g opacity={ opacity } className="evcert-qr-placeholder">
-					<rect x={ el.x } y={ el.y } width={ el.w } height={ el.h } fill={ color( design, '$text', mode ) } opacity={ 0.08 } />
-					{ [ [ 0, 0 ], [ 1, 0 ], [ 0, 1 ] ].map( ( [ cx, cy ] ) => (
-						<rect key={ `${ cx }${ cy }` } x={ el.x + cx * el.w * 0.64 + el.w * 0.04 } y={ el.y + cy * el.h * 0.64 + el.h * 0.04 } width={ el.w * 0.28 } height={ el.h * 0.28 } fill="none" stroke={ color( design, '$text', mode ) } strokeWidth={ el.w * 0.05 } />
-					) ) }
-					<rect x={ el.x + el.w * 0.42 } y={ el.y + el.h * 0.42 } width={ el.w * 0.16 } height={ el.h * 0.16 } fill={ color( design, '$text', mode ) } />
-				</g>
+				<svg x={ el.x } y={ el.y } width={ el.w } height={ el.h } viewBox={ QR_PLACEHOLDER.viewBox } opacity={ opacity } className="evcert-qr-placeholder" overflow="visible">
+					<g fill={ color( design, '$text', mode ) } dangerouslySetInnerHTML={ { __html: QR_PLACEHOLDER.markup } } />
+				</svg>
 			);
 		case 'text': {
 			const style = textStyle( el, design, mode );
