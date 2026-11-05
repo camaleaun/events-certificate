@@ -72,7 +72,10 @@ function historyReducer( state: History, action: Action ): History {
 	return state;
 }
 
-type Guide = { axis: 'x' | 'y'; at: number };
+type Guide =
+	| { axis: 'x' | 'y'; at: number; kind?: 'align' }
+	// Equal spacing: a gap from..to along the axis, drawn at "cross" on the other axis.
+	| { axis: 'x' | 'y'; kind: 'gap'; from: number; to: number; cross: number };
 type Drag =
 	| null
 	| { kind: 'move'; id: string; start: { x: number; y: number }; origin: Element }
@@ -103,11 +106,13 @@ function snap( moving: Box, design: Design, exclude: string, threshold: number )
 	const { w, h, safe } = design.page;
 	const xs = [ 0, safe, w / 2, w - safe, w ];
 	const ys = [ 0, safe, h / 2, h - safe, h ];
+	const others: Box[] = [];
 	for ( const el of design.elements ) {
 		if ( el.id === exclude || el.hidden ) {
 			continue;
 		}
 		const b = box( el );
+		others.push( b );
 		xs.push( b.x, b.x + b.w / 2, b.x + b.w );
 		ys.push( b.y, b.y + b.h / 2, b.y + b.h );
 	}
@@ -123,16 +128,83 @@ function snap( moving: Box, design: Design, exclude: string, threshold: number )
 		}
 		return found;
 	};
+
+	/**
+	 * Equal spacing along one axis, against neighbours that overlap the moving
+	 * box on the other axis: centred between the nearest one on each side, or
+	 * repeating the gap between the nearest neighbour and the one past it.
+	 */
+	const spacing = ( axis: 'x' | 'y' ) => {
+		const pos = axis === 'x' ? 'x' : 'y';
+		const size = axis === 'x' ? 'w' : 'h';
+		const cpos = axis === 'x' ? 'y' : 'x';
+		const csize = axis === 'x' ? 'h' : 'w';
+		const overlaps = ( b: Box ) => b[ cpos ] < moving[ cpos ] + moving[ csize ] && b[ cpos ] + b[ csize ] > moving[ cpos ];
+		const row = others.filter( overlaps );
+		const before = row.filter( ( b ) => b[ pos ] + b[ size ] <= moving[ pos ] + threshold ).sort( ( a, b ) => b[ pos ] + b[ size ] - ( a[ pos ] + a[ size ] ) );
+		const after = row.filter( ( b ) => b[ pos ] >= moving[ pos ] + moving[ size ] - threshold ).sort( ( a, b ) => a[ pos ] - b[ pos ] );
+		const cross = ( b: Box ) => ( Math.max( b[ cpos ], moving[ cpos ] ) + Math.min( b[ cpos ] + b[ csize ], moving[ cpos ] + moving[ csize ] ) ) / 2;
+		const candidates: { delta: number; gaps: Guide[] }[] = [];
+		const L = before[ 0 ];
+		const R = after[ 0 ];
+		if ( L && R ) {
+			const target = ( L[ pos ] + L[ size ] + R[ pos ] - moving[ size ] ) / 2;
+			const at = target;
+			candidates.push( {
+				delta: target - moving[ pos ],
+				gaps: [
+					{ axis, kind: 'gap', from: L[ pos ] + L[ size ], to: at, cross: cross( L ) },
+					{ axis, kind: 'gap', from: at + moving[ size ], to: R[ pos ], cross: cross( R ) },
+				],
+			} );
+		}
+		if ( L && before[ 1 ] ) {
+			const gap = L[ pos ] - ( before[ 1 ][ pos ] + before[ 1 ][ size ] );
+			const target = L[ pos ] + L[ size ] + gap;
+			candidates.push( {
+				delta: target - moving[ pos ],
+				gaps: [
+					{ axis, kind: 'gap', from: before[ 1 ][ pos ] + before[ 1 ][ size ], to: L[ pos ], cross: cross( before[ 1 ] ) },
+					{ axis, kind: 'gap', from: L[ pos ] + L[ size ], to: target, cross: cross( L ) },
+				],
+			} );
+		}
+		if ( R && after[ 1 ] ) {
+			const gap = after[ 1 ][ pos ] - ( R[ pos ] + R[ size ] );
+			const target = R[ pos ] - gap - moving[ size ];
+			candidates.push( {
+				delta: target - moving[ pos ],
+				gaps: [
+					{ axis, kind: 'gap', from: target + moving[ size ], to: R[ pos ], cross: cross( R ) },
+					{ axis, kind: 'gap', from: R[ pos ] + R[ size ], to: after[ 1 ][ pos ], cross: cross( after[ 1 ] ) },
+				],
+			} );
+		}
+		return candidates.filter( ( c ) => Math.abs( c.delta ) <= threshold && c.gaps.every( ( g ) => 'to' in g && g.to - g.from >= 2 ) ).sort( ( a, b ) => Math.abs( a.delta ) - Math.abs( b.delta ) )[ 0 ] || null;
+	};
+
 	const fx = best( xs, [ moving.x, moving.x + moving.w / 2, moving.x + moving.w ] );
 	const fy = best( ys, [ moving.y, moving.y + moving.h / 2, moving.y + moving.h ] );
+	const sx = spacing( 'x' );
+	const sy = spacing( 'y' );
 	const guides: Guide[] = [];
-	if ( fx ) {
+	let dx = 0;
+	let dy = 0;
+	if ( sx && ( ! fx || Math.abs( sx.delta ) <= Math.abs( fx.delta ) ) ) {
+		dx = sx.delta;
+		guides.push( ...sx.gaps );
+	} else if ( fx ) {
+		dx = fx.delta;
 		guides.push( { axis: 'x', at: fx.at } );
 	}
-	if ( fy ) {
+	if ( sy && ( ! fy || Math.abs( sy.delta ) <= Math.abs( fy.delta ) ) ) {
+		dy = sy.delta;
+		guides.push( ...sy.gaps );
+	} else if ( fy ) {
+		dy = fy.delta;
 		guides.push( { axis: 'y', at: fy.at } );
 	}
-	return { dx: fx ? fx.delta : 0, dy: fy ? fy.delta : 0, guides };
+	return { dx, dy, guides };
 }
 
 function resized( origin: Element, handle: string, dx: number, dy: number, keepRatio: boolean ): Element {
@@ -685,9 +757,30 @@ export default function Editor() {
 						<g className="evcert-guides" pointerEvents="none">
 							<rect x={ 0 } y={ 0 } width={ w } height={ h } className="evcert-trim" />
 							<rect x={ safe } y={ safe } width={ w - safe * 2 } height={ h - safe * 2 } className="evcert-safe" />
-							{ guides.map( ( g, i ) =>
-								g.axis === 'x' ? <line key={ i } x1={ g.at } x2={ g.at } y1={ -bleed } y2={ h + bleed } className="evcert-snap" /> : <line key={ i } y1={ g.at } y2={ g.at } x1={ -bleed } x2={ w + bleed } className="evcert-snap" />
-							) }
+							{ guides.map( ( g, i ) => {
+								if ( g.kind === 'gap' ) {
+									const len = Math.round( ( g.to - g.from ) * 10 ) / 10;
+									const tick = 4 / zoom;
+									const label = `${ len }`;
+									const mid = ( g.from + g.to ) / 2;
+									return g.axis === 'x' ? (
+										<g key={ i } className="evcert-gap">
+											<line x1={ g.from } x2={ g.to } y1={ g.cross } y2={ g.cross } />
+											<line x1={ g.from } x2={ g.from } y1={ g.cross - tick } y2={ g.cross + tick } />
+											<line x1={ g.to } x2={ g.to } y1={ g.cross - tick } y2={ g.cross + tick } />
+											<text x={ mid } y={ g.cross - tick * 1.5 } fontSize={ 10 / zoom } textAnchor="middle">{ label }</text>
+										</g>
+									) : (
+										<g key={ i } className="evcert-gap">
+											<line y1={ g.from } y2={ g.to } x1={ g.cross } x2={ g.cross } />
+											<line y1={ g.from } y2={ g.from } x1={ g.cross - tick } x2={ g.cross + tick } />
+											<line y1={ g.to } y2={ g.to } x1={ g.cross - tick } x2={ g.cross + tick } />
+											<text x={ g.cross + tick * 1.5 } y={ mid } fontSize={ 10 / zoom } dominantBaseline="middle">{ label }</text>
+										</g>
+									);
+								}
+								return g.axis === 'x' ? <line key={ i } x1={ g.at } x2={ g.at } y1={ -bleed } y2={ h + bleed } className="evcert-snap" /> : <line key={ i } y1={ g.at } y2={ g.at } x1={ -bleed } x2={ w + bleed } className="evcert-snap" />;
+							} ) }
 						</g>
 						{ current && selBox && tab === 'art' && ! editing && (
 							<g className="evcert-selection">

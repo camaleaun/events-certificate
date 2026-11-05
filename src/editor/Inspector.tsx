@@ -14,6 +14,7 @@ import {
 	SelectControl,
 	ToggleControl,
 	__experimentalNumberControl as NumberControl,
+	__experimentalUnitControl as UnitControl,
 	__experimentalToggleGroupControl as ToggleGroupControl,
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
 	__experimentalToggleGroupControlOptionIcon as ToggleGroupControlOptionIcon,
@@ -40,6 +41,7 @@ type Props = {
 
 const FONT_SIZES = [ 8, 10, 12, 14, 16, 18, 24, 32, 42 ].map( ( size ) => ( { name: `${ size } pt`, slug: String( size ), size } ) );
 const num = ( v: number ) => Math.round( v * 100 ) / 100;
+const PT = [ { value: 'pt', label: 'pt', default: 0 } ];
 
 /** A color item like the block editor's ColorGradientDropdown (indicator + name, a palette in a dropdown). */
 export function ColorItem( { label, value, design, mode, onChange }: { label: string; value?: string; design: Design; mode: Mode; onChange: ( v: string ) => void } ) {
@@ -206,21 +208,36 @@ export default function Inspector( { el, design, mode, tab, locale, sample, onCh
 									<Button size="small" icon={ linked ? link : linkOff } label={ linked ? __( 'Unlink radii', 'events-certificate' ) : __( 'Link radii', 'events-certificate' ) } onClick={ () => setLinked( ! linked ) } />
 								</HStack>
 								{ linked ? (
-									<RangeControl __next40pxDefaultSize __nextHasNoMarginBottom label={ __( 'All corners', 'events-certificate' ) } hideLabelFromVision value={ ( el.radius || [ 0 ] )[ 0 ] || 0 } min={ 0 } max={ Math.round( Math.min( el.w, el.h ) / 2 ) } onChange={ ( v ) => onChange( { radius: [ v ?? 0, v ?? 0, v ?? 0, v ?? 0 ] } ) } />
+									<HStack className="evcert-radius__linked" alignment="center">
+										<UnitControl
+											__next40pxDefaultSize
+											label={ __( 'All corners', 'events-certificate' ) }
+											hideLabelFromVision
+											units={ PT }
+											min={ 0 }
+											value={ `${ ( el.radius || [ 0 ] )[ 0 ] || 0 }pt` }
+											onChange={ ( v ) => {
+												const n = parseFloat( v || '0' ) || 0;
+												onChange( { radius: [ n, n, n, n ] } );
+											} }
+										/>
+										<RangeControl __next40pxDefaultSize __nextHasNoMarginBottom label={ __( 'All corners', 'events-certificate' ) } hideLabelFromVision withInputField={ false } value={ ( el.radius || [ 0 ] )[ 0 ] || 0 } min={ 0 } max={ Math.round( Math.min( el.w, el.h ) / 2 ) } onChange={ ( v ) => onChange( { radius: [ v ?? 0, v ?? 0, v ?? 0, v ?? 0 ] } ) } />
+									</HStack>
 								) : (
 									<div className="evcert-radius__corners">
 										{ [ cornerTopLeft, cornerTopRight, cornerBottomRight, cornerBottomLeft ].map( ( icon, i ) => (
 											<HStack key={ i }>
 												<Icon icon={ icon } />
-												<NumberControl
+												<UnitControl
 													__next40pxDefaultSize
 													label={ [ __( 'Top left', 'events-certificate' ), __( 'Top right', 'events-certificate' ), __( 'Bottom right', 'events-certificate' ), __( 'Bottom left', 'events-certificate' ) ][ i ] }
 													hideLabelFromVision
+													units={ PT }
 													min={ 0 }
-													value={ ( el.radius || [ 0, 0, 0, 0 ] )[ i ] || 0 }
+													value={ `${ ( el.radius || [ 0, 0, 0, 0 ] )[ i ] || 0 }pt` }
 													onChange={ ( v ) => {
 														const radius = [ ...( el.radius || [ 0, 0, 0, 0 ] ) ];
-														radius[ i ] = Number( v ) || 0;
+														radius[ i ] = parseFloat( v || '0' ) || 0;
 														onChange( { radius } );
 													} }
 												/>
