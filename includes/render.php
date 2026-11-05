@@ -654,7 +654,7 @@ function element_html( array $el, array $design, array $values, array $options )
 /**
  * Whether certificates here can be checked by others: on a site that isn't
  * public (localhost, Playground…) nobody else can open the verification
- * address, so certificates carry no QR code, address or hint (docs/decisions/0010).
+ * address, so certificates carry no QR code, code, address or hint (docs/decisions/0010).
  *
  * @return bool
  */
@@ -663,18 +663,18 @@ function verifiable() {
 }
 
 /**
- * Whether an element only serves verification: the QR code, the verification
- * hint, or a text that shows the verification address. The code itself stays.
+ * Whether an element only serves verification: the QR code, the code, the
+ * verification hint, or a text that shows the code or the verification address.
  *
  * @param array<string, mixed> $el Element.
  * @return bool
  */
 function is_verification( array $el ) {
-	if ( 'qr' === ( $el['type'] ?? '' ) || 'verify' === ( $el['slot'] ?? '' ) ) {
+	if ( 'qr' === ( $el['type'] ?? '' ) || in_array( $el['slot'] ?? '', array( 'verify', 'code' ), true ) ) {
 		return true;
 	}
 	foreach ( (array) ( $el['runs'] ?? array() ) as $run ) {
-		if ( in_array( $run['field'] ?? '', array( 'verify_url', 'verify_hint' ), true ) ) {
+		if ( in_array( $run['field'] ?? '', array( 'code', 'verify_url', 'verify_hint' ), true ) ) {
 			return true;
 		}
 	}

@@ -36,6 +36,18 @@ class SignerTest extends Test_Case {
 	}
 
 	/**
+	 * The signature is in the organizers' REST API (a schema with one type), so the block editor saves it.
+	 */
+	public function test_signature_in_rest() {
+		if ( ! post_type_exists( Signer\ORGANIZER ) ) {
+			$this->markTestSkipped( 'wc-post-types is not active.' );
+		}
+		$fields = ( new \WP_REST_Post_Meta_Fields( Signer\ORGANIZER ) )->get_field_schema()['properties'];
+		$this->assertArrayHasKey( Signer\SIGNATURE_META, $fields );
+		$this->assertSame( 'object', $fields[ Signer\SIGNATURE_META ]['type'] );
+	}
+
+	/**
 	 * A role falls back to the site language, then to any.
 	 */
 	public function test_role_in() {

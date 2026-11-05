@@ -449,7 +449,8 @@ function render_page( $cert, $code, $locale, $invalid ) {
 							<span><?php echo esc_html( $short ); ?></span>
 						</button>
 					<?php endif; ?>
-					<button type="button" class="evcert-dock__code <?php echo esc_attr( $class ); ?>" data-evcert-pop="details" aria-expanded="false" aria-label="<?php echo esc_attr( __( 'Details', 'events-certificate' ) . ' — ' . $cert['code'] ); ?>"><?php echo icon( 'shield' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?><span><?php echo esc_html( $cert['code'] ); ?></span></button>
+					<?php // Sites that aren't public show no code (docs/decisions/0010): the button keeps only its icon. ?>
+					<button type="button" class="evcert-dock__code <?php echo esc_attr( $class ); ?>" data-evcert-pop="details" aria-expanded="false" aria-label="<?php echo esc_attr( Render\verifiable() ? __( 'Details', 'events-certificate' ) . ' — ' . $cert['code'] : __( 'Details', 'events-certificate' ) ); ?>"><?php echo icon( 'shield' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?><?php if ( Render\verifiable() ) : ?><span><?php echo esc_html( $cert['code'] ); ?></span><?php endif; ?></button>
 					<button type="button" class="evcert-dock__icon" data-evcert-dock-to="left" aria-label="<?php esc_attr_e( 'Dock to the left corner', 'events-certificate' ); ?>" title="<?php esc_attr_e( 'Dock to the left corner', 'events-certificate' ); ?>"><?php echo icon( 'left' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?></button>
 					<button type="button" class="evcert-dock__icon" data-evcert-dock-to="right" aria-label="<?php esc_attr_e( 'Dock to the right corner', 'events-certificate' ); ?>" title="<?php esc_attr_e( 'Dock to the right corner', 'events-certificate' ); ?>"><?php echo icon( 'right' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?></button>
 				</div>
@@ -486,7 +487,9 @@ function render_page( $cert, $code, $locale, $invalid ) {
 						<div><dt><?php esc_html_e( 'Workload', 'events-certificate' ); ?></dt><dd><?php echo esc_html( Render\field_value( 'hours', '', $values ) ); ?></dd></div>
 					<?php endif; ?>
 					<div><dt><?php esc_html_e( 'Issued on', 'events-certificate' ); ?></dt><dd><?php echo esc_html( Render\format_date( (int) $values['issued_ts'], 'site' ) ); ?></dd></div>
-					<div><dt><?php esc_html_e( 'Code', 'events-certificate' ); ?></dt><dd><code><?php echo esc_html( $cert['code'] ); ?></code></dd></div>
+					<?php if ( Render\verifiable() ) : ?>
+						<div><dt><?php esc_html_e( 'Code', 'events-certificate' ); ?></dt><dd><code><?php echo esc_html( $cert['code'] ); ?></code></dd></div>
+					<?php endif; ?>
 				</dl>
 			</div>
 			<?php $share_url = page_url( $cert['code'], $locale ); ?>

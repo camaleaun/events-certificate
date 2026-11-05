@@ -11,3 +11,16 @@
 :has(> .evcert-certificate-panel) > .edit-post-meta-boxes-area {
 	order: 2;
 }
+
+// The signature preview: the sidebar's whole width, at the viewBox's aspect
+// ratio (the checkerboard is the drawing's area, as in the Edit SVG modal).
+.evcert-certificate-panel__preview {
+	margin: 12px 0;
+	svg {
+		display: block;
+		width: 100%;
+		height: auto;
+		overflow: hidden;
+		background: repeating-conic-gradient(#e0e0e0 0 25%, #fff 0 50%) 0 0 / 12px 12px;
+	}
+}

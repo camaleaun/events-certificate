@@ -86,12 +86,13 @@ function register_meta() {
 		array(
 			'type'              => 'object',
 			'single'            => true,
-			'default'           => null,
 			'sanitize_callback' => __NAMESPACE__ . '\sanitize_signature',
 			'auth_callback'     => $auth,
 			'show_in_rest'      => array(
+				// One type only: WordPress leaves a meta out of the REST API when its schema type is a list
+				// (['object', 'null'] made the signature silently unsaved). Sending null deletes it.
 				'schema' => array(
-					'type'       => array( 'object', 'null' ),
+					'type'       => 'object',
 					'properties' => array(
 						'vw'    => array( 'type' => 'number' ),
 						'vh'    => array( 'type' => 'number' ),

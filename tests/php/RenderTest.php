@@ -115,7 +115,7 @@ class RenderTest extends Test_Case {
 	}
 
 	/**
-	 * Sites that aren't public draw no QR code, verification hint or address; the code stays.
+	 * Sites that aren't public draw no QR code, code, verification hint or address.
 	 */
 	public function test_non_public_sites_drop_verification() {
 		$design = array(
@@ -162,7 +162,7 @@ class RenderTest extends Test_Case {
 		add_filter( 'evcert_is_public_site', '__return_false' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- the plugin's own hook.
 		$this->assertSame( '', Render\element_html( $qr, $design, $values, $opts ) );
 		$this->assertSame( '', Render\element_html( $hint, $design, $values, $opts ) );
-		$this->assertStringContainsString( '2611-04K7-M29Q-XAP3', Render\element_html( $code, $design, $values, $opts ) );
+		$this->assertSame( '', Render\element_html( $code, $design, $values, $opts ) );
 		remove_filter( 'evcert_is_public_site', '__return_false' );
 
 		add_filter( 'evcert_is_public_site', '__return_true' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- the plugin's own hook.
