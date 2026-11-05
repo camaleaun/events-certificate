@@ -62,7 +62,16 @@ class AdminTest extends Test_Case {
 	}
 
 	public function test_setup_tab_is_added() {
-		$tabs = CampTix\add_setup_tab( array( 'general' => 'General' ) );
-		$this->assertArrayHasKey( CampTix\SECTION, $tabs );
+		$tabs = CampTix\add_setup_tab(
+			array(
+				'general'         => 'General',
+				'payment'         => 'Payment',
+				'email-templates' => 'E-mail Templates',
+				'beta'            => 'Beta',
+			)
+		);
+		$this->assertSame( array( 'general', 'payment', 'email-templates', CampTix\SECTION, 'beta' ), array_keys( $tabs ) );
+
+		$this->assertSame( array( 'general', CampTix\SECTION ), array_keys( CampTix\add_setup_tab( array( 'general' => 'General' ) ) ) );
 	}
 }

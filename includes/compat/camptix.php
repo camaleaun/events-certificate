@@ -99,15 +99,21 @@ function move_after_attendees() {
 }
 
 /**
- * Adds the Certificates tab to Tickets > Setup.
+ * Adds the Certificates tab to Tickets > Setup, before Beta.
  *
  * @param array<string, string> $sections Tabs.
  * @return array<string, string>
  */
 function add_setup_tab( $sections ) {
-	$sections[ SECTION ] = __( 'Certificates', 'events-certificate' );
+	$tab = array( SECTION => __( 'Certificates', 'events-certificate' ) );
 
-	return $sections;
+	// Before Beta, which CampTix keeps last; at the end when there is no Beta tab.
+	$position = array_search( 'beta', array_keys( $sections ), true );
+	if ( false === $position ) {
+		return $sections + $tab;
+	}
+
+	return array_slice( $sections, 0, $position, true ) + $tab + array_slice( $sections, $position, null, true );
 }
 
 /**
