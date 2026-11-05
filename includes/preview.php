@@ -2,7 +2,7 @@
 /**
  * Preview in a new tab: the design editor sends the design as it is (unsaved
  * changes included), kept for a while per user, and opens the site with
- * ?evcert_preview=1 (like a post's ?preview=true), drawn like a certificate
+ * ?preview=1, like a post's preview, drawn like a certificate
  * page with the preview data, in any of the site's languages (?evcert_lang=).
  * The QR code and the code are the placeholders the editor shows, on any site.
  * Only people who may edit designs see it.
@@ -21,9 +21,16 @@ use WP_REST_Request;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * The query argument that asks for the preview.
+ * The query argument that asks for the preview: WordPress's own `preview`,
+ * taken only on the site's home address with no post in it (a post preview,
+ * ?p=…&preview=true, stays WordPress's).
  */
-const QUERY_ARG = 'evcert_preview';
+const QUERY_ARG = 'preview';
+
+/**
+ * Query arguments that make `preview` a post's preview.
+ */
+const POST_ARGS = array( 'p', 'page_id', 'preview_id', 'post_type', 'name', 'pagename', 'attachment_id' );
 
 /**
  * The code a preview shows: clearly not a real one, as long as a real one.
@@ -58,7 +65,7 @@ function url( $locale = '' ) {
  */
 function maybe_render() {
 	// phpcs:disable WordPress.Security.NonceVerification.Recommended -- read-only page, shown only to people who may edit designs.
-	if ( ! isset( $_GET[ QUERY_ARG ] ) ) {
+	if ( ! isset( $_GET[ QUERY_ARG ] ) || '1' !== $_GET[ QUERY_ARG ] || array_intersect_key( $_GET, array_flip( POST_ARGS ) ) || ( ! is_front_page() && ! is_home() ) ) {
 		return;
 	}
 	$lang = isset( $_GET['evcert_lang'] ) ? sanitize_text_field( wp_unslash( $_GET['evcert_lang'] ) ) : '';
