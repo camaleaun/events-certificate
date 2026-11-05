@@ -1,0 +1,41 @@
+=== Events Certificate ===
+Contributors: camaleaun
+Tags: certificate, events, attendance, camptix, qr code
+Requires at least: 7.0
+Tested up to: 7.1
+Requires PHP: 7.4
+Stable tag: 0.0.0
+License: GPLv2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+
+Verifiable attendance certificates for events, with a QR code and a public verification page anyone can check.
+
+== Description ==
+
+Events Certificate issues attendance certificates for events (meetups, WordCamps, courses) that anyone can verify: each certificate has a unique code and a QR code pointing to a public verification page on your site, in the spirit of the authenticity codes on government documents.
+
+This plugin is in early development.
+
+**Planned**
+
+* A canvas editor for the certificate artwork, with a mobile and a social image version.
+* Attendees from CampTix, GatherPress, a CSV file (Meetup.com exports included) or added by hand.
+* Certificates frozen when issued and drawn again on demand: no PDF files kept on the server.
+* Verification pages in the languages you choose, so people from other countries can check a certificate.
+* Optional identity documents stored like passwords: the site never keeps the number, only a way to check it.
+
+== Frequently Asked Questions ==
+
+= Why does my certificate show a placeholder instead of a QR code? =
+
+The QR code and the verification link only make sense when anyone can open your site. On WordPress Playground, localhost, .local or .test addresses and private networks the plugin shows a placeholder of the same size instead. An administrator can force authenticity on a public staging site.
+
+= Does deleting the plugin delete the certificates? =
+
+No, unless an administrator chose to delete all data. Printed certificates point to their verification page, so they are kept by default.
+
+== Changelog ==
+
+= 0.1.0 =
+
+* In development.

@@ -1,0 +1,48 @@
+{
+    "name": "camaleaun/events-certificate",
+    "description": "Verifiable attendance certificates for events.",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "camaleaun",
+            "homepage": "https://profiles.wordpress.org/camaleaun/"
+        }
+    ],
+    "require": {
+        "php": ">=7.4"
+    },
+    "require-dev": {
+        "wp-coding-standards/wpcs": "^3",
+        "phpcompatibility/phpcompatibility-wp": "*",
+        "php-parallel-lint/php-parallel-lint": "^1",
+        "phpunit/phpunit": "^9.6",
+        "yoast/phpunit-polyfills": "^2"
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        },
+        "platform": {
+            "php": "7.4.33"
+        }
+    },
+    "scripts": {
+        "lint": "parallel-lint --exclude vendor --exclude node_modules --exclude build .",
+        "phpcs": "phpcs",
+        "phpcbf": "phpcbf",
+        "test": "phpunit",
+        "check": [
+            "@lint",
+            "@phpcs",
+            "@test"
+        ]
+    },
+    "scripts-descriptions": {
+        "lint": "PHP syntax check of every file.",
+        "phpcs": "WordPress Coding Standards and PHP 7.4+ compatibility.",
+        "phpcbf": "Fix what PHPCS can fix automatically.",
+        "test": "PHPUnit tests (loads the WordPress site the plugin is installed in; set WP_LOAD for another).",
+        "check": "Lint, PHPCS and tests."
+    }
+}

@@ -1,0 +1,24 @@
+# Editor settings for this repository (https://editorconfig.org), after
+# WordPress's own: tabs, LF, UTF-8, a final newline, no trailing spaces.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = tab
+
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+# Composer writes them with four spaces.
+[{composer.json,composer.lock}]
+indent_style = space
+indent_size = 4
+
+# Two trailing spaces are a line break in Markdown.
+[*.md]
+trim_trailing_whitespace = false

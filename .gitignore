@@ -1,0 +1,15 @@
+.DS_Store
+*.log
+/vendor/
+.phpunit.result.cache
+/node_modules/
+/build/
+
+# Translations compiled locally (the .pot is committed; .po files live in the language repositories).
+/languages/*.po
+/languages/*.mo
+/languages/*.json
+/languages/*.l10n.php
+
+# Reference material (third-party PDFs and Figma assets with trademarks): kept locally, never published.
+/docs/references/
