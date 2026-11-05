@@ -1655,6 +1655,18 @@ admin.
        calculada em `admin_menu` (prioridade alta): o plugin acha o item
        `edit.php?post_type=tix_attendee` em `$submenu` e se insere logo depois.
        Se não o achar, fica no fim;
+     - **com o CampTix, a integração usa os hooks dele** (conferidos no fork do
+       wordcamp.org) para cada coisa ficar onde o organizador já procura:
+
+       | Onde, no CampTix | Hook | O que o plugin coloca |
+       |---|---|---|
+       | **Ingressos → Configuração → aba "Certificados"** | filtro `camptix_setup_sections` (a aba) + ação `camptix_menu_setup_controls` (os campos, na Settings API da página `camptix_options`) | as **configurações** do contexto site: carga horária, exigir presença, idiomas, autenticidade, documento, envio e compartilhamento. Os campos usam o nome `evcert_settings[...]`, e a opção é liberada para o formulário do CampTix pelo filtro `allowed_options` (o `register_setting` do CampTix só cobre a `camptix_options`), com o sanitize do nosso plugin |
+       | **Ingressos → Participantes** (lista de `tix_attendee`) | `manage_edit-tix_attendee_columns` + ações em lote | uma coluna **"Certificado"** (rascunho/emitido/revogado, com o link) e a ação em lote **"Emitir certificados"** para os selecionados |
+       | **Ingressos → Certificados** (submenu, depois de Participantes) | `add_submenu_page` | a **tela de gestão** (DataViews): rascunhos, emissão em lote, fila de e-mails, importação, correções e o link para o editor de arte. Ela precisa de página própria (@wordpress/build), então não cabe dentro de uma aba de formulário do CampTix |
+       | Ingressos → Ferramentas (abas) | `camptix_menu_tools_tabs` + `camptix_menu_tools_{aba}` | **não usado**, para não espalhar: emitir e enviar ficam na tela Certificados |
+
+       - Sem o CampTix, as mesmas configurações viram a aba "Configurações" da
+         própria tela Certificados.
      - com o GatherPress, o submenu é o dos eventos dele (a confirmar quando
        chegarmos lá);
      - sem nenhum dos dois, é um menu próprio "Certificados".
