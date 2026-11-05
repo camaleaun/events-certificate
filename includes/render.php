@@ -149,6 +149,37 @@ function locked_ratio( array $el ) {
 }
 
 /**
+ * The event a certificate names: the event's current name (the WordCamp, or
+ * the site), like the design, so renaming the event shows on every
+ * certificate; the name recorded at issue when there is no current one.
+ *
+ * @param array<string, mixed> $cert Certificate.
+ * @return string
+ */
+function event_title( array $cert ) {
+	$name = function_exists( 'EventsCertificate\\Compat\\CampTix\\event_name' ) ? \EventsCertificate\Compat\CampTix\event_name() : '';
+
+	return '' !== $name ? $name : (string) ( $cert['event_title'] ?? '' );
+}
+
+/**
+ * Where the event happens: the current place (the WordCamp's, or the
+ * setting), like the event's name; the place recorded at issue when none is set.
+ *
+ * @param array<string, mixed> $cert Certificate.
+ * @return string
+ */
+function event_location( array $cert ) {
+	$place = function_exists( 'EventsCertificate\\Compat\\CampTix\\event_location' ) ? \EventsCertificate\Compat\CampTix\event_location() : (string) Settings\value( 'location' );
+	if ( '' !== trim( $place ) ) {
+		return $place;
+	}
+	$data = json_decode( (string) ( $cert['data_json'] ?? '' ), true );
+
+	return is_array( $data ) ? (string) ( $data['location'] ?? '' ) : '';
+}
+
+/**
  * The page background in a mode: one value for both, or one per mode
  * (src/editor/model.ts pageBg()); '' = none, the page's own color shows.
  *
@@ -514,9 +545,8 @@ function values( array $cert ) {
 
 	return array(
 		'name'        => (string) ( $cert['name'] ?? '' ),
-		'event'       => (string) ( $cert['event_title'] ?? '' ),
-		// Certificates issued before the location was recorded fall back to the setting.
-		'location'    => (string) ( $data['location'] ?? Settings\value( 'location' ) ),
+		'event'       => event_title( $cert ),
+		'location'    => event_location( $cert ),
 		'issued_ts'   => (string) $issued,
 		'event_ts'    => (string) $start,
 		'hours'       => null === $hours ? '' : (string) ( floor( $hours ) === $hours ? (int) $hours : $hours ),

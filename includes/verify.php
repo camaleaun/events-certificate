@@ -291,12 +291,12 @@ function share_links( array $cert, $url ) {
 	$title  = sprintf(
 		/* translators: %s: event name. */
 		__( 'Certificate of participation: %s', 'events-certificate' ),
-		$cert['event_title']
+		Render\event_title( $cert )
 	);
 	$text = sprintf(
 		/* translators: %s: event name. */
 		__( 'My certificate from %s', 'events-certificate' ),
-		$cert['event_title']
+		Render\event_title( $cert )
 	);
 
 	return array(
@@ -386,7 +386,7 @@ function render_page( $cert, $code, $locale, $invalid ) {
 		<meta property="og:type" content="website">
 		<meta property="og:site_name" content="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>">
 		<meta property="og:title" content="<?php echo esc_attr( $title ); ?>">
-		<meta property="og:description" content="<?php echo esc_attr( $cert['event_title'] ); ?>">
+		<meta property="og:description" content="<?php echo esc_attr( Render\event_title( $cert ) ); ?>">
 		<meta property="og:url" content="<?php echo esc_url( page_url( $cert['code'], $locale ) ); ?>">
 		<meta property="og:locale" content="<?php echo esc_attr( $locale ); ?>">
 		<?php if ( $og_image ) : ?>
@@ -482,7 +482,7 @@ function render_page( $cert, $code, $locale, $invalid ) {
 				<?php endif; ?>
 				<dl>
 					<div><dt><?php esc_html_e( 'Name', 'events-certificate' ); ?></dt><dd><?php echo esc_html( $cert['name'] ); ?></dd></div>
-					<div><dt><?php esc_html_e( 'Event', 'events-certificate' ); ?></dt><dd><?php echo esc_html( $cert['event_title'] ); ?></dd></div>
+					<div><dt><?php esc_html_e( 'Event', 'events-certificate' ); ?></dt><dd><?php echo esc_html( Render\event_title( $cert ) ); ?></dd></div>
 					<?php if ( '' !== $values['hours'] ) : ?>
 						<div><dt><?php esc_html_e( 'Workload', 'events-certificate' ); ?></dt><dd><?php echo esc_html( Render\field_value( 'hours', '', $values ) ); ?></dd></div>
 					<?php endif; ?>

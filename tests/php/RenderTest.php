@@ -211,7 +211,7 @@ class RenderTest extends Test_Case {
 	}
 
 	/**
-	 * Fields read the certificate's frozen values.
+	 * Fields read the certificate's frozen values; the event's name is the current one (the site's when it has one).
 	 */
 	public function test_fields() {
 		$values = Render\values(
@@ -230,7 +230,7 @@ class RenderTest extends Test_Case {
 		$this->assertSame( 'Attendee', Render\field_value( 'role', '', $values ) );
 		$this->assertSame( '2026-10-31', Render\field_value( 'issued_date', 'iso', $values ) );
 		$this->assertSame(
-			'<strong>WordCamp Test</strong> &amp; more',
+			'<strong>' . esc_html( Render\event_title( array( 'event_title' => 'WordCamp Test' ) ) ) . '</strong> &amp; more',
 			Render\runs_html(
 				array(
 					'runs' => array(

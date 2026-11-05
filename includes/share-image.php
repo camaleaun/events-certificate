@@ -34,14 +34,21 @@ function bootstrap() {
 }
 
 /**
- * A short version of how certificates look now (the site design and the
- * signer): part of the image's file name, so a design change makes the page
- * draw a new image instead of showing the old one.
+ * A short version of how certificates look now (the site design, the signer,
+ * the event's name and place): part of the image's file name, so a change
+ * makes the page draw a new image instead of showing the old one.
  *
  * @return string
  */
 function look() {
-	return substr( md5( (string) wp_json_encode( array( \EventsCertificate\Designs\get( \EventsCertificate\Designs\site_design_id() ), \EventsCertificate\Signer\current() ) ) ), 0, 10 );
+	$now = array(
+		\EventsCertificate\Designs\get( \EventsCertificate\Designs\site_design_id() ),
+		\EventsCertificate\Signer\current(),
+		\EventsCertificate\Render\event_title( array() ),
+		\EventsCertificate\Render\event_location( array() ),
+	);
+
+	return substr( md5( (string) wp_json_encode( $now ) ), 0, 10 );
 }
 
 /**

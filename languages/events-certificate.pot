@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-05T17:08:10+00:00\n"
+"POT-Creation-Date: 2026-11-05T18:55:49+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: events-certificate\n"
@@ -49,7 +49,7 @@ msgstr ""
 msgid "Edit certificate"
 msgstr ""
 
-#: includes/admin-app.php:205
+#: includes/admin-app.php:203
 #: includes/admin.php:322
 msgid "City, Country"
 msgstr ""
@@ -57,31 +57,33 @@ msgstr ""
 #. translators: %s: number of hours (workload), e.g. "1 hour".
 #. translators: %s: number of hours (workload), e.g. "8 hours".
 #. translators: %s: number of hours.
+#: includes/admin-app.php:208
 #: includes/admin-app.php:210
-#: includes/admin-app.php:212
-#: includes/render.php:599
+#: includes/render.php:629
 #, php-format
 msgid "%s hour"
 msgid_plural "%s hours"
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/admin-app.php:213
-#: includes/render.php:506
+#: includes/admin-app.php:211
+#: includes/render.php:537
 msgid "Speaker"
 msgstr ""
 
-#: includes/admin-app.php:214
+#: includes/admin-app.php:212
 msgid "Building accessible blocks"
 msgstr ""
 
-#: includes/admin-app.php:218
+#: includes/admin-app.php:216
 #: build-signer/index.js:456
 msgid "Event Coordinator"
 msgstr ""
 
-#: includes/admin-app.php:268
-msgid "Edit certificate design"
+#: includes/admin-app.php:266
+#: build-signer/index.js:460
+#: build/routes/editor/content.js:1638
+msgid "Edit"
 msgstr ""
 
 #: includes/admin.php:81
@@ -263,7 +265,7 @@ msgid "Revoked"
 msgstr ""
 
 #: includes/class-list-table.php:80
-#: includes/compat/camptix-front.php:290
+#: includes/compat/camptix-front.php:307
 #: includes/verify.php:484
 #: build/routes/editor/content.js:891
 #: build/routes/editor/content.js:2555
@@ -272,7 +274,7 @@ msgid "Name"
 msgstr ""
 
 #: includes/class-list-table.php:81
-#: includes/compat/camptix-front.php:291
+#: includes/compat/camptix-front.php:308
 #: includes/verify.php:491
 #: build/routes/editor/content.js:3245
 msgid "Code"
@@ -300,7 +302,7 @@ msgid "Status"
 msgstr ""
 
 #: includes/class-list-table.php:86
-#: includes/compat/camptix-front.php:292
+#: includes/compat/camptix-front.php:309
 #: includes/verify.php:489
 msgid "Issued on"
 msgstr ""
@@ -334,7 +336,7 @@ msgid "Revoke this certificate? Its code will then say it was revoked."
 msgstr ""
 
 #: includes/class-list-table.php:340
-#: includes/render.php:505
+#: includes/render.php:536
 msgid "Attendee"
 msgstr ""
 
@@ -360,36 +362,36 @@ msgstr ""
 msgid "Certificates are available to attendees marked as present at the event. If you were there, please ask the organizers."
 msgstr ""
 
-#: includes/compat/camptix-front.php:192
+#: includes/compat/camptix-front.php:209
 msgid "The form expired. Please try again."
 msgstr ""
 
-#: includes/compat/camptix-front.php:229
+#: includes/compat/camptix-front.php:246
 msgid "Your certificate is available."
 msgstr ""
 
-#: includes/compat/camptix-front.php:231
+#: includes/compat/camptix-front.php:248
 msgid "View certificate"
 msgstr ""
 
-#: includes/compat/camptix-front.php:231
+#: includes/compat/camptix-front.php:248
 msgid "Get your certificate"
 msgstr ""
 
-#: includes/compat/camptix-front.php:243
+#: includes/compat/camptix-front.php:260
 msgid "This link isn’t valid. Use the link from your ticket e-mail."
 msgstr ""
 
-#: includes/compat/camptix-front.php:276
+#: includes/compat/camptix-front.php:293
 msgid "Your certificate was issued."
 msgstr ""
 
-#: includes/compat/camptix-front.php:278
+#: includes/compat/camptix-front.php:295
 msgid "Your certificate was corrected. The previous code now says it was replaced."
 msgstr ""
 
-#: includes/compat/camptix-front.php:281
-#: includes/compat/camptix-front.php:364
+#: includes/compat/camptix-front.php:298
+#: includes/compat/camptix-front.php:381
 #: includes/designs.php:97
 #: build-signer/index.js:441
 #: build/routes/editor/content.js:886
@@ -400,32 +402,32 @@ msgstr ""
 msgid "Certificate"
 msgstr ""
 
-#: includes/compat/camptix-front.php:293
+#: includes/compat/camptix-front.php:310
 msgid "Address"
 msgstr ""
 
-#: includes/compat/camptix-front.php:304
+#: includes/compat/camptix-front.php:321
 msgid "Correct the name"
 msgstr ""
 
-#: includes/compat/camptix-front.php:308
+#: includes/compat/camptix-front.php:325
 msgid "Name on the certificate"
 msgstr ""
 
-#: includes/compat/camptix-front.php:314
+#: includes/compat/camptix-front.php:331
 msgid "As it should appear: check accents and capital letters."
 msgstr ""
 
-#: includes/compat/camptix-front.php:318
+#: includes/compat/camptix-front.php:335
 #: includes/verify.php:324
 msgid "E-mail"
 msgstr ""
 
-#: includes/compat/camptix-front.php:323
+#: includes/compat/camptix-front.php:340
 msgid "Correct and reissue"
 msgstr ""
 
-#: includes/compat/camptix-front.php:323
+#: includes/compat/camptix-front.php:340
 msgid "Issue certificate"
 msgstr ""
 
@@ -433,40 +435,40 @@ msgstr ""
 msgid "Certificate designs"
 msgstr ""
 
-#: includes/render.php:507
+#: includes/render.php:538
 msgid "Organizer"
 msgstr ""
 
-#: includes/render.php:508
+#: includes/render.php:539
 msgid "Volunteer"
 msgstr ""
 
-#: includes/render.php:509
+#: includes/render.php:540
 msgid "Sponsor"
 msgstr ""
 
-#: includes/render.php:543
+#: includes/render.php:573
 #: build/routes/editor/content.js:1043
 msgid "Certificate of participation"
 msgstr ""
 
-#: includes/render.php:544
+#: includes/render.php:574
 #: build/routes/editor/content.js:1044
 msgid "This is to certify that"
 msgstr ""
 
-#: includes/render.php:545
+#: includes/render.php:575
 #: build/routes/editor/content.js:1028
 #: build/routes/editor/content.js:1045
 msgid "Date of issue"
 msgstr ""
 
-#: includes/render.php:546
+#: includes/render.php:576
 #: build/routes/editor/content.js:1046
 msgid "Place and date"
 msgstr ""
 
-#: includes/render.php:547
+#: includes/render.php:577
 #: build/routes/editor/content.js:1047
 msgid "Use the code above to verify at:"
 msgstr ""
@@ -807,11 +809,6 @@ msgstr ""
 #: build/routes/editor/content.js:849
 #: build/routes/editor/content.js:1036
 msgid "Role"
-msgstr ""
-
-#: build-signer/index.js:460
-#: build/routes/editor/content.js:1638
-msgid "Edit"
 msgstr ""
 
 #: build/routes/editor/content.js:845

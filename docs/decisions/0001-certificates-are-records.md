@@ -15,9 +15,10 @@ base32). Nothing reads live event data after issuing, so editing an event
 never changes what a certificate already given to someone says.
 
 The **look** is not frozen: certificates are drawn with the current site
-design and the current signer (name, role in each language, signature)
-(revised 2026-11-05, see below); the signer recorded at issue is used only
-when no organizer signs. The design version a certificate was
+design, the event's current name and place (the WordCamp's, or the site's)
+and the current signer (name, role in each language, signature)
+(revised 2026-11-05, see below); what was recorded at issue is used only
+when there is no current value. The design version a certificate was
 issued with is still kept (`design_hash`) as history, and drawn only if the
 site design is gone.
 
@@ -40,7 +41,9 @@ At first the design version was frozen too. In practice organizers adjust the
 design after the first certificates go out (a logo, a date format) and expect
 every certificate to show it; reissuing each one just for its look would give
 everyone a new code. The signer's role wording is text of the design too.
-What must not change silently is the content — who, what event, where, how
+The event's name and place are the event's, not the
+person's: a renamed event or a corrected place should show everywhere. What
+must not change silently is what is about the person — who, their role, how
 many hours, the code — and that stays in the row. The
 words of the standard texts already follow the page's language the same way.
 Share images are named after the current look, so a design change makes them

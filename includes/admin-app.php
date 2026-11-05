@@ -263,6 +263,6 @@ function render_editor_link() {
 	printf(
 		'<a class="page-title-action" href="%s">%s</a>',
 		esc_url( url( Designs\site_design_id() ) ),
-		esc_html__( 'Edit certificate design', 'events-certificate' )
+		esc_html__( 'Edit', 'events-certificate' )
 	);
 }

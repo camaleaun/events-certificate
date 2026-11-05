@@ -314,7 +314,7 @@ class List_Table extends \WP_List_Table {
 	 * @return string
 	 */
 	protected function column_event( $item ) {
-		return esc_html( $item['event_title'] );
+		return esc_html( \EventsCertificate\Render\event_title( $item ) );
 	}
 
 	/**
