@@ -28,7 +28,7 @@
         }
     },
     "scripts": {
-        "lint": "parallel-lint --exclude vendor --exclude node_modules --exclude build .",
+        "lint": "parallel-lint --exclude vendor --exclude node_modules --exclude build --exclude docs .",
         "phpcs": "phpcs",
         "phpcbf": "phpcbf",
         "test": "phpunit",
