@@ -813,3 +813,11 @@
 		flex: 1;
 	}
 }
+.evcert-anchors {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	.is-invalid input {
+		border-color: #cc1818;
+	}
+}

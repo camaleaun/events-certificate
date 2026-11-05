@@ -15,7 +15,9 @@ import {
 	moved,
 	newId,
 	REQUIRED_SLOTS,
+	placed,
 	recolor,
+	resolve,
 	rectPath,
 	runsHtml,
 	sanitizeSvg,
@@ -305,6 +307,9 @@ export default function Editor() {
 	const design = history.present;
 	const [ draft, setDraft ] = useState< Design | null >( null );
 	const shown = draft || design;
+	// Anchored elements resolved to x/y/w/h for drawing, hit testing and snapping.
+	const resolvedShown = useMemo( () => ( { ...shown, elements: shown.elements.map( ( e ) => resolve( e, shown.page ) ) } ), [ shown ] );
+	const resolvedDesign = useMemo( () => ( { ...design, elements: design.elements.map( ( e ) => resolve( e, design.page ) ) } ), [ design ] );
 	const [ selected, setSelected ] = useState< string | null >( null );
 	const [ mode, setMode ] = useState< Mode >( 'light' );
 	// One mode, like the block editor: click selects and drags, double-click edits text.
@@ -395,9 +400,11 @@ export default function Editor() {
 	}, [ fit ] );
 
 	const commit = ( next: Design ) => dispatch( { type: 'commit', design: next } );
+	const shift = ( e: Element, dx: number, dy: number ): Element => ( e.layout ? placed( e, box( moved( resolve( e, design.page ), dx, dy ) ), design.page ) : moved( e, dx, dy ) );
 	const update = ( id: string, patch: Partial< Element > ) =>
 		commit( { ...design, elements: design.elements.map( ( el ) => ( el.id === id ? ( { ...el, ...patch } as Element ) : el ) ) } );
-	const current = shown.elements.find( ( el ) => el.id === selected ) || null;
+	const current = resolvedShown.elements.find( ( el ) => el.id === selected ) || null;
+	const currentStored = design.elements.find( ( el ) => el.id === selected ) || null;
 
 	const toPage = ( event: { clientX: number; clientY: number } ) => {
 		const rect = svgRef.current!.getBoundingClientRect();
@@ -423,7 +430,7 @@ export default function Editor() {
 		if ( drag.kind === 'move' ) {
 			next = moved( drag.origin, dx, dy );
 			if ( ! event.altKey ) {
-				const s = snap( box( next ), design, drag.id, SNAP / zoom );
+				const s = snap( box( next ), resolvedDesign, drag.id, SNAP / zoom );
 				next = moved( next, s.dx, s.dy );
 				found = s.guides;
 			}
@@ -444,7 +451,7 @@ export default function Editor() {
 			next = { ...drag.origin, [ key.x ]: nx, [ key.y ]: ny } as Element;
 		}
 		setGuides( found );
-		setDraft( { ...design, elements: design.elements.map( ( el ) => ( el.id === drag.id ? next : el ) ) } );
+		setDraft( { ...design, elements: design.elements.map( ( el ) => ( el.id === drag.id ? ( el.layout ? placed( el, box( next ), design.page ) : next ) : el ) ) } );
 	};
 
 	const onPointerUp = () => {
@@ -472,7 +479,7 @@ export default function Editor() {
 		if ( ! el ) {
 			return;
 		}
-		const copy = { ...moved( el, 10, 10 ), id: newId( el.type ), slot: undefined, name: `${ el.name || el.type } copy` } as Element;
+		const copy = { ...shift( el, 10, 10 ), id: newId( el.type ), slot: undefined, name: `${ el.name || el.type } copy` } as Element;
 		commit( { ...design, elements: [ ...design.elements, copy ] } );
 		setSelected( copy.id );
 	};
@@ -570,7 +577,7 @@ export default function Editor() {
 				if ( el && ! el.locked ) {
 					const dx = event.key === 'ArrowLeft' ? -step : event.key === 'ArrowRight' ? step : 0;
 					const dy = event.key === 'ArrowUp' ? -step : event.key === 'ArrowDown' ? step : 0;
-					commit( { ...design, elements: design.elements.map( ( e ) => ( e.id === selected ? moved( e, dx, dy ) : e ) ) } );
+					commit( { ...design, elements: design.elements.map( ( e ) => ( e.id === selected ? shift( e, dx, dy ) : e ) ) } );
 				}
 			}
 		};
@@ -699,7 +706,7 @@ export default function Editor() {
 						</defs>
 						<rect x={ -bleed } y={ -bleed } width={ w + bleed * 2 } height={ h + bleed * 2 } fill={ bg === 'transparent' || bg === 'none' ? 'url(#evcert-checker)' : bg } />
 						<g clipPath="url(#evcert-page)">
-							{ shown.elements.map( ( el ) =>
+							{ resolvedShown.elements.map( ( el ) =>
 								el.hidden ? null : (
 									editing && editing.id === el.id && el.type === 'text' ? (
 										<foreignObject key={ el.id } x={ el.x } y={ el.y } width={ el.w } height={ Math.max( el.h, el.size * ( el.lh ?? 1.2 ) * 6 ) } style={ { overflow: 'visible' } } onPointerDown={ ( event ) => event.stopPropagation() }>
@@ -743,10 +750,10 @@ export default function Editor() {
 									>
 										{ el.rotation && el.type !== 'line' ? (
 											<g transform={ `rotate(${ el.rotation } ${ el.x + el.w / 2 } ${ el.y + el.h / 2 })` }>
-												<Shape el={ el } design={ shown } mode={ mode } sample={ config.sample } />
+												<Shape el={ el } design={ resolvedShown } mode={ mode } sample={ config.sample } />
 											</g>
 										) : (
-											<Shape el={ el } design={ shown } mode={ mode } sample={ config.sample } />
+											<Shape el={ el } design={ resolvedShown } mode={ mode } sample={ config.sample } />
 										) }
 									</g>
 									)
@@ -838,7 +845,7 @@ export default function Editor() {
 							</Button>
 						</div>
 						{ sidebarTab === 'element' && current && (
-							<Inspector el={ current } design={ design } mode={ mode } tab={ tab } locale={ LOCALE } sample={ config.sample } onChange={ ( patch ) => update( current.id, patch ) } onImage={ () => imageRef.current?.click() } />
+							<Inspector el={ current } stored={ currentStored } design={ design } mode={ mode } tab={ tab } locale={ LOCALE } sample={ config.sample } onChange={ ( patch ) => update( current.id, patch ) } onImage={ () => imageRef.current?.click() } />
 						) }
 						{ sidebarTab === 'design' && <DesignPanel design={ design } mode={ mode } title={ title } status={ statusLabel } onTitle={ setTitle } onChange={ commit } /> }
 					</aside>

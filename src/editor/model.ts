@@ -21,6 +21,7 @@ export type Base = {
 	rotation?: number;
 	locked?: boolean;
 	hidden?: boolean;
+	layout?: Layout;
 };
 
 export type TextEl = Base & {
@@ -334,4 +335,119 @@ export function sanitizeSvg( code: string ): { markup: string; vw: number; vh: n
 /** SVG markup with every fill (except "none") replaced, to recolor an icon with a color variable. */
 export function recolor( markup: string, fill?: string ): string {
 	return fill ? markup.replace( /fill="(?!none)[^"]*"/g, `fill="${ fill }"` ) : markup;
+}
+
+/**
+ * Anchors and relative sizes, like Figma's constraints: per axis, an element
+ * is pinned to the start, the end or the centre of its reference box (the page
+ * or the safe margin), or stretched between both with an inset on each side.
+ * Lengths are open text: "20pt", "10mm", "5%", "calc(100% - 40pt)"; percentages
+ * are of the reference box's size on that axis.
+ */
+export type AxisMode = 'start' | 'center' | 'end' | 'stretch';
+export type Axis = { mode: AxisMode; start?: string; end?: string; size?: string };
+export type Layout = { h: Axis; v: Axis; ref?: 'page' | 'safe' };
+
+const UNITS: Record< string, number > = { pt: 1, px: 1, mm: 2.83465, cm: 28.3465, in: 72 };
+
+/** A length in pt: "20pt", "10mm", "5%", "calc(100% - 40pt)" (terms joined by + or -), or a bare number (pt). */
+export function parseLen( value: string | number | undefined, total: number ): number {
+	if ( value === undefined || value === '' ) {
+		return 0;
+	}
+	if ( typeof value === 'number' ) {
+		return value;
+	}
+	let expr = value.trim().toLowerCase();
+	const calc = /^calc\((.*)\)$/.exec( expr );
+	if ( calc ) {
+		expr = calc[ 1 ];
+	}
+	let sum = 0;
+	const re = /([+-]?)\s*(-?\d*\.?\d+)\s*(pt|px|mm|cm|in|%)?/g;
+	let m: RegExpExecArray | null;
+	let matched = false;
+	while ( ( m = re.exec( expr ) ) ) {
+		matched = true;
+		const n = parseFloat( m[ 2 ] ) * ( m[ 1 ] === '-' ? -1 : 1 );
+		sum += m[ 3 ] === '%' ? ( n * total ) / 100 : n * ( UNITS[ m[ 3 ] || 'pt' ] || 1 );
+	}
+	return matched ? sum : 0;
+}
+
+/** Whether a length is valid open text. */
+export function isLen( value: string ): boolean {
+	const v = value.trim().toLowerCase();
+	return /^-?\d*\.?\d+\s*(pt|px|mm|cm|in|%)?$/.test( v ) || /^calc\(\s*-?\d*\.?\d+\s*(pt|px|mm|cm|in|%)?(\s*[+-]\s*\d*\.?\d+\s*(pt|px|mm|cm|in|%)?)*\s*\)$/.test( v );
+}
+
+/** The box an element is anchored to. */
+export function refBox( page: Design[ 'page' ], ref?: 'page' | 'safe' ): Box {
+	return ref === 'safe' ? { x: page.safe, y: page.safe, w: page.w - page.safe * 2, h: page.h - page.safe * 2 } : { x: 0, y: 0, w: page.w, h: page.h };
+}
+
+function resolveAxis( axis: Axis, origin: number, total: number ): [ number, number ] {
+	const start = parseLen( axis.start, total );
+	const end = parseLen( axis.end, total );
+	const size = parseLen( axis.size, total );
+	switch ( axis.mode ) {
+		case 'end':
+			return [ origin + total - end - size, size ];
+		case 'center':
+			return [ origin + ( total - size ) / 2 + start, size ];
+		case 'stretch':
+			return [ origin + start, Math.max( 1, total - start - end ) ];
+		default:
+			return [ origin + start, size ];
+	}
+}
+
+/** An element with its anchors resolved to x, y, w, h in pt (elements without anchors are returned as they are). */
+export function resolve< T extends Element >( el: T, page: Design[ 'page' ] ): T {
+	const layout = ( el as { layout?: Layout } ).layout;
+	if ( ! layout || el.type === 'line' ) {
+		return el;
+	}
+	const r = refBox( page, layout.ref );
+	const [ x, w ] = resolveAxis( layout.h, r.x, r.w );
+	const [ y, h ] = resolveAxis( layout.v, r.y, r.h );
+	return { ...el, x, y, w, h };
+}
+
+/** Writes a length back, in the unit it was written in (% stays %, anything else becomes pt). */
+function lenLike( previous: string | undefined, pt: number, total: number ): string {
+	const round = ( n: number ) => Math.round( n * 100 ) / 100;
+	if ( previous && /%\s*$/.test( previous ) && ! /calc/i.test( previous ) ) {
+		return `${ round( ( pt / total ) * 100 ) }%`;
+	}
+	return `${ round( pt ) }pt`;
+}
+
+function axisFrom( axis: Axis, pos: number, size: number, origin: number, total: number ): Axis {
+	const offset = pos - origin;
+	switch ( axis.mode ) {
+		case 'end':
+			return { ...axis, end: lenLike( axis.end, total - offset - size, total ), size: lenLike( axis.size, size, total ) };
+		case 'center':
+			return { ...axis, start: lenLike( axis.start, offset - ( total - size ) / 2, total ), size: lenLike( axis.size, size, total ) };
+		case 'stretch':
+			return { ...axis, start: lenLike( axis.start, offset, total ), end: lenLike( axis.end, total - offset - size, total ) };
+		default:
+			return { ...axis, start: lenLike( axis.start, offset, total ), size: lenLike( axis.size, size, total ) };
+	}
+}
+
+/** The anchors that put an element at a box (after dragging or resizing on the canvas). */
+export function layoutFrom( layout: Layout, b: Box, page: Design[ 'page' ] ): Layout {
+	const r = refBox( page, layout.ref );
+	return { ...layout, h: axisFrom( layout.h, b.x, b.w, r.x, r.w ), v: axisFrom( layout.v, b.y, b.h, r.y, r.h ) };
+}
+
+/** An element placed at a box: absolute elements take the numbers, anchored ones update their anchors. */
+export function placed< T extends Element >( stored: T, b: Box, page: Design[ 'page' ] ): T {
+	const layout = ( stored as { layout?: Layout } ).layout;
+	if ( stored.type === 'line' ) {
+		return stored;
+	}
+	return layout ? { ...stored, layout: layoutFrom( layout, b, page ) } : { ...stored, x: b.x, y: b.y, w: b.w, h: b.h };
 }

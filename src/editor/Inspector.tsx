@@ -12,6 +12,7 @@ import {
 	FontSizePicker,
 	RangeControl,
 	SelectControl,
+	TextControl,
 	ToggleControl,
 	__experimentalNumberControl as NumberControl,
 	__experimentalUnitControl as UnitControl,
@@ -24,12 +25,13 @@ import {
 } from '@wordpress/components';
 import { useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { alignCenter, alignLeft, alignRight, cornerBottomLeft, cornerBottomRight, cornerTopLeft, cornerTopRight, formatUppercase, Icon, link, linkOff, reset } from '@wordpress/icons';
+import { justifyBottom, justifyCenter, justifyCenterVertical, justifyLeft, justifyRight, justifyStretch, justifyStretchVertical, justifyTop, alignCenter, alignLeft, alignRight, cornerBottomLeft, cornerBottomRight, cornerTopLeft, cornerTopRight, formatUppercase, Icon, link, linkOff, reset } from '@wordpress/icons';
 import { elementIcon } from './icons';
-import { color, REQUIRED_SLOTS, type Design, type Element, type Mode } from './model';
+import { color, isLen, layoutFrom, parseLen, refBox, REQUIRED_SLOTS, type AxisMode, type Layout, type Design, type Element, type Mode } from './model';
 
 type Props = {
 	el: Element;
+	stored?: Element | null;
 	design: Design;
 	mode: Mode;
 	tab: 'content' | 'art';
@@ -81,7 +83,7 @@ export function ColorItem( { label, value, design, mode, onChange }: { label: st
 	);
 }
 
-export default function Inspector( { el, design, mode, tab, locale, sample, onChange, onImage }: Props ) {
+export default function Inspector( { el, stored, design, mode, tab, locale, sample, onChange, onImage }: Props ) {
 	const [ linked, setLinked ] = useState( true );
 	const required = !! el.slot && REQUIRED_SLOTS.includes( el.slot );
 	const typeLabel = {
@@ -272,12 +274,8 @@ export default function Inspector( { el, design, mode, tab, locale, sample, onCh
 			{ tab === 'art' && (
 				<ToolsPanel label={ __( 'Dimensions', 'events-certificate' ) } resetAll={ () => onChange( { rotation: 0, opacity: 1 } ) } className="dimensions-block-support-panel">
 					{ el.type !== 'line' && (
-						<ToolsPanelItem label={ __( 'Position and size', 'events-certificate' ) } hasValue={ () => true } onDeselect={ () => {} } isShownByDefault>
-							<div className="evcert-grid-2">
-								{ ( [ [ 'x', 'X' ], [ 'y', 'Y' ], [ 'w', __( 'Width', 'events-certificate' ) ], [ 'h', __( 'Height', 'events-certificate' ) ] ] as const ).map( ( [ k, label ] ) => (
-									<NumberControl key={ k } __next40pxDefaultSize label={ label } value={ num( ( el as any )[ k ] ) } onChange={ ( v ) => onChange( { [ k ]: Number( v ) } as Partial< Element > ) } suffix={ <span className="evcert-suffix">pt</span> } />
-								) ) }
-							</div>
+						<ToolsPanelItem label={ __( 'Position and size', 'events-certificate' ) } hasValue={ () => !! stored?.layout } onDeselect={ () => onChange( { layout: undefined, x: el.x, y: el.y, w: el.w, h: el.h } as Partial< Element > ) } isShownByDefault>
+							<Anchors el={ el } stored={ stored || el } page={ design.page } onChange={ onChange } />
 						</ToolsPanelItem>
 					) }
 					{ el.type !== 'line' && (
@@ -294,6 +292,111 @@ export default function Inspector( { el, design, mode, tab, locale, sample, onCh
 					</ToolsPanelItem>
 				</ToolsPanel>
 			) }
+		</div>
+	);
+}
+
+const AXIS_LABELS = () => ( {
+	h: {
+		start: [ __( 'Left', 'events-certificate' ), __( 'Width', 'events-certificate' ) ],
+		center: [ __( 'Offset', 'events-certificate' ), __( 'Width', 'events-certificate' ) ],
+		end: [ __( 'Right', 'events-certificate' ), __( 'Width', 'events-certificate' ) ],
+		stretch: [ __( 'Left', 'events-certificate' ), __( 'Right', 'events-certificate' ) ],
+	},
+	v: {
+		start: [ __( 'Top', 'events-certificate' ), __( 'Height', 'events-certificate' ) ],
+		center: [ __( 'Offset', 'events-certificate' ), __( 'Height', 'events-certificate' ) ],
+		end: [ __( 'Bottom', 'events-certificate' ), __( 'Height', 'events-certificate' ) ],
+		stretch: [ __( 'Top', 'events-certificate' ), __( 'Bottom', 'events-certificate' ) ],
+	},
+} );
+
+/**
+ * An open length field: "20pt", "10mm", "5%", "calc(100% - 40pt)". Commits
+ * on blur or Enter when valid, and shows what it resolves to.
+ */
+function LengthField( { label, value, total, onChange }: { label: string; value: string; total: number; onChange: ( v: string ) => void } ) {
+	const [ text, setText ] = useState( value );
+	const [ focused, setFocused ] = useState( false );
+	const shown = focused ? text : value;
+	const valid = isLen( shown );
+	const commitText = () => {
+		if ( isLen( text ) && text !== value ) {
+			onChange( /^-?\d*\.?\d+$/.test( text.trim() ) ? `${ text.trim() }pt` : text.trim() );
+		}
+	};
+	return (
+		<TextControl
+			__next40pxDefaultSize
+			__nextHasNoMarginBottom
+			label={ label }
+			value={ shown }
+			className={ valid ? '' : 'is-invalid' }
+			help={ valid ? `= ${ Math.round( parseLen( shown, total ) * 10 ) / 10 } pt` : __( 'Use pt, mm, % or calc(100% - 20pt).', 'events-certificate' ) }
+			onFocus={ () => { setText( value ); setFocused( true ); } }
+			onBlur={ () => { commitText(); setFocused( false ); } }
+			onKeyDown={ ( event: { key: string } ) => event.key === 'Enter' && commitText() }
+			onChange={ setText }
+		/>
+	);
+}
+
+/** Anchors per axis (start, centre, end, stretch) with open length fields, relative to the page or the safe margin. */
+function Anchors( { el, stored, page, onChange }: { el: Element; stored: Element; page: Design[ 'page' ]; onChange: ( patch: Partial< Element > ) => void } ) {
+	const labels = AXIS_LABELS();
+	const b = { x: el.x as number, y: el.y as number, w: el.w as number, h: el.h as number };
+	const layout: Layout = stored.layout || layoutFrom( { h: { mode: 'start' }, v: { mode: 'start' }, ref: 'page' }, b, page );
+	const ref = refBox( page, layout.ref );
+	const set = ( next: Layout ) => onChange( { layout: next } as Partial< Element > );
+	const setMode = ( axis: 'h' | 'v', mode: AxisMode ) => set( layoutFrom( { ...layout, [ axis ]: { mode } }, b, page ) );
+	const setRef = ( r: 'page' | 'safe' ) => set( layoutFrom( { ...layout, ref: r }, b, page ) );
+	const field = ( axis: 'h' | 'v', key: 'start' | 'end' | 'size', label: string ) => (
+		<LengthField
+			label={ label }
+			value={ layout[ axis ][ key ] || '0pt' }
+			total={ axis === 'h' ? ref.w : ref.h }
+			onChange={ ( v ) => set( { ...layout, [ axis ]: { ...layout[ axis ], [ key ]: v } } ) }
+		/>
+	);
+	const fields = ( axis: 'h' | 'v' ) => {
+		const mode = layout[ axis ].mode;
+		const [ first, second ] = labels[ axis ][ mode ];
+		return (
+			<div className="evcert-grid-2">
+				{ field( axis, mode === 'end' ? 'end' : 'start', first ) }
+				{ field( axis, mode === 'stretch' ? 'end' : 'size', second ) }
+			</div>
+		);
+	};
+	const fill = ( r: 'page' | 'safe' ) => set( { ref: r, h: { mode: 'stretch', start: '0pt', end: '0pt' }, v: { mode: 'stretch', start: '0pt', end: '0pt' } } );
+	return (
+		<div className="evcert-anchors">
+			<ToggleGroupControl __next40pxDefaultSize __nextHasNoMarginBottom isBlock label={ __( 'Relative to', 'events-certificate' ) } value={ layout.ref || 'page' } onChange={ ( v ) => setRef( v as 'page' ) }>
+				<ToggleGroupControlOption value="page" label={ __( 'Page', 'events-certificate' ) } />
+				<ToggleGroupControlOption value="safe" label={ __( 'Safe margin', 'events-certificate' ) } />
+			</ToggleGroupControl>
+			<ToggleGroupControl __next40pxDefaultSize __nextHasNoMarginBottom label={ __( 'Horizontal', 'events-certificate' ) } value={ layout.h.mode } onChange={ ( v ) => setMode( 'h', v as AxisMode ) }>
+				<ToggleGroupControlOptionIcon value="start" icon={ justifyLeft } label={ __( 'Left', 'events-certificate' ) } />
+				<ToggleGroupControlOptionIcon value="center" icon={ justifyCenter } label={ __( 'Center', 'events-certificate' ) } />
+				<ToggleGroupControlOptionIcon value="end" icon={ justifyRight } label={ __( 'Right', 'events-certificate' ) } />
+				<ToggleGroupControlOptionIcon value="stretch" icon={ justifyStretch } label={ __( 'Stretch', 'events-certificate' ) } />
+			</ToggleGroupControl>
+			{ fields( 'h' ) }
+			<ToggleGroupControl __next40pxDefaultSize __nextHasNoMarginBottom label={ __( 'Vertical', 'events-certificate' ) } value={ layout.v.mode } onChange={ ( v ) => setMode( 'v', v as AxisMode ) }>
+				<ToggleGroupControlOptionIcon value="start" icon={ justifyTop } label={ __( 'Top', 'events-certificate' ) } />
+				<ToggleGroupControlOptionIcon value="center" icon={ justifyCenterVertical } label={ __( 'Middle', 'events-certificate' ) } />
+				<ToggleGroupControlOptionIcon value="end" icon={ justifyBottom } label={ __( 'Bottom', 'events-certificate' ) } />
+				<ToggleGroupControlOptionIcon value="stretch" icon={ justifyStretchVertical } label={ __( 'Stretch', 'events-certificate' ) } />
+			</ToggleGroupControl>
+			{ fields( 'v' ) }
+			<HStack justify="flex-start">
+				<Button variant="secondary" size="compact" onClick={ () => fill( 'page' ) }>
+					{ __( 'Fill page', 'events-certificate' ) }
+				</Button>
+				<Button variant="secondary" size="compact" onClick={ () => fill( 'safe' ) }>
+					{ __( 'Fill safe margin', 'events-certificate' ) }
+				</Button>
+			</HStack>
 		</div>
 	);
 }
