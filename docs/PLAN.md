@@ -128,7 +128,7 @@ aproveitamos o padrão do rodapé:
 O que muda para estrangeiros:
 - Texto bilíngue no PDF quando o site não está em inglês, por exemplo "Verifique a
   autenticidade em … / Verify authenticity at …".
-- Página de verificação com seletor de idioma (`?lang=en`).
+- Página de verificação com seletor de idioma (`?evcert_lang=en`).
 - Datas sem ambiguidade (4 Nov 2026, e não 04/11).
 - Slug em inglês e código sem caracteres ambíguos.
 
@@ -975,7 +975,7 @@ cada idioma para a tradução ser completa.
 - **Seletor fixo no topo**, ao lado do selo de status, com **os idiomas definidos
   no site**, cada um no próprio idioma ("Português", "English", "Español"). Com
   mais de três, vira um menu compacto, sempre visível.
-  - O idioma escolhido vai na URL (`?lang=es`), para o link poder ser mandado já no
+  - O idioma escolhido vai na URL (`?evcert_lang=es`), para o link poder ser mandado já no
     idioma certo, e fica lembrado num cookie.
 - **Sugestão sem redirecionar:** se o `Accept-Language` do navegador combinar com
   um dos idiomas do site diferente do atual, aparece uma faixa ("View this
@@ -1891,7 +1891,7 @@ events-certificate/
      correta, fundos PNG/JPG/WebP.
 3. **Verificação:**
    - slug padrão e personalizado, fallback `?evcert_certificate=`, os estados
-     válido/revogado/não encontrado, `?lang=en`, limite por IP e noindex;
+     válido/revogado/não encontrado, `?evcert_lang=en`, limite por IP e noindex;
    - curl com links permanentes ligados e desligados, e com troca de slug.
 4. **Tela de certificados:** emitir, revogar/corrigir, lote, adicionar e colar,
    exportar.

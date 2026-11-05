@@ -171,7 +171,7 @@ function locale_name( $locale ) {
 function page_url( $code, $locale = '', $args = array() ) {
 	$url = Certificates\url( $code );
 	if ( $locale && get_locale() !== $locale ) {
-		$args['lang'] = $locale;
+		$args['evcert_lang'] = $locale;
 	}
 
 	return $args ? add_query_arg( $args, $url ) : $url;
@@ -190,7 +190,7 @@ function template_redirect() {
 		wp_safe_redirect( $typed ? Certificates\url( $typed ) : home_url( user_trailingslashit( Settings\value( 'slug' ) ) . '?invalid=1' ) );
 		exit;
 	}
-	$lang   = isset( $_GET['lang'] ) ? sanitize_text_field( wp_unslash( $_GET['lang'] ) ) : '';
+	$lang   = isset( $_GET['evcert_lang'] ) ? sanitize_text_field( wp_unslash( $_GET['evcert_lang'] ) ) : '';
 	$format = isset( $_GET['format'] ) ? sanitize_key( wp_unslash( $_GET['format'] ) ) : '';
 	$typed  = isset( $_GET['invalid'] );
 	// phpcs:enable

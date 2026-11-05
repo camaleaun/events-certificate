@@ -3,7 +3,7 @@
  * Preview in a new tab: the design editor sends the design as it is (unsaved
  * changes included), kept for a while per user, and opens the site with
  * ?evcert_preview=1 (like a post's ?preview=true), drawn like a certificate
- * page with the preview data, in any of the site's languages (?lang=).
+ * page with the preview data, in any of the site's languages (?evcert_lang=).
  * The QR code and the code are the placeholders the editor shows, on any site.
  * Only people who may edit designs see it.
  *
@@ -47,7 +47,7 @@ function bootstrap() {
 function url( $locale = '' ) {
 	$args = array( QUERY_ARG => '1' );
 	if ( $locale && get_locale() !== $locale ) {
-		$args['lang'] = $locale;
+		$args['evcert_lang'] = $locale;
 	}
 
 	return add_query_arg( $args, home_url( '/' ) );
@@ -61,7 +61,7 @@ function maybe_render() {
 	if ( ! isset( $_GET[ QUERY_ARG ] ) ) {
 		return;
 	}
-	$lang = isset( $_GET['lang'] ) ? sanitize_text_field( wp_unslash( $_GET['lang'] ) ) : '';
+	$lang = isset( $_GET['evcert_lang'] ) ? sanitize_text_field( wp_unslash( $_GET['evcert_lang'] ) ) : '';
 	// phpcs:enable
 	$locale   = in_array( $lang, \EventsCertificate\Verify\locales(), true ) ? $lang : get_locale();
 	$switched = switch_to_locale( $locale );
