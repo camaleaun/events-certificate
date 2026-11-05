@@ -4,7 +4,7 @@
  * the other elements, and a floating Dock with everything else.
  */
 import apiFetch from '@wordpress/api-fetch';
-import { Button, ColorPalette, DropdownMenu, MenuGroup, MenuItem, Popover, RangeControl, SelectControl, TextControl, ToggleControl } from '@wordpress/components';
+import { Button, ColorPalette, DropdownMenu, MenuGroup, MenuItem, Modal, Popover, RangeControl, SelectControl, TextareaControl, TextControl, ToggleControl } from '@wordpress/components';
 import { chevronLeft, drawerRight, listView, moreVertical, plus, redo as redoIcon, undo as undoIcon } from '@wordpress/icons';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
@@ -15,7 +15,10 @@ import {
 	moved,
 	newId,
 	REQUIRED_SLOTS,
+	recolor,
+	rectPath,
 	runsHtml,
+	sanitizeSvg,
 	runsOf,
 	type Box,
 	type Design,
@@ -146,12 +149,16 @@ function resized( origin: Element, handle: string, dx: number, dy: number, keepR
 function Shape( { el, design, mode, sample }: { el: Element; design: Design; mode: Mode; sample: Record< string, string > } ) {
 	const opacity = el.opacity ?? 1;
 	switch ( el.type ) {
-		case 'rect': {
-			const [ tl = 0, tr = 0, br = 0, bl = 0 ] = el.radius || [];
-			const { x, y, w, h } = el;
-			const r = ( v: number ) => Math.min( v, w / 2, h / 2 );
-			const d = `M${ x + r( tl ) } ${ y }H${ x + w - r( tr ) }A${ r( tr ) } ${ r( tr ) } 0 0 1 ${ x + w } ${ y + r( tr ) }V${ y + h - r( br ) }A${ r( br ) } ${ r( br ) } 0 0 1 ${ x + w - r( br ) } ${ y + h }H${ x + r( bl ) }A${ r( bl ) } ${ r( bl ) } 0 0 1 ${ x } ${ y + h - r( bl ) }V${ y + r( tl ) }A${ r( tl ) } ${ r( tl ) } 0 0 1 ${ x + r( tl ) } ${ y }Z`;
-			return <path d={ d } fill={ color( design, el.fill, mode ) } stroke={ color( design, el.stroke, mode ) } strokeWidth={ el.strokeWidth || 0 } opacity={ opacity } />;
+		case 'rect':
+			return <path d={ rectPath( el.x, el.y, el.w, el.h, el.radius, el.corner ) } fill={ color( design, el.fill, mode ) } stroke={ color( design, el.stroke, mode ) } strokeWidth={ el.strokeWidth || 0 } opacity={ opacity } />;
+		case 'svg': {
+			const fill = el.fill ? color( design, el.fill, mode ) : undefined;
+			const stroke = el.stroke ? color( design, el.stroke, mode ) : undefined;
+			return (
+				<svg x={ el.x } y={ el.y } width={ el.w } height={ el.h } viewBox={ `0 0 ${ el.vw } ${ el.vh }` } opacity={ opacity } overflow="visible">
+					<g fill={ fill || 'currentColor' } style={ { color: color( design, '$text', mode ) } } dangerouslySetInnerHTML={ { __html: recolor( el.markup, fill, stroke ) } } />
+				</svg>
+			);
 		}
 		case 'ellipse':
 			return <ellipse cx={ el.x + el.w / 2 } cy={ el.y + el.h / 2 } rx={ el.w / 2 } ry={ el.h / 2 } fill={ color( design, el.fill, mode ) } stroke={ color( design, el.stroke, mode ) } strokeWidth={ el.strokeWidth || 0 } opacity={ opacity } />;
@@ -219,6 +226,7 @@ export default function Editor() {
 	const [ tab, setTab ] = useState< 'content' | 'art' >( 'art' );
 	const [ panel, setPanel ] = useState< 'insert' | 'layers' | null >( null );
 	const [ sidebar, setSidebar ] = useState< 'design' | 'element' | null >( 'design' );
+	const [ svgModal, setSvgModal ] = useState< string | null >( null );
 	const [ guides, setGuides ] = useState< Guide[] >( [] );
 	const [ title, setTitle ] = useState( '' );
 	const [ status, setStatus ] = useState< 'loading' | 'saved' | 'dirty' | 'saving' | 'error' >( 'loading' );
@@ -362,6 +370,7 @@ export default function Editor() {
 		const el = create( type, design );
 		commit( { ...design, elements: [ ...design.elements, el ] } );
 		setSelected( el.id );
+		setSidebar( 'element' );
 		setPanel( null );
 		if ( type === 'image' ) {
 			imageRef.current?.click();
@@ -537,9 +546,10 @@ export default function Editor() {
 										[ 'rect', __( 'Rectangle', 'events-certificate' ), '▭' ],
 										[ 'ellipse', __( 'Ellipse', 'events-certificate' ), '◯' ],
 										[ 'image', __( 'Image', 'events-certificate' ), '🖼' ],
+										[ 'svg', __( 'SVG code', 'events-certificate' ), '⟨/⟩' ],
 									] as const
 								 ).map( ( [ type, label, glyph ] ) => (
-									<button key={ type } type="button" className="evcert-insert-item" onClick={ () => insert( type ) }>
+									<button key={ type } type="button" className="evcert-insert-item" onClick={ () => ( type === 'svg' ? setSvgModal( '' ) : insert( type ) ) }>
 										<span className="evcert-insert-icon" aria-hidden="true">{ glyph }</span>
 										{ label }
 									</button>
@@ -747,6 +757,44 @@ export default function Editor() {
 				</Button>
 			</footer>
 
+			{ svgModal !== null && (
+				<Modal title={ __( 'Insert SVG code', 'events-certificate' ) } onRequestClose={ () => setSvgModal( null ) }>
+					<TextareaControl
+						__nextHasNoMarginBottom
+						label={ __( 'Paste the SVG code (an icon, a logo, an ornament)', 'events-certificate' ) }
+						help={ __( 'Only drawing is kept: scripts, links, styles and embedded content are removed.', 'events-certificate' ) }
+						value={ svgModal }
+						onChange={ setSvgModal }
+						rows={ 8 }
+					/>
+					<div className="evcert-actions" style={ { marginTop: 16 } }>
+						<Button
+							variant="primary"
+							disabled={ ! sanitizeSvg( svgModal ) }
+							accessibleWhenDisabled
+							onClick={ () => {
+								const clean = sanitizeSvg( svgModal );
+								if ( ! clean ) {
+									return;
+								}
+								const size = 120;
+								const ratio = clean.vw / clean.vh;
+								const el = { id: newId( 'svg' ), type: 'svg', name: 'SVG', x: w / 2 - size / 2, y: h / 2 - size / 2 / ratio, w: size, h: size / ratio, ...clean } as Element;
+								commit( { ...design, elements: [ ...design.elements, el ] } );
+								setSelected( el.id );
+								setSidebar( 'element' );
+								setSvgModal( null );
+								setPanel( null );
+							} }
+						>
+							{ __( 'Insert', 'events-certificate' ) }
+						</Button>
+						<Button variant="tertiary" onClick={ () => setSvgModal( null ) }>
+							{ __( 'Cancel', 'events-certificate' ) }
+						</Button>
+					</div>
+				</Modal>
+			) }
 			<input ref={ fileRef } type="file" accept="application/json,.json" hidden onChange={ ( event ) => event.target.files?.[ 0 ] && importJson( event.target.files[ 0 ] ) } />
 			<input ref={ imageRef } type="file" accept="image/png,image/jpeg,image/svg+xml" hidden onChange={ ( event ) => event.target.files?.[ 0 ] && onImage( event.target.files[ 0 ] ) } />
 		</div>
@@ -851,6 +899,21 @@ function Inspector( props: {
 					<ColorField label={ __( 'Stroke', 'events-certificate' ) } value={ el.stroke } design={ design } mode={ mode } onChange={ ( stroke ) => onChange( { stroke } ) } />
 					<RangeControl __next40pxDefaultSize label={ __( 'Stroke width', 'events-certificate' ) } value={ el.strokeWidth || 0 } min={ 0 } max={ 60 } step={ 0.5 } onChange={ ( v ) => onChange( { strokeWidth: v ?? 0 } ) } />
 					{ el.type === 'rect' && (
+						<SelectControl
+							__next40pxDefaultSize
+							label={ __( 'Corner shape', 'events-certificate' ) }
+							value={ ( el.corner || 'round' ) as any }
+							options={ [
+								{ label: __( 'Round', 'events-certificate' ), value: 'round' },
+								{ label: __( 'Scoop', 'events-certificate' ), value: 'scoop' },
+								{ label: __( 'Bevel', 'events-certificate' ), value: 'bevel' },
+								{ label: __( 'Notch', 'events-certificate' ), value: 'notch' },
+								{ label: __( 'Squircle', 'events-certificate' ), value: 'squircle' },
+							] }
+							onChange={ ( corner ) => onChange( { corner: corner as 'round' } ) }
+						/>
+					) }
+					{ el.type === 'rect' && (
 						<div className="evcert-row">
 							{ [ __( '↖', 'events-certificate' ), __( '↗', 'events-certificate' ), __( '↘', 'events-certificate' ), __( '↙', 'events-certificate' ) ].map( ( label, i ) => (
 								<TextControl
@@ -881,6 +944,13 @@ function Inspector( props: {
 						options={ [ { label: __( 'Solid', 'events-certificate' ), value: 'solid' }, { label: __( 'Dashed', 'events-certificate' ), value: 'dashed' }, { label: __( 'Dotted', 'events-certificate' ), value: 'dotted' } ] }
 						onChange={ ( dash ) => onChange( { dash: dash as 'solid' } ) }
 					/>
+				</>
+			) }
+			{ tab === 'art' && el.type === 'svg' && (
+				<>
+					<ColorField label={ __( 'Fill', 'events-certificate' ) } value={ el.fill } design={ design } mode={ mode } onChange={ ( fill ) => onChange( { fill } ) } />
+					<ColorField label={ __( 'Stroke', 'events-certificate' ) } value={ el.stroke } design={ design } mode={ mode } onChange={ ( stroke ) => onChange( { stroke } ) } />
+					<p className="evcert-meta">{ __( 'Empty keeps the SVG’s own colors.', 'events-certificate' ) }</p>
 				</>
 			) }
 			{ tab === 'art' && el.type === 'image' && (

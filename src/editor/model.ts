@@ -38,7 +38,9 @@ export type TextEl = Base & {
 	fit?: boolean;
 	min?: number;
 };
-export type RectEl = Base & { type: 'rect'; fill?: string; stroke?: string; strokeWidth?: number; radius?: number[] };
+export type CornerShape = 'round' | 'scoop' | 'bevel' | 'notch' | 'squircle';
+export type RectEl = Base & { type: 'rect'; fill?: string; stroke?: string; strokeWidth?: number; radius?: number[]; corner?: CornerShape };
+export type SvgEl = Base & { type: 'svg'; markup: string; vw: number; vh: number; fill?: string; stroke?: string };
 export type EllipseEl = Base & { type: 'ellipse'; fill?: string; stroke?: string; strokeWidth?: number };
 export type PathEl = Base & { type: 'path'; d: string; vw: number; vh: number; fill?: string; stroke?: string; strokeWidth?: number };
 export type LineEl = Omit< Base, 'x' | 'y' | 'w' | 'h' > & {
@@ -59,7 +61,7 @@ export type LineEl = Omit< Base, 'x' | 'y' | 'w' | 'h' > & {
 export type ImageEl = Base & { type: 'image'; src: string; fit?: 'contain' | 'cover' };
 export type QrEl = Base & { type: 'qr' };
 
-export type Element = TextEl | RectEl | EllipseEl | PathEl | LineEl | ImageEl | QrEl;
+export type Element = TextEl | RectEl | EllipseEl | PathEl | LineEl | ImageEl | QrEl | SvgEl;
 
 export type Design = {
 	version: 1;
@@ -213,4 +215,110 @@ export function create( type: Element[ 'type' ], design: Design ): Element {
 		default:
 			return { id, type: 'image', name: 'Image', x: cx - 60, y: cy - 60, w: 120, h: 120, src: '', fit: 'contain' };
 	}
+}
+
+/**
+ * A rectangle's outline as an SVG path, with each corner drawn in a shape like
+ * CSS corner-shape (round, scoop, bevel, notch, squircle). A path, so the PDF
+ * draws exactly what the editor shows. Radii: [top-left, top-right,
+ * bottom-right, bottom-left], clamped to half the shorter side.
+ */
+export function rectPath( x: number, y: number, w: number, h: number, radius: number[] = [], shape: CornerShape = 'round' ): string {
+	const r = [ 0, 1, 2, 3 ].map( ( i ) => Math.max( 0, Math.min( radius[ i ] || 0, w / 2, h / 2 ) ) );
+	const f = ( n: number ) => Math.round( n * 100 ) / 100;
+	// Corner points and the directions along the edges into and out of each corner.
+	const corners = [
+		{ c: [ x, y ], in: [ 0, 1 ], out: [ 1, 0 ] }, // top-left: coming up the left edge, leaving right.
+		{ c: [ x + w, y ], in: [ -1, 0 ], out: [ 0, 1 ] },
+		{ c: [ x + w, y + h ], in: [ 0, -1 ], out: [ -1, 0 ] },
+		{ c: [ x, y + h ], in: [ 1, 0 ], out: [ 0, -1 ] },
+	];
+	let d = '';
+	corners.forEach( ( { c, in: din, out }, i ) => {
+		const rr = r[ i ];
+		const start = [ c[ 0 ] + din[ 0 ] * rr, c[ 1 ] + din[ 1 ] * rr ];
+		const end = [ c[ 0 ] + out[ 0 ] * rr, c[ 1 ] + out[ 1 ] * rr ];
+		d += ( i === 0 ? 'M' : 'L' ) + `${ f( start[ 0 ] ) } ${ f( start[ 1 ] ) }`;
+		if ( ! rr ) {
+			return;
+		}
+		switch ( shape ) {
+			case 'scoop':
+				d += `A${ f( rr ) } ${ f( rr ) } 0 0 0 ${ f( end[ 0 ] ) } ${ f( end[ 1 ] ) }`;
+				break;
+			case 'bevel':
+				d += `L${ f( end[ 0 ] ) } ${ f( end[ 1 ] ) }`;
+				break;
+			case 'notch': {
+				const inner = [ start[ 0 ] + end[ 0 ] - c[ 0 ], start[ 1 ] + end[ 1 ] - c[ 1 ] ];
+				d += `L${ f( inner[ 0 ] ) } ${ f( inner[ 1 ] ) }L${ f( end[ 0 ] ) } ${ f( end[ 1 ] ) }`;
+				break;
+			}
+			case 'squircle': {
+				const k = 0.18;
+				const c1 = [ c[ 0 ] + ( start[ 0 ] - c[ 0 ] ) * k, c[ 1 ] + ( start[ 1 ] - c[ 1 ] ) * k ];
+				const c2 = [ c[ 0 ] + ( end[ 0 ] - c[ 0 ] ) * k, c[ 1 ] + ( end[ 1 ] - c[ 1 ] ) * k ];
+				d += `C${ f( c1[ 0 ] ) } ${ f( c1[ 1 ] ) } ${ f( c2[ 0 ] ) } ${ f( c2[ 1 ] ) } ${ f( end[ 0 ] ) } ${ f( end[ 1 ] ) }`;
+				break;
+			}
+			default:
+				d += `A${ f( rr ) } ${ f( rr ) } 0 0 1 ${ f( end[ 0 ] ) } ${ f( end[ 1 ] ) }`;
+		}
+	} );
+	return d + 'Z';
+}
+
+/**
+ * SVG elements and attributes kept from pasted or uploaded SVG code: drawing
+ * only (no script, no event handlers, no links, no foreignObject, no style),
+ * the same spirit as the wp_kses() lists themes use for their SVG icons. The
+ * server sanitizes again with the same list when the design is saved.
+ */
+export const SVG_TAGS = [ 'svg', 'g', 'path', 'circle', 'ellipse', 'rect', 'line', 'polyline', 'polygon', 'defs', 'lineargradient', 'radialgradient', 'stop', 'clippath', 'title' ];
+export const SVG_ATTRS = [ 'd', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'stroke-miterlimit', 'stroke-dasharray', 'fill-rule', 'clip-rule', 'clip-path', 'opacity', 'fill-opacity', 'stroke-opacity', 'transform', 'cx', 'cy', 'r', 'rx', 'ry', 'x', 'y', 'width', 'height', 'points', 'x1', 'y1', 'x2', 'y2', 'viewbox', 'id', 'offset', 'stop-color', 'stop-opacity', 'gradientunits', 'gradienttransform', 'fx', 'fy' ];
+
+/** Sanitizes SVG code; returns the inner markup and the viewBox size, or null. */
+export function sanitizeSvg( code: string ): { markup: string; vw: number; vh: number } | null {
+	const doc = new DOMParser().parseFromString( code, 'image/svg+xml' );
+	const root = doc.documentElement;
+	if ( ! root || root.nodeName.toLowerCase() !== 'svg' || doc.querySelector( 'parsererror' ) ) {
+		return null;
+	}
+	const clean = ( node: globalThis.Element ) => {
+		for ( const child of Array.from( node.children ) ) {
+			if ( ! SVG_TAGS.includes( child.nodeName.toLowerCase() ) ) {
+				child.remove();
+				continue;
+			}
+			for ( const attr of Array.from( child.attributes ) ) {
+				const name = attr.name.toLowerCase();
+				const value = attr.value.trim().toLowerCase();
+				if ( ! SVG_ATTRS.includes( name ) || value.startsWith( 'javascript:' ) || ( value.includes( 'url(' ) && ! /^url\(#[\w-]+\)$/.test( value ) ) ) {
+					child.removeAttribute( attr.name );
+				}
+			}
+			clean( child );
+		}
+	};
+	clean( root );
+	const box = ( root.getAttribute( 'viewBox' ) || '' ).split( /[\s,]+/ ).map( Number );
+	const vw = box.length === 4 && box[ 2 ] > 0 ? box[ 2 ] : Number( root.getAttribute( 'width' ) ) || 100;
+	const vh = box.length === 4 && box[ 3 ] > 0 ? box[ 3 ] : Number( root.getAttribute( 'height' ) ) || 100;
+	const markup = Array.from( root.childNodes )
+		.map( ( n ) => ( n.nodeType === 1 ? new XMLSerializer().serializeToString( n ) : '' ) )
+		.join( '' )
+		.replace( / xmlns="http:\/\/www\.w3\.org\/2000\/svg"/g, '' );
+	return { markup, vw, vh };
+}
+
+/** SVG markup with every fill/stroke (except "none") replaced, to recolor an icon with a color variable. */
+export function recolor( markup: string, fill?: string, stroke?: string ): string {
+	let out = markup;
+	if ( fill ) {
+		out = out.replace( /fill="(?!none)[^"]*"/g, `fill="${ fill }"` );
+	}
+	if ( stroke ) {
+		out = out.replace( /stroke="(?!none)[^"]*"/g, `stroke="${ stroke }"` );
+	}
+	return out;
 }
