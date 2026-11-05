@@ -24,8 +24,11 @@ import {
 	type Design,
 	type Element,
 	type Mode,
+	type Run,
+	type TextEl,
 } from './model';
 import ElementToolbar from './ElementToolbar';
+import FieldText, { type FieldTextCommands } from './FieldText';
 import Inserter from './Inserter';
 import Inspector from './Inspector';
 import ListView from './ListView';
@@ -76,6 +79,21 @@ type Drag =
 	| { kind: 'point'; id: string; end: 1 | 2; start: { x: number; y: number }; origin: Element };
 
 const SNAP = 5;
+
+/** A text element's CSS, shared by the canvas and the inline editor. */
+function textStyle( el: TextEl, design: Design, mode: Mode ) {
+	return {
+		fontFamily: `'${ el.font }'`,
+		fontWeight: el.weight,
+		fontSize: `${ el.size }px`,
+		lineHeight: el.lh ?? 1.2,
+		letterSpacing: el.ls ? `${ el.ls }px` : undefined,
+		color: color( design, el.color, mode ),
+		textAlign: el.align || 'left',
+		whiteSpace: el.fit ? ( 'nowrap' as const ) : ( 'pre-line' as const ),
+		textTransform: el.upper ? ( 'uppercase' as const ) : undefined,
+	};
+}
 const LOCALE = document.documentElement.lang || 'en';
 const HANDLES = [ 'nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w' ];
 
@@ -156,10 +174,9 @@ function Shape( { el, design, mode, sample }: { el: Element; design: Design; mod
 			return <path d={ rectPath( el.x, el.y, el.w, el.h, el.radius, el.corner ) } fill={ color( design, el.fill, mode ) } stroke={ color( design, el.stroke, mode ) } strokeWidth={ el.strokeWidth || 0 } opacity={ opacity } />;
 		case 'svg': {
 			const fill = el.fill ? color( design, el.fill, mode ) : undefined;
-			const stroke = el.stroke ? color( design, el.stroke, mode ) : undefined;
 			return (
 				<svg x={ el.x } y={ el.y } width={ el.w } height={ el.h } viewBox={ `0 0 ${ el.vw } ${ el.vh }` } opacity={ opacity } overflow="visible">
-					<g fill={ fill || 'currentColor' } style={ { color: color( design, '$text', mode ) } } dangerouslySetInnerHTML={ { __html: recolor( el.markup, fill, stroke ) } } />
+					<g fill={ fill || 'currentColor' } style={ { color: color( design, '$text', mode ) } } dangerouslySetInnerHTML={ { __html: recolor( el.markup, fill ) } } />
 				</svg>
 			);
 		}
@@ -198,16 +215,7 @@ function Shape( { el, design, mode, sample }: { el: Element; design: Design; mod
 				</g>
 			);
 		case 'text': {
-			const style = {
-				fontFamily: `'${ el.font }'`,
-				fontWeight: el.weight,
-				fontSize: `${ el.size }px`,
-				lineHeight: el.lh ?? 1.2,
-				letterSpacing: el.ls ? `${ el.ls }px` : undefined,
-				color: color( design, el.color, mode ),
-				textAlign: el.align || 'left',
-				whiteSpace: el.fit ? ( 'nowrap' as const ) : ( 'pre-line' as const ),
-			};
+			const style = textStyle( el, design, mode );
 			return (
 				<foreignObject x={ el.x } y={ el.y } width={ el.w } height={ Math.max( el.h, el.size * ( el.lh ?? 1.2 ) * 6 ) } opacity={ opacity } style={ { overflow: 'visible' } }>
 					<div className="evcert-text" style={ style } dangerouslySetInnerHTML={ { __html: runsHtml( runsOf( el ), sample, LOCALE, el.upper ) } } />
@@ -230,6 +238,25 @@ export default function Editor() {
 	const [ panel, setPanel ] = useState< 'insert' | 'layers' | null >( null );
 	const [ sidebar, setSidebar ] = useState< 'design' | 'element' | null >( 'design' );
 	const [ svgModal, setSvgModal ] = useState< string | null >( null );
+	const [ editing, setEditing ] = useState< { id: string; runs: Run[] } | null >( null );
+	const textCommands = useRef< FieldTextCommands | null >( null );
+	const [ editAnchor, setEditAnchor ] = useState< HTMLElement | null >( null );
+	useEffect( () => {
+		setEditAnchor( editing ? ( document.querySelector( '.evcert-text--editing' ) as HTMLElement | null ) : null );
+	}, [ editing?.id ] );
+	const startEditing = ( el: Element ) => {
+		if ( el.type === 'text' && ! el.locked ) {
+			setSelected( el.id );
+			setSidebar( 'element' );
+			setEditing( { id: el.id, runs: runsOf( el ) } );
+		}
+	};
+	const stopEditing = () => {
+		if ( editing ) {
+			update( editing.id, { runs: editing.runs, text: undefined } as Partial< Element > );
+		}
+		setEditing( null );
+	};
 	const [ guides, setGuides ] = useState< Guide[] >( [] );
 	const [ title, setTitle ] = useState( '' );
 	const [ status, setStatus ] = useState< 'loading' | 'saved' | 'dirty' | 'saving' | 'error' >( 'loading' );
@@ -553,7 +580,7 @@ export default function Editor() {
 					</aside>
 				) }
 
-				<div className="evcert-stage" ref={ wrapRef } onPointerDown={ () => setSelected( null ) }>
+				<div className="evcert-stage" ref={ wrapRef } onPointerDown={ () => { if ( editing ) { stopEditing(); } setSelected( null ); } }>
 					<svg
 						ref={ svgRef }
 						className="evcert-canvas"
@@ -577,17 +604,40 @@ export default function Editor() {
 						<g clipPath="url(#evcert-page)">
 							{ shown.elements.map( ( el ) =>
 								el.hidden ? null : (
+									editing && editing.id === el.id && el.type === 'text' ? (
+										<foreignObject key={ el.id } x={ el.x } y={ el.y } width={ el.w } height={ Math.max( el.h, el.size * ( el.lh ?? 1.2 ) * 6 ) } style={ { overflow: 'visible' } } onPointerDown={ ( event ) => event.stopPropagation() }>
+											<FieldText
+												inline
+												label={ el.name || __( 'Text', 'events-certificate' ) }
+												runs={ editing.runs }
+												onChange={ ( runs ) => setEditing( { id: el.id, runs } ) }
+												sample={ config.sample }
+												locale={ LOCALE }
+												style={ textStyle( el, shown, mode ) }
+												commands={ textCommands }
+												onDone={ stopEditing }
+											/>
+										</foreignObject>
+									) : (
 									<g
 										key={ el.id }
 										className={ `evcert-el${ el.locked ? ' is-locked' : '' }` }
+										onDoubleClick={ () => startEditing( el ) }
 										onPointerDown={ ( event ) => {
 											if ( tab === 'content' && el.type !== 'text' ) {
 												return;
 											}
 											event.stopPropagation();
+											if ( editing ) {
+												stopEditing();
+											}
 											setSelected( el.id );
 											setSidebar( 'element' );
-											if ( tab === 'art' && ! el.locked ) {
+											if ( tab === 'content' ) {
+												startEditing( el );
+												return;
+											}
+											if ( ! el.locked ) {
 												startDrag( event, { kind: 'move', id: el.id, start: toPage( event ), origin: el } );
 											}
 										} }
@@ -600,6 +650,7 @@ export default function Editor() {
 											<Shape el={ el } design={ shown } mode={ mode } sample={ config.sample } />
 										) }
 									</g>
+									)
 								)
 							) }
 						</g>
@@ -611,7 +662,7 @@ export default function Editor() {
 								g.axis === 'x' ? <line key={ i } x1={ g.at } x2={ g.at } y1={ -bleed } y2={ h + bleed } className="evcert-snap" /> : <line key={ i } y1={ g.at } y2={ g.at } x1={ -bleed } x2={ w + bleed } className="evcert-snap" />
 							) }
 						</g>
-						{ current && selBox && tab === 'art' && (
+						{ current && selBox && tab === 'art' && ! editing && (
 							<g className="evcert-selection">
 								<rect ref={ selRef } x={ selBox.x } y={ selBox.y } width={ Math.max( 1, selBox.w ) } height={ Math.max( 1, selBox.h ) } />
 								{ current.type === 'line'
@@ -670,7 +721,7 @@ export default function Editor() {
 							<Inspector el={ current } design={ design } mode={ mode } tab={ tab } locale={ LOCALE } sample={ config.sample } onChange={ ( patch ) => update( current.id, patch ) } onImage={ () => imageRef.current?.click() } />
 						) }
 						{ sidebarTab === 'design' && (
-							<div className="evcert-inspector">
+							<div className="evcert-inspector evcert-inspector__section">
 								<TextControl __next40pxDefaultSize label={ __( 'Name', 'events-certificate' ) } value={ title } onChange={ setTitle } />
 								<p className="evcert-meta">{ sprintf( /* translators: 1: width, 2: height in points. */ __( 'A4 landscape · %1$s × %2$s pt', 'events-certificate' ), String( w ), String( h ) ) }</p>
 								<SelectControl
@@ -700,9 +751,13 @@ export default function Editor() {
 				) }
 			</div>
 
-			{ current && tab === 'art' && ! draft && (
+			{ current && ( tab === 'art' || editing ) && ! draft && (
 				<ElementToolbar
-					anchor={ anchor }
+					anchor={ editing ? editAnchor : anchor }
+					editing={ !! editing }
+					onBold={ () => textCommands.current?.bold() }
+					onItalic={ () => textCommands.current?.italic() }
+					onInsertField={ ( field ) => textCommands.current?.insertField( field ) }
 					el={ current }
 					required={ !! current.slot && REQUIRED_SLOTS.includes( current.slot ) }
 					onSelectParent={ () => setSidebar( 'element' ) }
@@ -734,7 +789,7 @@ export default function Editor() {
 					<TextareaControl
 						__nextHasNoMarginBottom
 						label={ __( 'Paste the SVG code (an icon, a logo, an ornament)', 'events-certificate' ) }
-						help={ __( 'Only drawing is kept: scripts, links, styles and embedded content are removed.', 'events-certificate' ) }
+						help={ __( 'Only <svg> (size, viewBox) and paths with their fill are kept; groups are unwrapped. Strokes, other shapes, styles, scripts and links are removed.', 'events-certificate' ) }
 						value={ svgModal }
 						onChange={ setSvgModal }
 						rows={ 8 }

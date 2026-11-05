@@ -40,7 +40,7 @@ export type TextEl = Base & {
 };
 export type CornerShape = 'round' | 'scoop' | 'bevel' | 'notch' | 'squircle';
 export type RectEl = Base & { type: 'rect'; fill?: string; stroke?: string; strokeWidth?: number; radius?: number[]; corner?: CornerShape };
-export type SvgEl = Base & { type: 'svg'; markup: string; vw: number; vh: number; fill?: string; stroke?: string };
+export type SvgEl = Base & { type: 'svg'; markup: string; vw: number; vh: number; fill?: string };
 export type EllipseEl = Base & { type: 'ellipse'; fill?: string; stroke?: string; strokeWidth?: number };
 export type PathEl = Base & { type: 'path'; d: string; vw: number; vh: number; fill?: string; stroke?: string; strokeWidth?: number };
 export type LineEl = Omit< Base, 'x' | 'y' | 'w' | 'h' > & {
@@ -269,13 +269,17 @@ export function rectPath( x: number, y: number, w: number, h: number, radius: nu
 }
 
 /**
- * SVG elements and attributes kept from pasted or uploaded SVG code: drawing
- * only (no script, no event handlers, no links, no foreignObject, no style),
- * the same spirit as the wp_kses() lists themes use for their SVG icons. The
- * server sanitizes again with the same list when the design is saved.
+ * SVG kept from pasted code: as little as possible, like the wp_kses() lists
+ * themes use for their SVG icons — <svg> with its size and viewBox and paths
+ * with their fill. Groups are unwrapped (their fill goes to their paths). No stroke, no other shapes, no styles, scripts,
+ * links or embedded content. The server sanitizes again with the same list
+ * (wp_kses) when the design is saved.
  */
-export const SVG_TAGS = [ 'svg', 'g', 'path', 'circle', 'ellipse', 'rect', 'line', 'polyline', 'polygon', 'defs', 'lineargradient', 'radialgradient', 'stop', 'clippath', 'title' ];
-export const SVG_ATTRS = [ 'd', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'stroke-miterlimit', 'stroke-dasharray', 'fill-rule', 'clip-rule', 'clip-path', 'opacity', 'fill-opacity', 'stroke-opacity', 'transform', 'cx', 'cy', 'r', 'rx', 'ry', 'x', 'y', 'width', 'height', 'points', 'x1', 'y1', 'x2', 'y2', 'viewbox', 'id', 'offset', 'stop-color', 'stop-opacity', 'gradientunits', 'gradienttransform', 'fx', 'fy' ];
+export const SVG_ALLOWED: Record< string, string[] > = {
+	svg: [ 'width', 'height', 'viewbox' ],
+	path: [ 'd', 'fill', 'fill-rule', 'clip-rule' ],
+};
+export const SVG_TAGS = Object.keys( SVG_ALLOWED );
 
 /** Sanitizes SVG code; returns the inner markup and the viewBox size, or null. */
 export function sanitizeSvg( code: string ): { markup: string; vw: number; vh: number } | null {
@@ -284,16 +288,28 @@ export function sanitizeSvg( code: string ): { markup: string; vw: number; vh: n
 	if ( ! root || root.nodeName.toLowerCase() !== 'svg' || doc.querySelector( 'parsererror' ) ) {
 		return null;
 	}
+	// Unwrap groups: their paths move up, inheriting the group's fill.
+	for ( let group = root.querySelector( 'g' ); group; group = root.querySelector( 'g' ) ) {
+		const fill = group.getAttribute( 'fill' );
+		for ( const path of Array.from( group.querySelectorAll( 'path' ) ) ) {
+			if ( fill && ! path.hasAttribute( 'fill' ) ) {
+				path.setAttribute( 'fill', fill );
+			}
+		}
+		group.replaceWith( ...Array.from( group.childNodes ) );
+	}
 	const clean = ( node: globalThis.Element ) => {
 		for ( const child of Array.from( node.children ) ) {
-			if ( ! SVG_TAGS.includes( child.nodeName.toLowerCase() ) ) {
+			const tag = child.nodeName.toLowerCase();
+			if ( tag === 'svg' || ! SVG_ALLOWED[ tag ] ) {
 				child.remove();
 				continue;
 			}
 			for ( const attr of Array.from( child.attributes ) ) {
 				const name = attr.name.toLowerCase();
-				const value = attr.value.trim().toLowerCase();
-				if ( ! SVG_ATTRS.includes( name ) || value.startsWith( 'javascript:' ) || ( value.includes( 'url(' ) && ! /^url\(#[\w-]+\)$/.test( value ) ) ) {
+				const value = attr.value.trim();
+				const color = name !== 'fill' || /^(none|currentcolor|#[0-9a-f]{3,8}|rgba?\([\d\s.,%]+\))$/i.test( value );
+				if ( ! SVG_ALLOWED[ tag ].includes( name ) || ! color ) {
 					child.removeAttribute( attr.name );
 				}
 			}
@@ -311,14 +327,7 @@ export function sanitizeSvg( code: string ): { markup: string; vw: number; vh: n
 	return { markup, vw, vh };
 }
 
-/** SVG markup with every fill/stroke (except "none") replaced, to recolor an icon with a color variable. */
-export function recolor( markup: string, fill?: string, stroke?: string ): string {
-	let out = markup;
-	if ( fill ) {
-		out = out.replace( /fill="(?!none)[^"]*"/g, `fill="${ fill }"` );
-	}
-	if ( stroke ) {
-		out = out.replace( /stroke="(?!none)[^"]*"/g, `stroke="${ stroke }"` );
-	}
-	return out;
+/** SVG markup with every fill (except "none") replaced, to recolor an icon with a color variable. */
+export function recolor( markup: string, fill?: string ): string {
+	return fill ? markup.replace( /fill="(?!none)[^"]*"/g, `fill="${ fill }"` ) : markup;
 }

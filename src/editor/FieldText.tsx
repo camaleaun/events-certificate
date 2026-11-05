@@ -102,7 +102,22 @@ function fromDom( root: HTMLElement ): Run[] {
 	return runs;
 }
 
-export default function FieldText( { label, runs, onChange, sample, locale }: { label: string; runs: Run[]; onChange: ( runs: Run[] ) => void; sample: Record< string, string >; locale: string } ) {
+export type FieldTextCommands = { bold: () => void; italic: () => void; insertField: ( field: string ) => void };
+
+type FieldTextProps = {
+	label: string;
+	runs: Run[];
+	onChange: ( runs: Run[] ) => void;
+	sample: Record< string, string >;
+	locale: string;
+	// Inline: just the editable (on the canvas), styled like the element; the toolbar lives elsewhere.
+	inline?: boolean;
+	style?: Record< string, string | number | undefined >;
+	commands?: { current: FieldTextCommands | null };
+	onDone?: () => void;
+};
+
+export default function FieldText( { label, runs, onChange, sample, locale, inline, style, commands, onDone }: FieldTextProps ) {
 	const info = fields();
 	const ref = useRef< HTMLDivElement >( null );
 	const last = useRef< string >( '' );
@@ -154,6 +169,34 @@ export default function FieldText( { label, runs, onChange, sample, locale }: { 
 		emit();
 	};
 
+	if ( commands ) {
+		commands.current = {
+			bold: () => {
+				document.execCommand( 'bold' );
+				emit();
+			},
+			italic: () => {
+				document.execCommand( 'italic' );
+				emit();
+			},
+			insertField,
+		};
+	}
+
+	// On the canvas: focus with the caret at the end as soon as editing starts.
+	useEffect( () => {
+		if ( ! inline || ! ref.current ) {
+			return;
+		}
+		ref.current.focus();
+		const range = document.createRange();
+		range.selectNodeContents( ref.current );
+		range.collapse( false );
+		const selection = window.getSelection();
+		selection?.removeAllRanges();
+		selection?.addRange( range );
+	}, [] );
+
 	useEffect( () => {
 		const root = ref.current;
 		if ( ! root ) {
@@ -171,6 +214,80 @@ export default function FieldText( { label, runs, onChange, sample, locale }: { 
 
 	const chipField = chip?.el.dataset.field || '';
 	const chipInfo = info[ chipField ];
+
+	if ( inline ) {
+		return (
+			<>
+			<div
+					ref={ ref }
+					className={ inline ? 'evcert-text evcert-text--editing' : 'evcert-field-text-input' }
+					style={ inline ? style : undefined }
+					contentEditable
+					suppressContentEditableWarning
+					role="textbox"
+					aria-multiline="true"
+					aria-label={ label }
+					onInput={ emit }
+					onBlur={ ( event ) => {
+						// Leaving the text (not into its chip popover or the toolbar) ends inline editing.
+						const next = event.relatedTarget as HTMLElement | null;
+						if ( inline && onDone && ! next?.closest( '.components-popover, .evcert-element-toolbar' ) ) {
+							onDone();
+						}
+					} }
+					onKeyDown={ ( event ) => {
+						if ( inline && event.key === 'Escape' ) {
+							event.preventDefault();
+							onDone?.();
+							return;
+						}
+						if ( ( event.metaKey || event.ctrlKey ) && ( event.key === 'b' || event.key === 'i' ) ) {
+							event.preventDefault();
+							document.execCommand( event.key === 'b' ? 'bold' : 'italic' );
+							emit();
+						}
+						event.stopPropagation();
+					} }
+					onPaste={ ( event ) => {
+						event.preventDefault();
+						document.execCommand( 'insertText', false, event.clipboardData.getData( 'text/plain' ) );
+					} }
+				/>
+			{ chip && chipInfo && (
+					<Popover anchor={ chip.el } onClose={ () => setChip( null ) } placement="bottom-start">
+						<div className="evcert-chip-popover">
+							<strong>{ chipInfo.label }</strong>
+							<p className="evcert-chip-sample">{ fieldValue( chipField, chip.el.dataset.format, sample, locale ) }</p>
+							{ chipInfo.formats && (
+								<SelectControl
+									__next40pxDefaultSize
+									label={ __( 'Format', 'events-certificate' ) }
+									value={ chip.el.dataset.format || chipInfo.formats[ 0 ].key }
+									options={ chipInfo.formats.map( ( f ) => ( { label: `${ f.label } — ${ fieldValue( chipField, f.key, sample, locale ) }`, value: f.key } ) ) }
+									onChange={ ( format ) => {
+										chip.el.dataset.format = format;
+										emit();
+										setChip( { ...chip } );
+									} }
+								/>
+							) }
+							<Button
+								variant="link"
+								isDestructive
+								onClick={ () => {
+									chip.el.remove();
+									setChip( null );
+									emit();
+								} }
+							>
+								{ __( 'Remove field', 'events-certificate' ) }
+							</Button>
+						</div>
+					</Popover>
+				) }
+			</>
+		);
+	}
 
 	return (
 		<div className="evcert-field-text">
@@ -209,14 +326,27 @@ export default function FieldText( { label, runs, onChange, sample, locale }: { 
 			</div>
 			<div
 				ref={ ref }
-				className="evcert-field-text-input"
+				className={ inline ? 'evcert-text evcert-text--editing' : 'evcert-field-text-input' }
+				style={ inline ? style : undefined }
 				contentEditable
 				suppressContentEditableWarning
 				role="textbox"
 				aria-multiline="true"
 				aria-label={ label }
 				onInput={ emit }
+				onBlur={ ( event ) => {
+					// Leaving the text (not into its chip popover or the toolbar) ends inline editing.
+					const next = event.relatedTarget as HTMLElement | null;
+					if ( inline && onDone && ! next?.closest( '.components-popover, .evcert-element-toolbar' ) ) {
+						onDone();
+					}
+				} }
 				onKeyDown={ ( event ) => {
+					if ( inline && event.key === 'Escape' ) {
+						event.preventDefault();
+						onDone?.();
+						return;
+					}
 					if ( ( event.metaKey || event.ctrlKey ) && ( event.key === 'b' || event.key === 'i' ) ) {
 						event.preventDefault();
 						document.execCommand( event.key === 'b' ? 'bold' : 'italic' );

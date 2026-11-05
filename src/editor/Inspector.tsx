@@ -24,9 +24,8 @@ import {
 import { useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { alignCenter, alignLeft, alignRight, cornerBottomLeft, cornerBottomRight, cornerTopLeft, cornerTopRight, formatUppercase, Icon, link, linkOff, reset } from '@wordpress/icons';
-import FieldText from './FieldText';
 import { elementIcon } from './icons';
-import { color, REQUIRED_SLOTS, runsOf, type Design, type Element, type Mode } from './model';
+import { color, REQUIRED_SLOTS, type Design, type Element, type Mode } from './model';
 
 type Props = {
 	el: Element;
@@ -117,9 +116,7 @@ export default function Inspector( { el, design, mode, tab, locale, sample, onCh
 			</div>
 
 			{ el.type === 'text' && (
-				<div className="evcert-inspector__section">
-					<FieldText key={ el.id } label={ __( 'Text', 'events-certificate' ) } runs={ runsOf( el ) } onChange={ ( runs ) => onChange( { runs, text: undefined } as Partial< Element > ) } sample={ sample } locale={ locale } />
-				</div>
+				<div className="evcert-inspector__section evcert-meta">{ __( 'Double-click the text on the canvas to edit it (in Content mode, a single click). Fields are inserted from the toolbar.', 'events-certificate' ) }</div>
 			) }
 
 			{ tab === 'art' && el.type === 'image' && (
@@ -182,7 +179,7 @@ export default function Inspector( { el, design, mode, tab, locale, sample, onCh
 					<div className="evcert-color-items">
 						{ el.type === 'text' && <ColorItem label={ __( 'Text', 'events-certificate' ) } value={ el.color } design={ design } mode={ mode } onChange={ ( c ) => onChange( { color: c } ) } /> }
 						{ ( el.type === 'rect' || el.type === 'ellipse' || el.type === 'path' || el.type === 'svg' ) && <ColorItem label={ __( 'Fill', 'events-certificate' ) } value={ el.fill } design={ design } mode={ mode } onChange={ ( fill ) => onChange( { fill } ) } /> }
-						{ el.type !== 'text' && <ColorItem label={ el.type === 'line' ? __( 'Line', 'events-certificate' ) : __( 'Stroke', 'events-certificate' ) } value={ ( el as any ).stroke } design={ design } mode={ mode } onChange={ ( stroke ) => onChange( { stroke } as Partial< Element > ) } /> }
+						{ el.type !== 'text' && el.type !== 'svg' && <ColorItem label={ el.type === 'line' ? __( 'Line', 'events-certificate' ) : __( 'Stroke', 'events-certificate' ) } value={ ( el as any ).stroke } design={ design } mode={ mode } onChange={ ( stroke ) => onChange( { stroke } as Partial< Element > ) } /> }
 					</div>
 				</ToolsPanel>
 			) }

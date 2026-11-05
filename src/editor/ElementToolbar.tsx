@@ -3,9 +3,10 @@
  * (block-editor/src/components/block-toolbar + block-popover): element icon,
  * movers, lock, and an Options menu with Delete in its own last group.
  */
-import { DropdownMenu, MenuGroup, MenuItem, Popover, Toolbar, ToolbarButton, ToolbarGroup } from '@wordpress/components';
+import { DropdownMenu, MenuGroup, MenuItem, Popover, Toolbar, ToolbarButton, ToolbarDropdownMenu, ToolbarGroup } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
-import { arrowDown, arrowUp, copy, lock, moreVertical, trash, unlock, unseen } from '@wordpress/icons';
+import { arrowDown, arrowUp, copy, formatBold, formatItalic, lock, moreVertical, plus, trash, unlock, unseen } from '@wordpress/icons';
+import { fields } from './FieldText';
 import { elementIcon } from './icons';
 import type { Element } from './model';
 
@@ -18,9 +19,14 @@ type Props = {
 	onToggle: ( key: 'locked' | 'hidden' ) => void;
 	onDuplicate: () => void;
 	onRemove: () => void;
+	editing?: boolean;
+	onBold?: () => void;
+	onItalic?: () => void;
+	onInsertField?: ( field: string ) => void;
 };
 
-export default function ElementToolbar( { anchor, el, required, onSelectParent, onOrder, onToggle, onDuplicate, onRemove }: Props ) {
+export default function ElementToolbar( { anchor, el, required, onSelectParent, onOrder, onToggle, onDuplicate, onRemove, editing, onBold, onItalic, onInsertField }: Props ) {
+	const info = fields();
 	if ( ! anchor ) {
 		return null;
 	}
@@ -41,10 +47,23 @@ export default function ElementToolbar( { anchor, el, required, onSelectParent, 
 				<ToolbarGroup>
 					<ToolbarButton icon={ elementIcon( el.type ) } label={ el.name || el.type } onClick={ onSelectParent } />
 				</ToolbarGroup>
+				{ editing && (
+					<ToolbarGroup>
+						<ToolbarButton icon={ formatBold } label={ __( 'Bold', 'events-certificate' ) } shortcut="⌘B" onMouseDown={ ( e: { preventDefault: () => void } ) => e.preventDefault() } onClick={ onBold } />
+						<ToolbarButton icon={ formatItalic } label={ __( 'Italic', 'events-certificate' ) } shortcut="⌘I" onMouseDown={ ( e: { preventDefault: () => void } ) => e.preventDefault() } onClick={ onItalic } />
+						<ToolbarDropdownMenu
+							icon={ plus }
+							label={ __( 'Insert a field', 'events-certificate' ) }
+							controls={ Object.entries( info ).map( ( [ key, f ] ) => ( { title: f.label, onClick: () => onInsertField?.( key ) } ) ) }
+						/>
+					</ToolbarGroup>
+				) }
+				{ ! editing && (
 				<ToolbarGroup>
 					<ToolbarButton icon={ arrowUp } label={ __( 'Bring forward', 'events-certificate' ) } onClick={ () => onOrder( 'up' ) } />
 					<ToolbarButton icon={ arrowDown } label={ __( 'Send backward', 'events-certificate' ) } onClick={ () => onOrder( 'down' ) } />
 				</ToolbarGroup>
+				) }
 				<ToolbarGroup>
 					<ToolbarButton icon={ el.locked ? lock : unlock } isPressed={ !! el.locked } label={ el.locked ? __( 'Unlock', 'events-certificate' ) : __( 'Lock', 'events-certificate' ) } onClick={ () => onToggle( 'locked' ) } />
 				</ToolbarGroup>
