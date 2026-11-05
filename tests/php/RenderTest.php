@@ -115,6 +115,17 @@ class RenderTest extends Test_Case {
 	}
 
 	/**
+	 * Arcs become cubic curves for dompdf, relative commands absolute, compact flags read.
+	 */
+	public function test_without_arcs() {
+		$d = Render\without_arcs( 'M10 10 a5 5 0 1 0 10 0 a5 5 0 01-10 0z m2 2h3v3H12z' );
+		$this->assertStringNotContainsString( 'A', strtoupper( $d ) );
+		$this->assertStringContainsString( '15 15', $d ); // Both half circles pass through the bottom.
+		$this->assertStringEndsWith( 'M12 12L15 12L15 15L12 15Z', $d );
+		$this->assertSame( 'M0 0L5 5', Render\without_arcs( 'M0 0 L5 5' ) );
+	}
+
+	/**
 	 * Sites that aren't public draw no QR code, code, verification hint or address.
 	 */
 	public function test_non_public_sites_drop_verification() {

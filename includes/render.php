@@ -242,6 +242,241 @@ function is_path_data( $d ) {
 }
 
 /**
+ * Path data rewritten in absolute commands with every elliptical arc as cubic
+ * Bézier curves (dompdf draws SVG arcs wrong; see rect_path() for the same in
+ * the corner shapes). S and T become C and Q, so a curve after a converted
+ * arc keeps the meaning it had.
+ *
+ * @param string $d Path data (is_path_data()).
+ * @return string
+ */
+function without_arcs( $d ) {
+	$counts = array(
+		'M' => 2,
+		'L' => 2,
+		'H' => 1,
+		'V' => 1,
+		'C' => 6,
+		'S' => 4,
+		'Q' => 4,
+		'T' => 2,
+		'A' => 7,
+		'Z' => 0,
+	);
+	$d      = (string) $d;
+	$len    = strlen( $d );
+	$pos    = 0;
+	$out    = array();
+	$x      = 0.0;
+	$y      = 0.0;
+	$sx     = 0.0;
+	$sy     = 0.0;
+	$cubic  = null; // Last cubic control point, for S.
+	$quad   = null; // Last quadratic control point, for T.
+	$f      = static function ( $n ) {
+		$s = rtrim( rtrim( sprintf( '%.4F', $n ), '0' ), '.' );
+		return '-0' === $s ? '0' : $s;
+	};
+	$skip   = static function () use ( $d, $len, &$pos ) {
+		while ( $pos < $len && false !== strpos( " \t\r\n,", $d[ $pos ] ) ) {
+			++$pos;
+		}
+	};
+	$number = static function ( $flag = false ) use ( $d, &$pos, $skip ) {
+		$skip();
+		if ( $flag ) {
+			return (float) $d[ $pos++ ];
+		}
+		if ( ! preg_match( '/\G[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?/', $d, $m, 0, $pos ) ) {
+			return null;
+		}
+		$pos += strlen( $m[0] );
+		return (float) $m[0];
+	};
+
+	$cmd = '';
+	while ( true ) {
+		$skip();
+		if ( $pos >= $len ) {
+			break;
+		}
+		if ( ctype_alpha( $d[ $pos ] ) ) {
+			$cmd = $d[ $pos++ ];
+		} elseif ( '' === $cmd ) {
+			break;
+		}
+		$upper = strtoupper( $cmd );
+		$rel   = $cmd !== $upper;
+		$args  = array();
+		for ( $i = 0; $i < $counts[ $upper ]; $i++ ) {
+			$n = $number( 'A' === $upper && ( 3 === $i || 4 === $i ) );
+			if ( null === $n ) {
+				return $d; // Malformed: leave it as it was.
+			}
+			$args[] = $n;
+		}
+		$ox = $rel ? $x : 0.0;
+		$oy = $rel ? $y : 0.0;
+		switch ( $upper ) {
+			case 'M':
+				$x     = $args[0] + $ox;
+				$y     = $args[1] + $oy;
+				$sx    = $x;
+				$sy    = $y;
+				$out[] = 'M' . $f( $x ) . ' ' . $f( $y );
+				$cmd   = $rel ? 'l' : 'L'; // Further pairs are lines.
+				$cubic = null;
+				$quad  = null;
+				break;
+			case 'L':
+			case 'H':
+			case 'V':
+				$x     = 'V' === $upper ? $x : $args[0] + $ox;
+				$y     = 'H' === $upper ? $y : ( 'V' === $upper ? $args[0] + $oy : $args[1] + $oy );
+				$out[] = 'L' . $f( $x ) . ' ' . $f( $y );
+				$cubic = null;
+				$quad  = null;
+				break;
+			case 'C':
+			case 'S':
+				if ( 'C' === $upper ) {
+					$c1 = array( $args[0] + $ox, $args[1] + $oy );
+					$c2 = array( $args[2] + $ox, $args[3] + $oy );
+					$e  = array( $args[4] + $ox, $args[5] + $oy );
+				} else {
+					$c1 = $cubic ? array( 2 * $x - $cubic[0], 2 * $y - $cubic[1] ) : array( $x, $y );
+					$c2 = array( $args[0] + $ox, $args[1] + $oy );
+					$e  = array( $args[2] + $ox, $args[3] + $oy );
+				}
+				$out[] = 'C' . $f( $c1[0] ) . ' ' . $f( $c1[1] ) . ' ' . $f( $c2[0] ) . ' ' . $f( $c2[1] ) . ' ' . $f( $e[0] ) . ' ' . $f( $e[1] );
+				$cubic = $c2;
+				$quad  = null;
+				$x     = $e[0];
+				$y     = $e[1];
+				break;
+			case 'Q':
+			case 'T':
+				if ( 'Q' === $upper ) {
+					$c = array( $args[0] + $ox, $args[1] + $oy );
+					$e = array( $args[2] + $ox, $args[3] + $oy );
+				} else {
+					$c = $quad ? array( 2 * $x - $quad[0], 2 * $y - $quad[1] ) : array( $x, $y );
+					$e = array( $args[0] + $ox, $args[1] + $oy );
+				}
+				$out[] = 'Q' . $f( $c[0] ) . ' ' . $f( $c[1] ) . ' ' . $f( $e[0] ) . ' ' . $f( $e[1] );
+				$quad  = $c;
+				$cubic = null;
+				$x     = $e[0];
+				$y     = $e[1];
+				break;
+			case 'A':
+				$ex = $args[5] + $ox;
+				$ey = $args[6] + $oy;
+				foreach ( arc_to_cubics( $x, $y, $args[0], $args[1], $args[2], (bool) $args[3], (bool) $args[4], $ex, $ey ) as $c ) {
+					$out[] = 'C' . implode( ' ', array_map( $f, $c ) );
+				}
+				$x     = $ex;
+				$y     = $ey;
+				$cubic = null;
+				$quad  = null;
+				break;
+			case 'Z':
+				$out[] = 'Z';
+				$x     = $sx;
+				$y     = $sy;
+				$cubic = null;
+				$quad  = null;
+				break;
+		}
+	}
+
+	return implode( '', $out );
+}
+
+/**
+ * An SVG elliptical arc as cubic Béziers (SVG 1.1 appendix F.6.5 and F.6.6),
+ * one per quarter turn at most.
+ *
+ * @param float $x1    Start x.
+ * @param float $y1    Start y.
+ * @param float $rx    Radius x.
+ * @param float $ry    Radius y.
+ * @param float $angle X-axis rotation, degrees.
+ * @param bool  $large Large-arc flag.
+ * @param bool  $sweep Sweep flag.
+ * @param float $x2    End x.
+ * @param float $y2    End y.
+ * @return array<int, float[]> Each curve as [c1x, c1y, c2x, c2y, x, y].
+ */
+function arc_to_cubics( $x1, $y1, $rx, $ry, $angle, $large, $sweep, $x2, $y2 ) {
+	if ( ( $x1 === $x2 && $y1 === $y2 ) ) {
+		return array();
+	}
+	$rx = abs( $rx );
+	$ry = abs( $ry );
+	if ( 0.0 === (float) $rx || 0.0 === (float) $ry ) {
+		return array( array( $x1, $y1, $x2, $y2, $x2, $y2 ) ); // A straight line.
+	}
+	$phi = deg2rad( fmod( $angle, 360 ) );
+	$cos = cos( $phi );
+	$sin = sin( $phi );
+	$dx  = ( $x1 - $x2 ) / 2;
+	$dy  = ( $y1 - $y2 ) / 2;
+	$x1p = $cos * $dx + $sin * $dy;
+	$y1p = -$sin * $dx + $cos * $dy;
+	// Radii too small for the endpoints are scaled up.
+	$lambda = ( $x1p * $x1p ) / ( $rx * $rx ) + ( $y1p * $y1p ) / ( $ry * $ry );
+	if ( $lambda > 1 ) {
+		$rx *= sqrt( $lambda );
+		$ry *= sqrt( $lambda );
+	}
+	$num  = $rx * $rx * $ry * $ry - $rx * $rx * $y1p * $y1p - $ry * $ry * $x1p * $x1p;
+	$den  = $rx * $rx * $y1p * $y1p + $ry * $ry * $x1p * $x1p;
+	$coef = ( $large === $sweep ? -1 : 1 ) * sqrt( max( 0, $num / $den ) );
+	$cxp  = $coef * ( $rx * $y1p / $ry );
+	$cyp  = $coef * ( -$ry * $x1p / $rx );
+	$cx   = $cos * $cxp - $sin * $cyp + ( $x1 + $x2 ) / 2;
+	$cy   = $sin * $cxp + $cos * $cyp + ( $y1 + $y2 ) / 2;
+
+	$vector = static function ( $ux, $uy, $vx, $vy ) {
+		$a = atan2( $ux * $vy - $uy * $vx, $ux * $vx + $uy * $vy );
+		return $a;
+	};
+	$theta  = $vector( 1, 0, ( $x1p - $cxp ) / $rx, ( $y1p - $cyp ) / $ry );
+	$delta  = $vector( ( $x1p - $cxp ) / $rx, ( $y1p - $cyp ) / $ry, ( -$x1p - $cxp ) / $rx, ( -$y1p - $cyp ) / $ry );
+	if ( ! $sweep && $delta > 0 ) {
+		$delta -= 2 * M_PI;
+	} elseif ( $sweep && $delta < 0 ) {
+		$delta += 2 * M_PI;
+	}
+
+	$segments = max( 1, (int) ceil( abs( $delta ) / ( M_PI / 2 ) - 1e-7 ) );
+	$step     = $delta / $segments;
+	$k        = 4 / 3 * tan( $step / 4 );
+	$point    = static function ( $t ) use ( $rx, $ry, $cos, $sin, $cx, $cy ) {
+		return array( $cx + $rx * cos( $t ) * $cos - $ry * sin( $t ) * $sin, $cy + $rx * cos( $t ) * $sin + $ry * sin( $t ) * $cos );
+	};
+	$tangent  = static function ( $t ) use ( $rx, $ry, $cos, $sin ) {
+		return array( -$rx * sin( $t ) * $cos - $ry * cos( $t ) * $sin, -$rx * sin( $t ) * $sin + $ry * cos( $t ) * $cos );
+	};
+	$curves   = array();
+	for ( $i = 0; $i < $segments; $i++ ) {
+		$t1       = $theta + $i * $step;
+		$t2       = $t1 + $step;
+		$p1       = $point( $t1 );
+		$p2       = $point( $t2 );
+		$d1       = $tangent( $t1 );
+		$d2       = $tangent( $t2 );
+		$curves[] = array( $p1[0] + $k * $d1[0], $p1[1] + $k * $d1[1], $p2[0] - $k * $d2[0], $p2[1] - $k * $d2[1], $p2[0], $p2[1] );
+	}
+	// End exactly where the arc ends.
+	$curves[ $segments - 1 ][4] = $x2;
+	$curves[ $segments - 1 ][5] = $y2;
+
+	return $curves;
+}
+
+/**
  * The values a certificate's fields show, in the current locale.
  *
  * @param array<string, mixed> $cert Certificate.
@@ -625,7 +860,8 @@ function element_html( array $el, array $design, array $values, array $options )
 				}
 				$paths .= sprintf(
 					'<path d="%s" fill="%s"%s/>',
-					esc_attr( $path['d'] ),
+					// dompdf draws SVG arcs wrong: the PDF gets them as Bézier curves.
+					esc_attr( empty( $options['for_pdf'] ) ? $path['d'] : without_arcs( $path['d'] ) ),
 					esc_attr( isset( $path['fill'] ) ? color( $design, $path['fill'], $mode ) : $current ),
 					'evenodd' === ( $path['rule'] ?? '' ) ? ' fill-rule="evenodd"' : ''
 				);
