@@ -24,6 +24,9 @@ const OPTION = 'evcert_settings';
  *   anyone sees a certificate and checks it is authentic.
  * - delete_data: drop the tables on uninstall. Off by default: printed
  *   certificates point to their verification page.
+ * - self_issue: who gets their own certificate from the tickets page
+ *   (CampTix): "attended" (marked present), "confirmed" (any confirmed
+ *   ticket) or "off" (only organizers issue).
  *
  * @return array<string, mixed>
  */
@@ -32,6 +35,7 @@ function defaults() {
 		'force_public' => false,
 		'slug'         => 'certificate',
 		'delete_data'  => false,
+		'self_issue'   => 'attended',
 	);
 }
 
@@ -52,6 +56,9 @@ function sanitize( $value ) {
 
 	$slug          = array_key_exists( 'slug', $value ) ? sanitize_title( (string) $value['slug'] ) : '';
 	$clean['slug'] = '' !== $slug ? $slug : $defaults['slug'];
+
+	$who                 = array_key_exists( 'self_issue', $value ) ? (string) $value['self_issue'] : '';
+	$clean['self_issue'] = in_array( $who, array( 'attended', 'confirmed', 'off' ), true ) ? $who : $defaults['self_issue'];
 
 	return $clean;
 }

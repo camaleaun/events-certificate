@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-05T09:59:44+00:00\n"
+"POT-Creation-Date: 2026-11-05T10:17:26+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: events-certificate\n"
@@ -41,7 +41,7 @@ msgstr ""
 
 #: includes/admin-app.php:116
 #: includes/designs.php:46
-#: build/routes/editor/content.js:3514
+#: build/routes/editor/content.js:3513
 msgid "Certificate design"
 msgstr ""
 
@@ -80,14 +80,14 @@ msgid "Edit certificate design"
 msgstr ""
 
 #: includes/admin.php:64
-#: includes/admin.php:269
-#: includes/compat/camptix.php:108
+#: includes/admin.php:301
+#: includes/compat/camptix.php:109
 msgid "Certificates"
 msgstr ""
 
 #: includes/admin.php:124
-#: build/routes/editor/content.js:1902
-#: build/routes/editor/content.js:2924
+#: build/routes/editor/content.js:1905
+#: build/routes/editor/content.js:2927
 msgid "Authenticity"
 msgstr ""
 
@@ -100,103 +100,220 @@ msgid "Certificate address"
 msgstr ""
 
 #: includes/admin.php:147
-msgid "Data"
+msgid "Issuing"
 msgstr ""
 
 #: includes/admin.php:153
+msgid "Attendees get their own"
+msgstr ""
+
+#: includes/admin.php:162
+msgid "Data"
+msgstr ""
+
+#: includes/admin.php:168
 msgid "Uninstall"
 msgstr ""
 
-#: includes/admin.php:166
+#: includes/admin.php:181
 msgid "Certificates issued on this site carry a QR code and a code anyone can check on its verification page."
 msgstr ""
 
-#: includes/admin.php:171
+#: includes/admin.php:186
 msgid "it runs on WordPress Playground"
 msgstr ""
 
-#: includes/admin.php:172
+#: includes/admin.php:187
 msgid "its environment type is “local”"
 msgstr ""
 
-#: includes/admin.php:173
+#: includes/admin.php:188
 msgid "its address only works on this computer or network"
 msgstr ""
 
-#: includes/admin.php:174
+#: includes/admin.php:189
 msgid "its address is a private IP"
 msgstr ""
 
 #. translators: %s: reasons, e.g. "its address only works on this computer or network".
-#: includes/admin.php:184
+#: includes/admin.php:199
 #, php-format
 msgid "This site doesn’t look public (%s), so certificates show a placeholder where the QR code and the verification address go: nobody else could open them."
 msgstr ""
 
-#: includes/admin.php:198
+#: includes/admin.php:213
 msgid "Treat this site as public"
 msgstr ""
 
-#: includes/admin.php:199
+#: includes/admin.php:214
 msgid "For a staging site with a public address. Only turn it on when anyone can open this site’s pages."
 msgstr ""
 
-#: includes/admin.php:212
+#: includes/admin.php:227
 msgid "The address printed on certificates and in their QR code. Change it before issuing: printed certificates keep the old one."
 msgstr ""
 
 #. translators: Stands for a certificate code in an example address, as in https://example.com/certificate/<code>/.
-#: includes/admin.php:214
+#: includes/admin.php:229
 msgctxt "certificate code placeholder"
 msgid "code"
 msgstr ""
 
-#: includes/admin.php:226
+#: includes/admin.php:238
+msgid "When marked as present at the event"
+msgstr ""
+
+#: includes/admin.php:239
+msgid "With any confirmed ticket"
+msgstr ""
+
+#: includes/admin.php:240
+msgid "No: only organizers issue certificates"
+msgstr ""
+
+#: includes/admin.php:247
+msgid "From the link in their ticket e-mail, attendees check how their name goes on the certificate and get it with its code."
+msgstr ""
+
+#: includes/admin.php:258
 msgid "Delete all certificates when the plugin is deleted"
 msgstr ""
 
-#: includes/admin.php:227
+#: includes/admin.php:259
 msgid "Printed certificates would no longer be verifiable. Leave it off unless you are sure."
 msgstr ""
 
-#: includes/admin.php:263
+#: includes/admin.php:295
 msgid "Drafts"
 msgstr ""
 
-#: includes/admin.php:264
+#: includes/admin.php:296
 msgid "Issued"
 msgstr ""
 
-#: includes/admin.php:265
+#: includes/admin.php:297
 msgid "Revoked"
 msgstr ""
 
-#: includes/admin.php:270
+#: includes/admin.php:302
 msgid "Issue, send and revoke attendance certificates here. This screen is still being built."
 msgstr ""
 
-#: includes/admin.php:295
-#: build/routes/editor/content.js:1917
-#: build/routes/editor/content.js:3523
-#: build/routes/editor/content.js:3710
+#: includes/admin.php:327
+#: build/routes/editor/content.js:1920
+#: build/routes/editor/content.js:3522
+#: build/routes/editor/content.js:3709
 msgid "Settings"
 msgstr ""
 
-#: includes/compat/camptix.php:137
+#: includes/certificates.php:141
+msgid "The name on the certificate is required."
+msgstr ""
+
+#: includes/certificates.php:167
+msgid "The certificate could not be issued. Try again."
+msgstr ""
+
+#: includes/compat/camptix-front.php:81
+msgid "Certificates for this event are issued by the organizers."
+msgstr ""
+
+#: includes/compat/camptix-front.php:84
+msgid "Your ticket isn’t confirmed yet. The certificate is available once it is."
+msgstr ""
+
+#: includes/compat/camptix-front.php:87
+msgid "Certificates are available to attendees marked as present at the event. If you were there, please ask the organizers."
+msgstr ""
+
+#: includes/compat/camptix-front.php:159
+msgid "The form expired. Please try again."
+msgstr ""
+
+#: includes/compat/camptix-front.php:196
+msgid "Your certificate is available."
+msgstr ""
+
+#: includes/compat/camptix-front.php:198
+msgid "View certificate"
+msgstr ""
+
+#: includes/compat/camptix-front.php:198
+msgid "Get your certificate"
+msgstr ""
+
+#: includes/compat/camptix-front.php:210
+msgid "This link isn’t valid. Use the link from your ticket e-mail."
+msgstr ""
+
+#: includes/compat/camptix-front.php:243
+msgid "Your certificate was issued."
+msgstr ""
+
+#: includes/compat/camptix-front.php:245
+msgid "Your certificate was corrected. The previous code now says it was replaced."
+msgstr ""
+
+#: includes/compat/camptix-front.php:248
+#: includes/compat/camptix-front.php:313
+#: includes/designs.php:97
+#: build/routes/editor/content.js:814
+#: build/routes/editor/content.js:819
+#: build/routes/editor/content.js:3510
+#: build/routes/editor/content.js:3711
+#: build/routes/editor/content.js:3753
+msgid "Certificate"
+msgstr ""
+
+#: includes/compat/camptix-front.php:257
+#: build/routes/editor/content.js:819
+#: build/routes/editor/content.js:2932
+msgid "Name"
+msgstr ""
+
+#: includes/compat/camptix-front.php:258
+#: build/routes/editor/content.js:2928
+msgid "Code"
+msgstr ""
+
+#: includes/compat/camptix-front.php:259
+msgid "Issued on"
+msgstr ""
+
+#: includes/compat/camptix-front.php:260
+msgid "Address"
+msgstr ""
+
+#: includes/compat/camptix-front.php:271
+msgid "Correct the name"
+msgstr ""
+
+#: includes/compat/camptix-front.php:275
+msgid "Name on the certificate"
+msgstr ""
+
+#: includes/compat/camptix-front.php:281
+msgid "As it should appear: check accents and capital letters."
+msgstr ""
+
+#: includes/compat/camptix-front.php:285
+msgid "E-mail"
+msgstr ""
+
+#: includes/compat/camptix-front.php:290
+msgid "Correct and reissue"
+msgstr ""
+
+#: includes/compat/camptix-front.php:290
+msgid "Issue certificate"
+msgstr ""
+
+#: includes/compat/camptix.php:138
 msgid "Certificate settings"
 msgstr ""
 
 #: includes/designs.php:45
 msgid "Certificate designs"
-msgstr ""
-
-#: includes/designs.php:97
-#: build/routes/editor/content.js:814
-#: build/routes/editor/content.js:819
-#: build/routes/editor/content.js:3511
-#: build/routes/editor/content.js:3712
-#: build/routes/editor/content.js:3754
-msgid "Certificate"
 msgstr ""
 
 #: build/routes/editor/content.js:774
@@ -232,31 +349,26 @@ msgstr ""
 
 #: build/routes/editor/content.js:781
 #: build/routes/editor/content.js:959
-#: build/routes/editor/content.js:2933
+#: build/routes/editor/content.js:2936
 msgid "Signer role"
 msgstr ""
 
-#: build/routes/editor/content.js:819
-#: build/routes/editor/content.js:2929
-msgid "Name"
-msgstr ""
-
 #: build/routes/editor/content.js:820
-#: build/routes/editor/content.js:1987
+#: build/routes/editor/content.js:1990
 msgid "Size"
 msgstr ""
 
 #: build/routes/editor/content.js:820
 #: build/routes/editor/content.js:836
-#: build/routes/editor/content.js:2248
-#: build/routes/editor/content.js:3764
+#: build/routes/editor/content.js:2251
+#: build/routes/editor/content.js:3763
 msgid "Landscape"
 msgstr ""
 
 #: build/routes/editor/content.js:820
 #: build/routes/editor/content.js:837
-#: build/routes/editor/content.js:2249
-#: build/routes/editor/content.js:3764
+#: build/routes/editor/content.js:2252
+#: build/routes/editor/content.js:3763
 msgid "Portrait"
 msgstr ""
 
@@ -265,7 +377,7 @@ msgid "Paper"
 msgstr ""
 
 #: build/routes/editor/content.js:835
-#: build/routes/editor/content.js:2274
+#: build/routes/editor/content.js:2277
 msgid "Orientation"
 msgstr ""
 
@@ -276,12 +388,12 @@ msgid "%1$s × %2$s pt"
 msgstr ""
 
 #: build/routes/editor/content.js:849
-#: build/routes/editor/content.js:2941
+#: build/routes/editor/content.js:2944
 msgid "Background"
 msgstr ""
 
 #: build/routes/editor/content.js:863
-#: build/routes/editor/content.js:2211
+#: build/routes/editor/content.js:2214
 msgid "Safe margin"
 msgstr ""
 
@@ -386,7 +498,7 @@ msgid "Details (talk title)"
 msgstr ""
 
 #: build/routes/editor/content.js:958
-#: build/routes/editor/content.js:2932
+#: build/routes/editor/content.js:2935
 msgid "Signer name"
 msgstr ""
 
@@ -458,13 +570,13 @@ msgid "Paste or type URL"
 msgstr ""
 
 #: build/routes/editor/content.js:1417
-#: build/routes/editor/content.js:2339
+#: build/routes/editor/content.js:2342
 msgid "Apply"
 msgstr ""
 
 #: build/routes/editor/content.js:1428
 #: build/routes/editor/content.js:1604
-#: build/routes/editor/content.js:1900
+#: build/routes/editor/content.js:1903
 msgid "Image"
 msgstr ""
 
@@ -530,38 +642,38 @@ msgid "Send backward"
 msgstr ""
 
 #: build/routes/editor/content.js:1552
-#: build/routes/editor/content.js:2369
+#: build/routes/editor/content.js:2372
 msgid "Unlock"
 msgstr ""
 
 #: build/routes/editor/content.js:1552
-#: build/routes/editor/content.js:2369
+#: build/routes/editor/content.js:2372
 msgid "Lock"
 msgstr ""
 
 #: build/routes/editor/content.js:1553
-#: build/routes/editor/content.js:2361
-#: build/routes/editor/content.js:3539
+#: build/routes/editor/content.js:2364
+#: build/routes/editor/content.js:3538
 msgid "Options"
 msgstr ""
 
 #: build/routes/editor/content.js:1558
-#: build/routes/editor/content.js:1824
+#: build/routes/editor/content.js:1827
 msgid "Duplicate"
 msgstr ""
 
 #: build/routes/editor/content.js:1562
-#: build/routes/editor/content.js:2373
+#: build/routes/editor/content.js:2376
 msgid "Bring to front"
 msgstr ""
 
 #: build/routes/editor/content.js:1566
-#: build/routes/editor/content.js:2377
+#: build/routes/editor/content.js:2380
 msgid "Send to back"
 msgstr ""
 
 #: build/routes/editor/content.js:1570
-#: build/routes/editor/content.js:2365
+#: build/routes/editor/content.js:2368
 msgid "Hide"
 msgstr ""
 
@@ -570,37 +682,37 @@ msgid "Required: it can be moved, not deleted."
 msgstr ""
 
 #: build/routes/editor/content.js:1583
-#: build/routes/editor/content.js:1829
+#: build/routes/editor/content.js:1832
 msgid "Delete"
 msgstr ""
 
 #: build/routes/editor/content.js:1600
-#: build/routes/editor/content.js:1895
-#: build/routes/editor/content.js:2016
-#: build/routes/editor/content.js:2934
-#: build/routes/editor/content.js:3607
+#: build/routes/editor/content.js:1898
+#: build/routes/editor/content.js:2019
+#: build/routes/editor/content.js:2937
+#: build/routes/editor/content.js:3606
 msgid "Text"
 msgstr ""
 
 #: build/routes/editor/content.js:1601
-#: build/routes/editor/content.js:1896
-#: build/routes/editor/content.js:2019
-#: build/routes/editor/content.js:2021
+#: build/routes/editor/content.js:1899
+#: build/routes/editor/content.js:2022
+#: build/routes/editor/content.js:2024
 msgid "Line"
 msgstr ""
 
 #: build/routes/editor/content.js:1602
-#: build/routes/editor/content.js:1897
+#: build/routes/editor/content.js:1900
 msgid "Rectangle"
 msgstr ""
 
 #: build/routes/editor/content.js:1603
-#: build/routes/editor/content.js:1898
+#: build/routes/editor/content.js:1901
 msgid "Ellipse"
 msgstr ""
 
 #: build/routes/editor/content.js:1605
-#: build/routes/editor/content.js:1901
+#: build/routes/editor/content.js:1904
 msgid "SVG"
 msgstr ""
 
@@ -614,8 +726,8 @@ msgid "Elements"
 msgstr ""
 
 #: build/routes/editor/content.js:1613
-#: build/routes/editor/content.js:2352
-#: build/routes/editor/content.js:3500
+#: build/routes/editor/content.js:2355
+#: build/routes/editor/content.js:3499
 msgid "Close"
 msgstr ""
 
@@ -627,707 +739,703 @@ msgstr ""
 msgid "No results found."
 msgstr ""
 
-#: build/routes/editor/content.js:1653
+#: build/routes/editor/content.js:1656
 msgid "This file is not a certificate design."
 msgstr ""
 
-#: build/routes/editor/content.js:1658
+#: build/routes/editor/content.js:1661
 msgid "Import design"
 msgstr ""
 
-#: build/routes/editor/content.js:1659
+#: build/routes/editor/content.js:1662
 msgid "Choose a design file (.json), like one exported from this editor. It replaces the whole current design: elements, colors and page. Nothing is saved until you click Save."
 msgstr ""
 
-#: build/routes/editor/content.js:1661
+#: build/routes/editor/content.js:1664
 msgid "Drop the design file here"
 msgstr ""
 
-#: build/routes/editor/content.js:1665
+#: build/routes/editor/content.js:1668
 msgid "Choose another file"
 msgstr ""
 
-#: build/routes/editor/content.js:1665
+#: build/routes/editor/content.js:1668
 msgid "Choose file"
 msgstr ""
 
-#: build/routes/editor/content.js:1666
+#: build/routes/editor/content.js:1669
 msgid "or drop it here"
 msgstr ""
 
 #. translators: 1: number of elements, 2: page width, 3: page height (points).
-#: build/routes/editor/content.js:1671
+#: build/routes/editor/content.js:1674
 #, js-format
 msgid "%1$s element, page %2$s × %3$s pt. The current design will be replaced."
 msgid_plural "%1$s elements, page %2$s × %3$s pt. The current design will be replaced."
 msgstr[0] ""
 msgstr[1] ""
 
-#: build/routes/editor/content.js:1677
-#: build/routes/editor/content.js:2335
+#: build/routes/editor/content.js:1680
+#: build/routes/editor/content.js:2338
 msgid "Cancel"
 msgstr ""
 
-#: build/routes/editor/content.js:1683
+#: build/routes/editor/content.js:1686
 msgid "Replace design"
 msgstr ""
 
 #. translators: %s: color name.
-#: build/routes/editor/content.js:1715
+#: build/routes/editor/content.js:1718
 #, js-format
 msgid "Fill: %s"
 msgstr ""
 
-#: build/routes/editor/content.js:1716
-#: build/routes/editor/content.js:1723
-#: build/routes/editor/content.js:2018
+#: build/routes/editor/content.js:1719
+#: build/routes/editor/content.js:1726
+#: build/routes/editor/content.js:2021
 msgid "Current color"
 msgstr ""
 
-#: build/routes/editor/content.js:1724
-#: build/routes/editor/content.js:1871
+#: build/routes/editor/content.js:1727
+#: build/routes/editor/content.js:1874
 msgid "Theme"
 msgstr ""
 
-#: build/routes/editor/content.js:1738
-#: build/routes/editor/content.js:1885
+#: build/routes/editor/content.js:1741
+#: build/routes/editor/content.js:1888
 msgid "Custom"
 msgstr ""
 
 #. translators: %d: path number.
-#: build/routes/editor/content.js:1752
+#: build/routes/editor/content.js:1755
 #, js-format
 msgid "Path %d data (d)"
 msgstr ""
 
-#: build/routes/editor/content.js:1774
+#: build/routes/editor/content.js:1777
 msgid "Only path commands and numbers, starting with M."
 msgstr ""
 
-#: build/routes/editor/content.js:1792
+#: build/routes/editor/content.js:1795
 msgid "Paths"
 msgstr ""
 
-#: build/routes/editor/content.js:1793
+#: build/routes/editor/content.js:1796
 msgid "Add path"
 msgstr ""
 
-#: build/routes/editor/content.js:1803
+#: build/routes/editor/content.js:1806
 msgid "Add path data"
 msgstr ""
 
-#: build/routes/editor/content.js:1808
+#: build/routes/editor/content.js:1811
 msgid "Move up"
 msgstr ""
 
-#: build/routes/editor/content.js:1809
+#: build/routes/editor/content.js:1812
 msgid "Move down"
 msgstr ""
 
-#: build/routes/editor/content.js:1811
+#: build/routes/editor/content.js:1814
 msgid "Path options"
 msgstr ""
 
-#: build/routes/editor/content.js:1816
+#: build/routes/editor/content.js:1819
 msgid "Move to bottom (behind)"
 msgstr ""
 
-#: build/routes/editor/content.js:1820
+#: build/routes/editor/content.js:1823
 msgid "Move to top (in front)"
 msgstr ""
 
-#: build/routes/editor/content.js:1839
-#: build/routes/editor/content.js:2319
+#: build/routes/editor/content.js:1842
+#: build/routes/editor/content.js:2322
 msgid "ViewBox"
 msgstr ""
 
-#: build/routes/editor/content.js:1841
-#: build/routes/editor/content.js:2022
-#: build/routes/editor/content.js:2097
-#: build/routes/editor/content.js:2098
-#: build/routes/editor/content.js:2099
-#: build/routes/editor/content.js:2321
+#: build/routes/editor/content.js:1844
+#: build/routes/editor/content.js:2025
+#: build/routes/editor/content.js:2100
+#: build/routes/editor/content.js:2101
+#: build/routes/editor/content.js:2102
+#: build/routes/editor/content.js:2324
 msgid "Width"
 msgstr ""
 
-#: build/routes/editor/content.js:1842
-#: build/routes/editor/content.js:2103
-#: build/routes/editor/content.js:2104
-#: build/routes/editor/content.js:2105
-#: build/routes/editor/content.js:2322
+#: build/routes/editor/content.js:1845
+#: build/routes/editor/content.js:2106
+#: build/routes/editor/content.js:2107
+#: build/routes/editor/content.js:2108
+#: build/routes/editor/content.js:2325
 msgid "Height"
 msgstr ""
 
-#: build/routes/editor/content.js:1844
+#: build/routes/editor/content.js:1847
 msgid "The coordinate space of the paths. The element’s size on the page is set in Dimensions."
 msgstr ""
 
-#: build/routes/editor/content.js:1848
+#: build/routes/editor/content.js:1851
 msgid "Each path is the d value of an SVG <path>. Without a fill it uses the current color, set in Color. Pasting SVG code into a path fills in the viewBox and the paths; nothing else is kept."
 msgstr ""
 
-#: build/routes/editor/content.js:1868
-#: build/routes/editor/content.js:2007
+#: build/routes/editor/content.js:1871
+#: build/routes/editor/content.js:2010
 msgid "None"
 msgstr ""
 
-#: build/routes/editor/content.js:1899
+#: build/routes/editor/content.js:1902
 msgid "Shape"
 msgstr ""
 
-#: build/routes/editor/content.js:1904
+#: build/routes/editor/content.js:1907
 msgid "Required on every certificate: it can be moved and styled, not deleted."
 msgstr ""
 
-#: build/routes/editor/content.js:1904
+#: build/routes/editor/content.js:1907
 msgid "The QR code and the code anyone can check."
 msgstr ""
 
-#: build/routes/editor/content.js:1904
+#: build/routes/editor/content.js:1907
 msgid "Text with fields that each certificate fills in."
 msgstr ""
 
-#: build/routes/editor/content.js:1916
+#: build/routes/editor/content.js:1919
 msgid "Click the selected text again (or press Enter) to edit it on the canvas. Fields are inserted from the toolbar. Locked texts can still be edited, not moved."
 msgstr ""
 
-#: build/routes/editor/content.js:1918
-#: build/routes/editor/content.js:1922
+#: build/routes/editor/content.js:1921
+#: build/routes/editor/content.js:1925
 msgid "Alternative text"
 msgstr ""
 
-#: build/routes/editor/content.js:1923
+#: build/routes/editor/content.js:1926
 msgid "Describe the purpose of the image. Read aloud on the certificate page; leave empty if the image is purely decorative."
 msgstr ""
 
-#: build/routes/editor/content.js:1928
-#: build/routes/editor/content.js:1933
+#: build/routes/editor/content.js:1931
+#: build/routes/editor/content.js:1936
 msgid "Aspect ratio"
 msgstr ""
 
-#: build/routes/editor/content.js:1936
+#: build/routes/editor/content.js:1939
 msgid "Original"
 msgstr ""
 
-#: build/routes/editor/content.js:1937
+#: build/routes/editor/content.js:1940
 msgid "Square - 1:1"
 msgstr ""
 
-#: build/routes/editor/content.js:1938
+#: build/routes/editor/content.js:1941
 msgid "Standard - 4:3"
 msgstr ""
 
-#: build/routes/editor/content.js:1939
+#: build/routes/editor/content.js:1942
 msgid "Portrait - 3:4"
 msgstr ""
 
-#: build/routes/editor/content.js:1940
+#: build/routes/editor/content.js:1943
 msgid "Classic - 3:2"
 msgstr ""
 
-#: build/routes/editor/content.js:1941
+#: build/routes/editor/content.js:1944
 msgid "Classic Portrait - 2:3"
 msgstr ""
 
-#: build/routes/editor/content.js:1942
+#: build/routes/editor/content.js:1945
 msgid "Wide - 16:9"
 msgstr ""
 
-#: build/routes/editor/content.js:1943
+#: build/routes/editor/content.js:1946
 msgid "Tall - 9:16"
 msgstr ""
 
-#: build/routes/editor/content.js:1961
-#: build/routes/editor/content.js:1967
+#: build/routes/editor/content.js:1964
+#: build/routes/editor/content.js:1970
 msgid "Scale"
 msgstr ""
 
-#: build/routes/editor/content.js:1969
+#: build/routes/editor/content.js:1972
 msgid "Image is contained without distortion."
 msgstr ""
 
-#: build/routes/editor/content.js:1969
+#: build/routes/editor/content.js:1972
 msgid "Image covers the space evenly."
 msgstr ""
 
-#: build/routes/editor/content.js:1972
+#: build/routes/editor/content.js:1975
 msgid "Cover"
 msgstr ""
 
-#: build/routes/editor/content.js:1973
+#: build/routes/editor/content.js:1976
 msgid "Contain"
 msgstr ""
 
-#: build/routes/editor/content.js:1982
+#: build/routes/editor/content.js:1985
 msgid "Typography"
 msgstr ""
 
-#: build/routes/editor/content.js:1986
+#: build/routes/editor/content.js:1989
 msgid "Font"
 msgstr ""
 
-#: build/routes/editor/content.js:1988
-#: build/routes/editor/content.js:1993
+#: build/routes/editor/content.js:1991
+#: build/routes/editor/content.js:1996
 msgid "Appearance"
 msgstr ""
 
-#: build/routes/editor/content.js:1995
+#: build/routes/editor/content.js:1998
 msgid "Regular"
 msgstr ""
 
-#: build/routes/editor/content.js:1995
+#: build/routes/editor/content.js:1998
 msgid "Medium"
 msgstr ""
 
-#: build/routes/editor/content.js:1995
+#: build/routes/editor/content.js:1998
 msgid "Semi Bold"
 msgstr ""
 
-#: build/routes/editor/content.js:1999
+#: build/routes/editor/content.js:2002
 msgid "Line height"
 msgstr ""
 
-#: build/routes/editor/content.js:2000
+#: build/routes/editor/content.js:2003
 msgid "Letter spacing"
 msgstr ""
 
-#: build/routes/editor/content.js:2001
+#: build/routes/editor/content.js:2004
 msgid "Alignment"
 msgstr ""
 
-#: build/routes/editor/content.js:2002
-#: build/routes/editor/content.js:2097
+#: build/routes/editor/content.js:2005
 #: build/routes/editor/content.js:2100
-#: build/routes/editor/content.js:2214
+#: build/routes/editor/content.js:2103
+#: build/routes/editor/content.js:2217
 msgid "Left"
 msgstr ""
 
-#: build/routes/editor/content.js:2003
-#: build/routes/editor/content.js:2215
+#: build/routes/editor/content.js:2006
+#: build/routes/editor/content.js:2218
 msgid "Center"
 msgstr ""
 
-#: build/routes/editor/content.js:2004
-#: build/routes/editor/content.js:2099
-#: build/routes/editor/content.js:2100
-#: build/routes/editor/content.js:2216
+#: build/routes/editor/content.js:2007
+#: build/routes/editor/content.js:2102
+#: build/routes/editor/content.js:2103
+#: build/routes/editor/content.js:2219
 msgid "Right"
 msgstr ""
 
-#: build/routes/editor/content.js:2006
+#: build/routes/editor/content.js:2009
 msgid "Letter case"
 msgstr ""
 
-#: build/routes/editor/content.js:2008
+#: build/routes/editor/content.js:2011
 msgid "Uppercase"
 msgstr ""
 
-#: build/routes/editor/content.js:2010
+#: build/routes/editor/content.js:2013
 msgid "Shrink to fit"
 msgstr ""
 
-#: build/routes/editor/content.js:2010
+#: build/routes/editor/content.js:2013
 msgid "Shrink to fit (one line)"
 msgstr ""
 
-#: build/routes/editor/content.js:2010
+#: build/routes/editor/content.js:2013
 msgid "For names: long ones get smaller instead of wrapping."
 msgstr ""
 
-#: build/routes/editor/content.js:2014
+#: build/routes/editor/content.js:2017
 msgid "Color"
 msgstr ""
 
-#: build/routes/editor/content.js:2017
+#: build/routes/editor/content.js:2020
 msgid "Fill"
 msgstr ""
 
-#: build/routes/editor/content.js:2019
+#: build/routes/editor/content.js:2022
 msgid "Stroke"
 msgstr ""
 
-#: build/routes/editor/content.js:2021
+#: build/routes/editor/content.js:2024
 msgid "Border"
 msgstr ""
 
-#: build/routes/editor/content.js:2023
+#: build/routes/editor/content.js:2026
 msgid "Style"
 msgstr ""
 
-#: build/routes/editor/content.js:2024
+#: build/routes/editor/content.js:2027
 msgid "Solid"
 msgstr ""
 
-#: build/routes/editor/content.js:2025
+#: build/routes/editor/content.js:2028
 msgid "Dashed"
 msgstr ""
 
-#: build/routes/editor/content.js:2026
+#: build/routes/editor/content.js:2029
 msgid "Dotted"
 msgstr ""
 
-#: build/routes/editor/content.js:2028
-#: build/routes/editor/content.js:2030
+#: build/routes/editor/content.js:2031
+#: build/routes/editor/content.js:2033
 msgid "Radius"
 msgstr ""
 
-#: build/routes/editor/content.js:2031
+#: build/routes/editor/content.js:2034
 msgid "Unlink radii"
 msgstr ""
 
-#: build/routes/editor/content.js:2031
+#: build/routes/editor/content.js:2034
 msgid "Link radii"
 msgstr ""
 
-#: build/routes/editor/content.js:2038
-#: build/routes/editor/content.js:2049
+#: build/routes/editor/content.js:2041
+#: build/routes/editor/content.js:2052
 msgid "All corners"
 msgstr ""
 
-#: build/routes/editor/content.js:2056
+#: build/routes/editor/content.js:2059
 msgid "Top left"
 msgstr ""
 
-#: build/routes/editor/content.js:2056
+#: build/routes/editor/content.js:2059
 msgid "Top right"
 msgstr ""
 
-#: build/routes/editor/content.js:2056
+#: build/routes/editor/content.js:2059
 msgid "Bottom right"
 msgstr ""
 
-#: build/routes/editor/content.js:2056
+#: build/routes/editor/content.js:2059
 msgid "Bottom left"
 msgstr ""
 
-#: build/routes/editor/content.js:2070
-#: build/routes/editor/content.js:2075
+#: build/routes/editor/content.js:2073
+#: build/routes/editor/content.js:2078
 msgid "Corner shape"
 msgstr ""
 
-#: build/routes/editor/content.js:2078
+#: build/routes/editor/content.js:2081
 msgid "Round"
 msgstr ""
 
-#: build/routes/editor/content.js:2079
+#: build/routes/editor/content.js:2082
 msgid "Scoop"
 msgstr ""
 
-#: build/routes/editor/content.js:2080
+#: build/routes/editor/content.js:2083
 msgid "Bevel"
 msgstr ""
 
-#: build/routes/editor/content.js:2081
+#: build/routes/editor/content.js:2084
 msgid "Notch"
 msgstr ""
 
-#: build/routes/editor/content.js:2082
+#: build/routes/editor/content.js:2085
 msgid "Squircle"
 msgstr ""
 
-#: build/routes/editor/content.js:2088
+#: build/routes/editor/content.js:2091
 msgid "Dimensions"
 msgstr ""
 
-#: build/routes/editor/content.js:2089
+#: build/routes/editor/content.js:2092
 msgid "Position and size"
 msgstr ""
 
-#: build/routes/editor/content.js:2090
+#: build/routes/editor/content.js:2093
 msgid "Rotation"
 msgstr ""
 
-#: build/routes/editor/content.js:2091
+#: build/routes/editor/content.js:2094
 msgid "Opacity"
 msgstr ""
 
-#: build/routes/editor/content.js:2098
-#: build/routes/editor/content.js:2104
+#: build/routes/editor/content.js:2101
+#: build/routes/editor/content.js:2107
 msgid "Offset"
 msgstr ""
 
-#: build/routes/editor/content.js:2103
 #: build/routes/editor/content.js:2106
-#: build/routes/editor/content.js:2221
+#: build/routes/editor/content.js:2109
+#: build/routes/editor/content.js:2224
 msgid "Top"
 msgstr ""
 
-#: build/routes/editor/content.js:2105
-#: build/routes/editor/content.js:2106
-#: build/routes/editor/content.js:2223
+#: build/routes/editor/content.js:2108
+#: build/routes/editor/content.js:2109
+#: build/routes/editor/content.js:2226
 msgid "Bottom"
 msgstr ""
 
-#: build/routes/editor/content.js:2134
+#: build/routes/editor/content.js:2137
 msgid "Use a value and unit"
 msgstr ""
 
-#: build/routes/editor/content.js:2134
+#: build/routes/editor/content.js:2137
 msgid "Set custom value (calc)"
 msgstr ""
 
-#: build/routes/editor/content.js:2157
+#: build/routes/editor/content.js:2160
 msgid "Use pt, mm, % or calc(100% - 20pt)."
 msgstr ""
 
-#: build/routes/editor/content.js:2209
+#: build/routes/editor/content.js:2212
 msgid "Relative to"
 msgstr ""
 
-#: build/routes/editor/content.js:2210
+#: build/routes/editor/content.js:2213
 msgid "Page"
 msgstr ""
 
-#: build/routes/editor/content.js:2213
+#: build/routes/editor/content.js:2216
 msgid "Horizontal"
 msgstr ""
 
-#: build/routes/editor/content.js:2217
-#: build/routes/editor/content.js:2224
+#: build/routes/editor/content.js:2220
+#: build/routes/editor/content.js:2227
 msgid "Stretch"
 msgstr ""
 
-#: build/routes/editor/content.js:2220
+#: build/routes/editor/content.js:2223
 msgid "Vertical"
 msgstr ""
 
-#: build/routes/editor/content.js:2222
+#: build/routes/editor/content.js:2225
 msgid "Middle"
 msgstr ""
 
-#: build/routes/editor/content.js:2228
+#: build/routes/editor/content.js:2231
 msgid "Fill page"
 msgstr ""
 
-#: build/routes/editor/content.js:2229
+#: build/routes/editor/content.js:2232
 msgid "Fill safe margin"
 msgstr ""
 
-#: build/routes/editor/content.js:2239
+#: build/routes/editor/content.js:2242
 msgid "Page (print)"
 msgstr ""
 
-#: build/routes/editor/content.js:2240
-#: build/routes/editor/content.js:3763
+#: build/routes/editor/content.js:2243
+#: build/routes/editor/content.js:3762
 msgid "Desktop"
 msgstr ""
 
-#: build/routes/editor/content.js:2241
-#: build/routes/editor/content.js:3763
+#: build/routes/editor/content.js:2244
+#: build/routes/editor/content.js:3762
 msgid "Tablet"
 msgstr ""
 
-#: build/routes/editor/content.js:2242
-#: build/routes/editor/content.js:3763
+#: build/routes/editor/content.js:2245
+#: build/routes/editor/content.js:3762
 msgid "Mobile"
 msgstr ""
 
-#: build/routes/editor/content.js:2256
-#: build/routes/editor/content.js:3554
+#: build/routes/editor/content.js:2259
+#: build/routes/editor/content.js:3553
 msgid "View"
 msgstr ""
 
-#: build/routes/editor/content.js:2289
+#: build/routes/editor/content.js:2292
 msgid "The page is the print format set in Size; it does not turn."
 msgstr ""
 
-#: build/routes/editor/content.js:2289
+#: build/routes/editor/content.js:2292
 msgid "Moving, resizing or hiding here changes this screen only. Text and style are shared."
 msgstr ""
 
 #. translators: %s: element name.
-#: build/routes/editor/content.js:2308
+#: build/routes/editor/content.js:2311
 #, js-format
 msgid "Edit SVG: %s"
 msgstr ""
 
-#: build/routes/editor/content.js:2312
+#: build/routes/editor/content.js:2315
 msgid "Preview"
 msgstr ""
 
-#: build/routes/editor/content.js:2324
+#: build/routes/editor/content.js:2327
 msgid "The coordinate space of the paths."
 msgstr ""
 
-#: build/routes/editor/content.js:2331
+#: build/routes/editor/content.js:2334
 msgid "Paths further down are drawn on top. Without a fill a path uses the current color. Pasting SVG code into a path replaces the drawing with its viewBox and paths; nothing else is kept."
 msgstr ""
 
-#: build/routes/editor/content.js:2351
 #: build/routes/editor/content.js:2354
-#: build/routes/editor/content.js:3505
+#: build/routes/editor/content.js:2357
+#: build/routes/editor/content.js:3504
 msgid "Layers"
 msgstr ""
 
-#: build/routes/editor/content.js:2365
+#: build/routes/editor/content.js:2368
 msgid "Show"
 msgstr ""
 
-#: build/routes/editor/content.js:2917
+#: build/routes/editor/content.js:2920
 msgid "Certificate of participation"
 msgstr ""
 
-#: build/routes/editor/content.js:2918
+#: build/routes/editor/content.js:2921
 msgid "This is to certify that"
 msgstr ""
 
-#: build/routes/editor/content.js:2919
+#: build/routes/editor/content.js:2922
 msgid "took part in "
 msgstr ""
 
-#: build/routes/editor/content.js:2920
+#: build/routes/editor/content.js:2923
 msgid ", with a workload of "
 msgstr ""
 
-#: build/routes/editor/content.js:2921
+#: build/routes/editor/content.js:2924
 msgid "Place and date"
 msgstr ""
 
-#: build/routes/editor/content.js:2922
+#: build/routes/editor/content.js:2925
 msgid ""
 "Use the code above to verify at:\n"
 ""
 msgstr ""
 
-#: build/routes/editor/content.js:2925
-msgid "Code"
-msgstr ""
-
-#: build/routes/editor/content.js:2926
+#: build/routes/editor/content.js:2929
 msgid "Date label"
 msgstr ""
 
-#: build/routes/editor/content.js:2927
+#: build/routes/editor/content.js:2930
 msgid "Date line"
 msgstr ""
 
-#: build/routes/editor/content.js:2928
+#: build/routes/editor/content.js:2931
 msgid "Intro"
 msgstr ""
 
-#: build/routes/editor/content.js:2930
+#: build/routes/editor/content.js:2933
 msgid "Signature"
 msgstr ""
 
-#: build/routes/editor/content.js:2931
+#: build/routes/editor/content.js:2934
 msgid "Signature line"
 msgstr ""
 
-#: build/routes/editor/content.js:2935
+#: build/routes/editor/content.js:2938
 msgid "Title"
 msgstr ""
 
-#: build/routes/editor/content.js:2936
+#: build/routes/editor/content.js:2939
 msgid "Verification hint"
 msgstr ""
 
-#: build/routes/editor/content.js:2938
+#: build/routes/editor/content.js:2941
 msgid "Primary"
 msgstr ""
 
-#: build/routes/editor/content.js:2939
+#: build/routes/editor/content.js:2942
 msgid "Muted text"
 msgstr ""
 
-#: build/routes/editor/content.js:2940
+#: build/routes/editor/content.js:2943
 msgid "Lines"
 msgstr ""
 
-#: build/routes/editor/content.js:2942
+#: build/routes/editor/content.js:2945
 msgid "On primary"
 msgstr ""
 
-#: build/routes/editor/content.js:3417
+#: build/routes/editor/content.js:3416
 msgid "Design imported. Save to keep it."
 msgstr ""
 
-#: build/routes/editor/content.js:3479
+#: build/routes/editor/content.js:3478
 msgid "Loading…"
 msgstr ""
 
-#: build/routes/editor/content.js:3480
+#: build/routes/editor/content.js:3479
 msgid "Saved"
 msgstr ""
 
-#: build/routes/editor/content.js:3481
+#: build/routes/editor/content.js:3480
 msgid "Unsaved changes"
 msgstr ""
 
-#: build/routes/editor/content.js:3482
-#: build/routes/editor/content.js:3536
+#: build/routes/editor/content.js:3481
+#: build/routes/editor/content.js:3535
 msgid "Saving…"
 msgstr ""
 
-#: build/routes/editor/content.js:3483
+#: build/routes/editor/content.js:3482
 msgid "Couldn’t save"
 msgstr ""
 
-#: build/routes/editor/content.js:3490
+#: build/routes/editor/content.js:3489
 msgid "Back to Certificates"
 msgstr ""
 
-#: build/routes/editor/content.js:3500
+#: build/routes/editor/content.js:3499
 msgid "Add element"
 msgstr ""
 
-#: build/routes/editor/content.js:3503
+#: build/routes/editor/content.js:3502
 msgid "Undo"
 msgstr ""
 
-#: build/routes/editor/content.js:3504
+#: build/routes/editor/content.js:3503
 msgid "Redo"
 msgstr ""
 
-#: build/routes/editor/content.js:3522
+#: build/routes/editor/content.js:3521
 msgid "Preview in dark mode"
 msgstr ""
 
-#: build/routes/editor/content.js:3522
+#: build/routes/editor/content.js:3521
 msgid "Preview in light mode"
 msgstr ""
 
-#: build/routes/editor/content.js:3534
+#: build/routes/editor/content.js:3533
 msgid "Couldn’t save. Try again."
 msgstr ""
 
-#: build/routes/editor/content.js:3536
+#: build/routes/editor/content.js:3535
 msgid "Save"
 msgstr ""
 
-#: build/routes/editor/content.js:3540
+#: build/routes/editor/content.js:3539
 msgid "Design"
 msgstr ""
 
-#: build/routes/editor/content.js:3544
+#: build/routes/editor/content.js:3543
 msgid "Export (JSON)"
 msgstr ""
 
-#: build/routes/editor/content.js:3548
+#: build/routes/editor/content.js:3547
 msgid "Import…"
 msgstr ""
 
-#: build/routes/editor/content.js:3552
+#: build/routes/editor/content.js:3551
 msgid "Restore the Base design"
 msgstr ""
 
-#: build/routes/editor/content.js:3557
+#: build/routes/editor/content.js:3556
 msgid "Fit to screen"
 msgstr ""
 
-#: build/routes/editor/content.js:3722
+#: build/routes/editor/content.js:3721
 msgid "Element"
 msgstr ""
 
-#: build/routes/editor/content.js:3725
+#: build/routes/editor/content.js:3724
 msgid "Close settings"
 msgstr ""
 
-#: build/routes/editor/content.js:3753
+#: build/routes/editor/content.js:3752
 msgid "Selection"
 msgstr ""
 
 #. translators: 1: screen (Desktop, Tablet, Mobile), 2: orientation, 3: width, 4: height.
-#: build/routes/editor/content.js:3762
+#: build/routes/editor/content.js:3761
 #, js-format
 msgid "%1$s · %2$s · %3$s × %4$s"
 msgstr ""

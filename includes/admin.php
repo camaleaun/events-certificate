@@ -143,6 +143,21 @@ function add_settings_fields( $page ) {
 	);
 
 	add_settings_section(
+		'evcert_issuing',
+		__( 'Issuing', 'events-certificate' ),
+		'__return_false',
+		$page
+	);
+	add_settings_field(
+		'evcert_self_issue',
+		__( 'Attendees get their own', 'events-certificate' ),
+		__NAMESPACE__ . '\render_self_issue_field',
+		$page,
+		'evcert_issuing',
+		array( 'label_for' => 'evcert_self_issue' )
+	);
+
+	add_settings_section(
 		'evcert_data',
 		__( 'Data', 'events-certificate' ),
 		'__return_false',
@@ -213,6 +228,23 @@ function render_slug_field() {
 		/* translators: Stands for a certificate code in an example address, as in https://example.com/certificate/<code>/. */
 		esc_html_x( 'code', 'certificate code placeholder', 'events-certificate' )
 	);
+}
+
+/**
+ * Field: who gets their own certificate from the tickets page.
+ */
+function render_self_issue_field() {
+	$options = array(
+		'attended'  => __( 'When marked as present at the event', 'events-certificate' ),
+		'confirmed' => __( 'With any confirmed ticket', 'events-certificate' ),
+		'off'       => __( 'No: only organizers issue certificates', 'events-certificate' ),
+	);
+	printf( '<select id="evcert_self_issue" name="%s[self_issue]">', esc_attr( Settings\OPTION ) );
+	foreach ( $options as $value => $label ) {
+		printf( '<option value="%1$s" %2$s>%3$s</option>', esc_attr( $value ), selected( Settings\value( 'self_issue' ), $value, false ), esc_html( $label ) );
+	}
+	echo '</select>';
+	printf( '<p class="description">%s</p>', esc_html__( 'From the link in their ticket e-mail, attendees check how their name goes on the certificate and get it with its code.', 'events-certificate' ) );
 }
 
 /**

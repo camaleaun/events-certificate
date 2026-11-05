@@ -43,6 +43,7 @@ function register() {
 	add_action( 'camptix_menu_setup_controls', __NAMESPACE__ . '\setup_controls' );
 	remove_action( 'evcert_certificates_screen', 'EventsCertificate\Admin\render_settings_form' );
 	add_action( 'evcert_certificates_screen', __NAMESPACE__ . '\render_settings_link' );
+	register_front();
 }
 
 /**
