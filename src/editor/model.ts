@@ -47,7 +47,8 @@ export type RectEl = Base & { type: 'rect'; fill?: string; stroke?: string; stro
 /** One path of an SVG element: its outline (path data) and fill (a color or a $variable; none = the current color). */
 export type SvgPath = { d: string; fill?: string; rule?: 'nonzero' | 'evenodd' };
 /** An SVG drawing kept as fields, never as markup: a viewBox size and a list of filled paths. */
-export type SvgEl = Base & { type: 'svg'; vw: number; vh: number; paths: SvgPath[]; color?: string; markup?: string; fill?: string };
+/** title: names the drawing (the SVG's <title> and the image's alt text); empty for decoration. */
+export type SvgEl = Base & { type: 'svg'; title?: string; vw: number; vh: number; paths: SvgPath[]; color?: string; markup?: string; fill?: string };
 export type EllipseEl = Base & { type: 'ellipse'; fill?: string; stroke?: string; strokeWidth?: number };
 export type PathEl = Base & { type: 'path'; d: string; vw: number; vh: number; fill?: string; stroke?: string; strokeWidth?: number };
 export type LineEl = Omit< Base, 'x' | 'y' | 'w' | 'h' > & {

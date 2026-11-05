@@ -4,7 +4,7 @@
  * rows as the sidebar — the viewBox and one row per path — with more room.
  * Changes are a draft until Apply.
  */
-import { Button, Modal, __experimentalHStack as HStack, __experimentalNumberControl as NumberControl } from '@wordpress/components';
+import { Button, Modal, TextControl, __experimentalHStack as HStack, __experimentalNumberControl as NumberControl } from '@wordpress/components';
 import { useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import { DropdownRow } from './DesignPanel';
@@ -20,6 +20,7 @@ type Props = {
 };
 
 export default function SvgEditor( { el, design, mode, onApply, onClose }: Props ) {
+	const [ title, setTitle ] = useState( el.title || '' );
 	const [ vw, setVw ] = useState( el.vw );
 	const [ vh, setVh ] = useState( el.vh );
 	const [ paths, setPaths ] = useState< SvgPath[] >( svgPaths( el ) );
@@ -27,17 +28,25 @@ export default function SvgEditor( { el, design, mode, onApply, onClose }: Props
 	const current = el.color || '$text';
 
 	return (
-		<Modal title={ sprintf( /* translators: %s: element name. */ __( 'Edit SVG: %s', 'events-certificate' ), el.name || 'SVG' ) } size="large" onRequestClose={ onClose } className="evcert-svg-editor">
+		<Modal title={ title.trim() ? sprintf( /* translators: %s: title of the SVG. */ __( 'Edit SVG: %s', 'events-certificate' ), title.trim() ) : __( 'Edit SVG', 'events-certificate' ) } size="large" onRequestClose={ onClose } className="evcert-svg-editor">
 			<div className="evcert-svg-editor__body">
 				<div className="evcert-svg-editor__preview">
-					<svg viewBox={ `0 0 ${ vw } ${ vh }` } role="img" aria-label={ __( 'Preview', 'events-certificate' ) }>
-						<rect width={ vw } height={ vh } className="evcert-svg-editor__box" />
+					{ /* The checkerboard is the drawing's own area: its viewBox's aspect ratio, centred. */ }
+					<svg viewBox={ `0 0 ${ vw } ${ vh }` } role="img" aria-label={ title.trim() || __( 'Preview', 'events-certificate' ) } style={ { '--evcert-ratio': vw / vh } as React.CSSProperties }>
 						{ paths.map( ( p, i ) =>
 							p.d ? <path key={ i } d={ p.d } fill={ color( design, p.fill || current, mode ) } fillRule={ p.rule } opacity={ focus === null || focus === i ? 1 : 0.25 } /> : null
 						) }
 					</svg>
 				</div>
 				<div className="evcert-svg-editor__fields">
+					<TextControl
+						__next40pxDefaultSize
+						__nextHasNoMarginBottom
+						label={ __( 'Title', 'events-certificate' ) }
+						help={ __( 'Names the drawing for screen readers. Leave empty when it is decoration.', 'events-certificate' ) }
+						value={ title }
+						onChange={ setTitle }
+					/>
 					<DropdownRow label={ __( 'ViewBox', 'events-certificate' ) } value={ `${ vw } × ${ vh }` }>
 						{ () => (
 							<>
@@ -57,7 +66,7 @@ export default function SvgEditor( { el, design, mode, onApply, onClose }: Props
 				<Button variant="tertiary" __next40pxDefaultSize onClick={ onClose }>
 					{ __( 'Cancel', 'events-certificate' ) }
 				</Button>
-				<Button variant="primary" __next40pxDefaultSize onClick={ () => { onApply( { vw, vh, paths: paths.filter( ( p ) => p.d ), markup: undefined, fill: undefined } ); onClose(); } }>
+				<Button variant="primary" __next40pxDefaultSize onClick={ () => { onApply( { title: title.trim() || undefined, vw, vh, paths: paths.filter( ( p ) => p.d ), markup: undefined, fill: undefined } ); onClose(); } }>
 					{ __( 'Apply', 'events-certificate' ) }
 				</Button>
 			</div>

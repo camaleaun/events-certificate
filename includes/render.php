@@ -487,8 +487,8 @@ function element_html( array $el, array $design, array $values, array $options )
 	$rotate  = ! empty( $el['rotation'] ) && 'line' !== $type ? sprintf( 'transform:rotate(%ddeg);transform-origin:50%% 50%%;', (int) $el['rotation'] ) : '';
 	$box     = 'line' === $type ? '' : sprintf( 'position:absolute;left:%.2Fpt;top:%.2Fpt;width:%.2Fpt;height:%.2Fpt;%s', $el['x'], $el['y'], max( 0, $el['w'] ), max( 0, $el['h'] ), $rotate );
 	$alpha   = $opacity < 1 ? sprintf( 'opacity:%.3F;', $opacity ) : '';
-	$img     = static function ( $src, $style ) {
-		return '' === $src ? '' : sprintf( '<img alt="" src="%s" style="%s">', esc_attr( $src ), esc_attr( $style ) );
+	$img     = static function ( $src, $style, $alt = '' ) {
+		return '' === $src ? '' : sprintf( '<img alt="%s" src="%s" style="%s">', esc_attr( $alt ), esc_attr( $src ), esc_attr( $style ) );
 	};
 
 	switch ( $type ) {
@@ -597,8 +597,10 @@ function element_html( array $el, array $design, array $values, array $options )
 					'evenodd' === ( $path['rule'] ?? '' ) ? ' fill-rule="evenodd"' : ''
 				);
 			}
-			$svg = sprintf( '<svg xmlns="http://www.w3.org/2000/svg" width="%1$.2F" height="%2$.2F" viewBox="0 0 %3$s %4$s">%5$s</svg>', $el['w'], $el['h'], (float) $el['vw'], (float) $el['vh'], $paths );
-			return $img( svg_src( $svg ), $box . $alpha );
+			// The title names the drawing: the image's alt text and the SVG's <title>.
+			$title = trim( (string) ( $el['title'] ?? '' ) );
+			$svg   = sprintf( '<svg xmlns="http://www.w3.org/2000/svg" width="%1$.2F" height="%2$.2F" viewBox="0 0 %3$s %4$s">%5$s%6$s</svg>', $el['w'], $el['h'], (float) $el['vw'], (float) $el['vh'], '' === $title ? '' : '<title>' . esc_html( $title ) . '</title>', $paths );
+			return $img( svg_src( $svg ), $box . $alpha, $title );
 
 		case 'image':
 			$src = image_src( (string) ( $el['src'] ?? '' ), ! empty( $options['for_pdf'] ) );
