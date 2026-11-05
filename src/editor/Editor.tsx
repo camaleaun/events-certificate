@@ -5,7 +5,7 @@
  */
 import apiFetch from '@wordpress/api-fetch';
 import { Button, ColorPalette, DropdownMenu, MenuGroup, MenuItem, Popover, Snackbar, Spinner, RangeControl, SelectControl, TextControl, ToggleControl } from '@wordpress/components';
-import { chevronLeft, drawerRight, lineSolid, listView, moreVertical, plus, redo as redoIcon, undo as undoIcon } from '@wordpress/icons';
+import { chevronLeft, drawerRight, external, lineSolid, listView, moreVertical, plus, redo as redoIcon, undo as undoIcon } from '@wordpress/icons';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import {
@@ -47,7 +47,8 @@ import './style.scss';
 
 declare global {
 	interface Window {
-		evcertEditor: { design: number; exitUrl: string; fonts: string; sample: Record< string, string > };
+		// development: unfinished features, off unless a constant turns them on (includes/admin-app.php).
+		evcertEditor: { design: number; exitUrl: string; fonts: string; sample: Record< string, string >; development?: { screenViews?: boolean } };
 	}
 }
 
@@ -808,6 +809,27 @@ export default function Editor() {
 		error: __( 'Couldn’t save', 'events-certificate' ),
 	}[ status ];
 
+	/**
+	 * Opens the certificate page with the design as it is now (unsaved changes
+	 * included) and the preview data. The tab opens first, so browsers don't
+	 * block it, then goes to the address once the design is stored.
+	 */
+	const preview = () => {
+		const tab = window.open( '', '_blank' );
+		apiFetch< { url: string } >( { path: '/evcert/v1/preview', method: 'POST', data: { design: stored } } )
+			.then( ( { url } ) => {
+				if ( tab ) {
+					tab.location.href = url;
+				} else {
+					window.open( url, '_blank' );
+				}
+			} )
+			.catch( () => {
+				tab?.close();
+				setNotice( __( 'Couldn’t open the preview.', 'events-certificate' ) );
+			} );
+	};
+
 	const layerName = ( el: Element ) => el.name || el.type;
 	const sidebarTab = current ? sidebar : sidebar === 'element' ? 'design' : sidebar;
 
@@ -838,7 +860,9 @@ export default function Editor() {
 					</button>
 				</div>
 				<div className="evcert-header-right">
-					<PreviewDropdown view={ view } onChange={ ( next ) => { setView( next ); setDraft( null ); } } />
+					{ /* Screen views (Desktop/Tablet/Mobile, orientation): unfinished, behind EVCERT_DEVELOPMENT_SCREEN_VIEWS. */ }
+					{ config.development?.screenViews && <PreviewDropdown view={ view } onChange={ ( next ) => { setView( next ); setDraft( null ); } } /> }
+					<Button icon={ external } onClick={ preview } label={ __( 'Preview in new tab', 'events-certificate' ) } />
 					<Button onClick={ () => setMode( mode === 'light' ? 'dark' : 'light' ) } label={ mode === 'light' ? __( 'Preview in dark mode', 'events-certificate' ) : __( 'Preview in light mode', 'events-certificate' ) }>
 						{ mode === 'light' ? '☀︎' : '☾' }
 					</Button>

@@ -303,3 +303,6 @@ body.evcert-verify {
 	font-weight: 600;
 	cursor: pointer;
 }
+
+/* Preview (includes/preview.php): one row, the label and the light/dark switch. */
+.evcert-dock__preview { align-self: center; margin: 0 4px 0 8px; font-weight: 600; }

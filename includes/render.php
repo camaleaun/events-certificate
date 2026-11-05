@@ -735,10 +735,11 @@ function svg_src( $svg ) {
  * @param string $url   Verification address.
  * @param string $color Color of the modules.
  * @param string $back  Color of the quiet zone and the light modules.
+ * @param bool   $placeholder Draw the placeholder anyway (previews).
  * @return string Image source.
  */
-function qr_src( $url, $color, $back = 'none' ) {
-	if ( Environment\is_public() && class_exists( '\EventsCertificate\Vendor\chillerlan\QRCode\QRCode' ) ) {
+function qr_src( $url, $color, $back = 'none', $placeholder = false ) {
+	if ( ! $placeholder && Environment\is_public() && class_exists( '\EventsCertificate\Vendor\chillerlan\QRCode\QRCode' ) ) {
 		$options = new \EventsCertificate\Vendor\chillerlan\QRCode\QROptions(
 			array(
 				'outputType'    => \EventsCertificate\Vendor\chillerlan\QRCode\QRCode::OUTPUT_MARKUP_SVG,
@@ -799,7 +800,8 @@ function element_html( array $el, array $design, array $values, array $options )
 		return '' === $src ? '' : sprintf( '<img alt="%s" src="%s" style="%s">', esc_attr( $alt ), esc_attr( $src ), esc_attr( $style ) );
 	};
 
-	if ( ! verifiable() && is_verification( $el ) ) {
+	// A preview (includes/preview.php) shows the verification parts with placeholders, on any site.
+	if ( ! verifiable() && empty( $options['preview'] ) && is_verification( $el ) ) {
 		return '';
 	}
 
@@ -925,7 +927,7 @@ function element_html( array $el, array $design, array $values, array $options )
 			if ( in_array( $page_bg, array( 'none', 'transparent' ), true ) ) {
 				$page_bg = 'dark' === $mode ? '#000000' : '#ffffff';
 			}
-			return $img( qr_src( Certificates\url( $values['code'] ), color( $design, '$text', $mode ), $page_bg ), $box . $alpha );
+			return $img( qr_src( Certificates\url( $values['code'] ), color( $design, '$text', $mode ), $page_bg, ! empty( $options['preview'] ) ), $box . $alpha );
 	}
 
 	return '';

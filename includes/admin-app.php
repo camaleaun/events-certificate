@@ -192,10 +192,14 @@ function enqueue() {
 		'evcert-editor-data',
 		'window.evcertEditor = ' . wp_json_encode(
 			array(
-				'design'  => $design,
-				'exitUrl' => Admin\page_url(),
-				'fonts'   => $url . '/fonts',
-				'sample'  => array(
+				'design'      => $design,
+				// Unfinished features, off unless turned on in wp-config.php.
+				'development' => array(
+					'screenViews' => defined( 'EVCERT_DEVELOPMENT_SCREEN_VIEWS' ) && EVCERT_DEVELOPMENT_SCREEN_VIEWS,
+				),
+				'exitUrl'     => Admin\page_url(),
+				'fonts'       => $url . '/fonts',
+				'sample'      => array(
 					// The organizer who signs previews the participant too, when there is one.
 					'name'        => $signer ? $signer['name'] : 'Alex Rivera',
 					// Real values where the site has them (an emptied preview value falls back to these).
