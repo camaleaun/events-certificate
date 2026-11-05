@@ -54,6 +54,7 @@
 		{"type": "text", "id": "signer", "name": "Signer name", "slot": "signer", "x": 523, "y": 515, "w": 194, "h": 11, "runs": [{"field": "signer_name"}], "font": "Inter", "weight": 600, "size": 8, "color": "$muted", "align": "center", "lh": 1.3, "upper": true},
 		{"type": "text", "id": "signer-role", "name": "Signer role", "x": 523, "y": 526, "w": 194, "h": 12, "runs": [{"field": "signer_role"}], "font": "Inter", "weight": 500, "size": 8, "color": "$muted", "align": "center", "lh": 1.5},
 		{"id": "authenticity", "name": "Authenticity", "slot": "authenticity", "type": "qr", "x": 397, "y": 466, "w": 48, "h": 48},
-		{"type": "text", "id": "code", "name": "Code", "slot": "code", "x": 346, "y": 518, "w": 150, "h": 9, "runs": [{"field": "code"}], "font": "Inter", "weight": 500, "size": 6.5, "color": "$muted", "align": "center", "lh": 1.2}
+		{"type": "text", "id": "code", "name": "Code", "slot": "code", "x": 346, "y": 516, "w": 150, "h": 9, "runs": [{"field": "code"}], "font": "Inter", "weight": 500, "size": 6.5, "color": "$muted", "align": "center", "lh": 1.2},
+		{"id": "verify-hint", "name": "Verification hint", "slot": "verify", "type": "text", "x": 321, "y": 526, "w": 200, "h": 18, "runs": [{"text": "Use the code above to verify at:\n"}, {"field": "verify_url"}], "font": "Inter", "weight": 400, "size": 6, "color": "$muted", "align": "center", "lh": 1.3}
 	]
 }

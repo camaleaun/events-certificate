@@ -498,3 +498,237 @@
 .evcert-chip-sample {
 	color: #757575;
 }
+
+/* ---- Block editor patterns (Gutenberg) ---- */
+
+/* Inserter toggle: the + turns into × when open, like editor-document-tools__inserter-toggle. */
+.evcert-inserter-toggle.components-button {
+	svg {
+		transition: transform 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
+	}
+	&.is-pressed svg {
+		transform: rotate(45deg);
+	}
+}
+.evcert-document-bar {
+	height: 32px;
+	width: min(100%, 450px);
+}
+
+/* Inserter (block-editor-inserter__menu), 350px. */
+.evcert-inserter,
+.evcert-list-view {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+.evcert-inserter__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	height: 48px;
+	padding: 0 8px 0 16px;
+	border-bottom: 1px solid #e0e0e0;
+	flex: none;
+}
+.evcert-inserter__search {
+	padding: 16px;
+	position: sticky;
+	top: 0;
+	background: #fff;
+}
+.evcert-inserter__list {
+	display: flex;
+	flex-wrap: wrap;
+	padding: 0 8px 16px;
+}
+.evcert-inserter__item.components-button {
+	width: 33.33%;
+	height: auto;
+	flex-direction: column;
+	justify-content: flex-start;
+	padding: 8px;
+	font-size: 13px;
+	color: #1e1e1e;
+	&:hover {
+		color: var(--wp-admin-theme-color, #3858e9);
+	}
+}
+.evcert-inserter__item-icon {
+	padding: 12px 20px;
+	border-radius: 2px;
+	svg {
+		fill: currentColor;
+	}
+}
+.evcert-inserter__item-title {
+	padding: 4px 2px 8px;
+	font-size: 12px;
+	text-align: center;
+}
+.evcert-inserter__empty {
+	padding: 16px;
+	color: #757575;
+}
+
+/* List View rows (block-editor-list-view-leaf). */
+.evcert-list-view__tree {
+	list-style: none;
+	margin: 0;
+	padding: 8px;
+}
+.evcert-list-view__row {
+	display: flex;
+	align-items: center;
+	border-radius: 2px;
+	margin: 0;
+	&.is-selected {
+		background: var(--wp-admin-theme-color, #3858e9);
+		color: #fff;
+		.evcert-list-view__select,
+		.components-button {
+			color: #fff;
+		}
+		svg {
+			fill: #fff;
+		}
+	}
+	&.is-hidden .evcert-list-view__title {
+		opacity: 0.6;
+	}
+	&:not(.is-selected):hover {
+		background: #f0f0f0;
+	}
+}
+.evcert-list-view__select {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	height: 36px;
+	padding: 0 4px;
+	border: 0;
+	background: none;
+	color: #1e1e1e;
+	font-size: 13px;
+	text-align: left;
+	cursor: pointer;
+	min-width: 0;
+}
+.evcert-list-view__title {
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.evcert-list-view__state {
+	flex: none;
+}
+
+/* Element toolbar (block-editor-block-contextual-toolbar). */
+.evcert-element-toolbar-popover .components-popover__content {
+	overflow: visible;
+}
+.evcert-element-toolbar.components-toolbar {
+	background: #fff;
+	border: 1px solid #1e1e1e;
+	border-radius: 2px;
+	min-height: 48px;
+	.components-toolbar-group {
+		border: 0;
+		border-right: 1px solid #ddd;
+		min-height: 46px;
+		&:last-child {
+			border-right: 0;
+		}
+	}
+}
+
+/* Inspector: block card + tools panels. */
+.evcert-inspector {
+	padding: 0;
+}
+.evcert-card {
+	display: flex;
+	gap: 12px;
+	padding: 16px;
+	border-bottom: 1px solid #e0e0e0;
+}
+.evcert-card__icon {
+	flex: none;
+	svg {
+		fill: currentColor;
+	}
+}
+.evcert-card__title {
+	margin: 2px 0 8px;
+	font-size: 13px;
+	font-weight: 500;
+	line-height: 24px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.evcert-card__description {
+	margin: 0;
+	font-size: 13px;
+	color: #1e1e1e;
+}
+.evcert-inspector__section {
+	padding: 16px;
+	border-bottom: 1px solid #e0e0e0;
+}
+.evcert-inspector .components-tools-panel {
+	border-top: 0;
+	border-bottom: 1px solid #e0e0e0;
+}
+.evcert-color-items {
+	grid-column: 1 / -1;
+	border: 1px solid #ddd;
+	border-radius: 2px;
+	> * + * {
+		border-top: 1px solid #ddd;
+	}
+}
+.evcert-color-item,
+.evcert-color-item__toggle.components-button {
+	width: 100%;
+}
+.evcert-color-item__value {
+	margin-left: auto;
+	color: #757575;
+	font-size: 12px;
+}
+.evcert-color-popover {
+	padding: 16px;
+	width: 260px;
+}
+.evcert-color-popover__label {
+	margin: 0 0 8px;
+	font-size: 11px;
+	font-weight: 500;
+	text-transform: uppercase;
+}
+.evcert-radius__header {
+	margin-bottom: 8px;
+}
+.evcert-radius__legend {
+	font-size: 11px;
+	font-weight: 500;
+	text-transform: uppercase;
+}
+.evcert-radius__corners {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 8px;
+}
+.evcert-grid-2 {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 8px;
+}
+.evcert-suffix {
+	padding-right: 8px;
+	color: #757575;
+	font-size: 12px;
+}

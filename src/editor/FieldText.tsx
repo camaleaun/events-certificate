@@ -37,6 +37,7 @@ export function fields(): Record< string, FieldInfo > {
 		signer_name: { label: __( 'Signer name', 'events-certificate' ) },
 		signer_role: { label: __( 'Signer role', 'events-certificate' ) },
 		code: { label: __( 'Certificate code', 'events-certificate' ) },
+		verify_url: { label: __( 'Verification address', 'events-certificate' ) },
 		document: { label: __( 'Document (masked)', 'events-certificate' ) },
 	};
 }

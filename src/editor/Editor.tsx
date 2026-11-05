@@ -25,7 +25,10 @@ import {
 	type Element,
 	type Mode,
 } from './model';
-import FieldText from './FieldText';
+import ElementToolbar from './ElementToolbar';
+import Inserter from './Inserter';
+import Inspector from './Inspector';
+import ListView from './ListView';
 import base from '../../templates/base-design.json';
 import './style.scss';
 
@@ -203,7 +206,7 @@ function Shape( { el, design, mode, sample }: { el: Element; design: Design; mod
 				letterSpacing: el.ls ? `${ el.ls }px` : undefined,
 				color: color( design, el.color, mode ),
 				textAlign: el.align || 'left',
-				whiteSpace: el.fit ? ( 'nowrap' as const ) : ( 'normal' as const ),
+				whiteSpace: el.fit ? ( 'nowrap' as const ) : ( 'pre-line' as const ),
 			};
 			return (
 				<foreignObject x={ el.x } y={ el.y } width={ el.w } height={ Math.max( el.h, el.size * ( el.lh ?? 1.2 ) * 6 ) } opacity={ opacity } style={ { overflow: 'visible' } }>
@@ -237,6 +240,9 @@ export default function Editor() {
 	const fileRef = useRef< HTMLInputElement >( null );
 	const imageRef = useRef< HTMLInputElement >( null );
 	const savedRef = useRef< Design | null >( null );
+	const selRef = useRef< SVGRectElement >( null );
+	const [ anchor, setAnchor ] = useState< SVGRectElement | null >( null );
+	useEffect( () => setAnchor( selRef.current ), [ selected, tab, zoom ] );
 
 	// Load the design.
 	useEffect( () => {
@@ -478,15 +484,16 @@ export default function Editor() {
 						<Button
 							className="evcert-inserter-toggle"
 							variant="primary"
+							size="compact"
 							icon={ plus }
 							isPressed={ panel === 'insert' }
 							onClick={ () => setPanel( panel === 'insert' ? null : 'insert' ) }
-							label={ __( 'Insert', 'events-certificate' ) }
+							label={ panel === 'insert' ? __( 'Close', 'events-certificate' ) : __( 'Add element', 'events-certificate' ) }
 						/>
 					) }
-					<Button icon={ undoIcon } onClick={ () => dispatch( { type: 'undo' } ) } disabled={ ! history.past.length } accessibleWhenDisabled label={ __( 'Undo', 'events-certificate' ) } />
-					<Button icon={ redoIcon } onClick={ () => dispatch( { type: 'redo' } ) } disabled={ ! history.future.length } accessibleWhenDisabled label={ __( 'Redo', 'events-certificate' ) } />
-					<Button icon={ listView } isPressed={ panel === 'layers' } onClick={ () => setPanel( panel === 'layers' ? null : 'layers' ) } label={ __( 'Layers', 'events-certificate' ) } />
+					<Button size="compact" icon={ undoIcon } onClick={ () => dispatch( { type: 'undo' } ) } disabled={ ! history.past.length } accessibleWhenDisabled label={ __( 'Undo', 'events-certificate' ) } />
+					<Button size="compact" icon={ redoIcon } onClick={ () => dispatch( { type: 'redo' } ) } disabled={ ! history.future.length } accessibleWhenDisabled label={ __( 'Redo', 'events-certificate' ) } />
+					<Button size="compact" icon={ listView } isPressed={ panel === 'layers' } onClick={ () => setPanel( panel === 'layers' ? null : 'layers' ) } label={ __( 'Layers', 'events-certificate' ) } />
 					<div className="evcert-mode-switch" role="group" aria-label={ __( 'Editing mode', 'events-certificate' ) }>
 						<Button size="compact" isPressed={ tab === 'content' } onClick={ () => { setTab( 'content' ); setPanel( null ); } }>
 							{ __( 'Content', 'events-certificate' ) }
@@ -507,8 +514,8 @@ export default function Editor() {
 					<Button onClick={ () => setMode( mode === 'light' ? 'dark' : 'light' ) } label={ mode === 'light' ? __( 'Preview in dark mode', 'events-certificate' ) : __( 'Preview in light mode', 'events-certificate' ) }>
 						{ mode === 'light' ? '☀︎' : '☾' }
 					</Button>
-					<Button icon={ drawerRight } isPressed={ !! sidebarTab } onClick={ () => setSidebar( sidebarTab ? null : current ? 'element' : 'design' ) } label={ __( 'Settings', 'events-certificate' ) } />
-					<Button variant="primary" className="evcert-save" onClick={ save } disabled={ status === 'saving' || status === 'loading' } accessibleWhenDisabled>
+					<Button size="compact" icon={ drawerRight } isPressed={ !! sidebarTab } onClick={ () => setSidebar( sidebarTab ? null : current ? 'element' : 'design' ) } label={ __( 'Settings', 'events-certificate' ) } />
+					<Button variant="primary" size="compact" className="evcert-save" onClick={ save } disabled={ status === 'saving' || status === 'loading' } accessibleWhenDisabled>
 						{ __( 'Save', 'events-certificate' ) }
 					</Button>
 					<DropdownMenu icon={ moreVertical } label={ __( 'Options', 'events-certificate' ) } popoverProps={ { placement: 'bottom-end' } }>
@@ -531,54 +538,17 @@ export default function Editor() {
 			<div className="evcert-body">
 				{ panel && (
 					<aside className="evcert-left-panel">
-						<div className="evcert-panel-header">
-							<strong>{ panel === 'insert' ? __( 'Insert', 'events-certificate' ) : __( 'Layers', 'events-certificate' ) }</strong>
-							<Button size="small" onClick={ () => setPanel( null ) } label={ __( 'Close', 'events-certificate' ) }>
-								×
-							</Button>
-						</div>
-						{ panel === 'insert' && (
-							<div className="evcert-insert">
-								{ (
-									[
-										[ 'text', __( 'Text', 'events-certificate' ), 'T' ],
-										[ 'line', __( 'Line', 'events-certificate' ), '／' ],
-										[ 'rect', __( 'Rectangle', 'events-certificate' ), '▭' ],
-										[ 'ellipse', __( 'Ellipse', 'events-certificate' ), '◯' ],
-										[ 'image', __( 'Image', 'events-certificate' ), '🖼' ],
-										[ 'svg', __( 'SVG code', 'events-certificate' ), '⟨/⟩' ],
-									] as const
-								 ).map( ( [ type, label, glyph ] ) => (
-									<button key={ type } type="button" className="evcert-insert-item" onClick={ () => ( type === 'svg' ? setSvgModal( '' ) : insert( type ) ) }>
-										<span className="evcert-insert-icon" aria-hidden="true">{ glyph }</span>
-										{ label }
-									</button>
-								) ) }
-								{ ! design.elements.some( ( el ) => el.type === 'qr' ) && (
-									<button type="button" className="evcert-insert-item" onClick={ () => insert( 'qr' ) }>
-										<span className="evcert-insert-icon" aria-hidden="true">▦</span>
-										{ __( 'Authenticity (QR)', 'events-certificate' ) }
-									</button>
-								) }
-							</div>
-						) }
-						{ panel === 'layers' && (
-							<ol className="evcert-layers">
-								{ [ ...design.elements ].reverse().map( ( el ) => (
-									<li key={ el.id } className={ el.id === selected ? 'is-selected' : '' }>
-										<button type="button" className="evcert-layer-name" onClick={ () => { setSelected( el.id ); setSidebar( 'element' ); } }>
-											{ layerName( el ) }
-											{ el.slot && <span className="evcert-slot">{ el.slot }</span> }
-										</button>
-										<button type="button" title={ __( 'Show/hide', 'events-certificate' ) } onClick={ () => update( el.id, { hidden: ! el.hidden } ) }>
-											{ el.hidden ? '◌' : '●' }
-										</button>
-										<button type="button" title={ __( 'Lock', 'events-certificate' ) } onClick={ () => update( el.id, { locked: ! el.locked } ) }>
-											{ el.locked ? '🔒' : '🔓' }
-										</button>
-									</li>
-								) ) }
-							</ol>
+						{ panel === 'insert' ? (
+							<Inserter hasQr={ design.elements.some( ( el ) => el.type === 'qr' ) } onInsert={ ( type ) => ( type === 'svg' ? setSvgModal( '' ) : insert( type ) ) } onClose={ () => setPanel( null ) } />
+						) : (
+							<ListView
+								elements={ design.elements }
+								selected={ selected }
+								onSelect={ ( id ) => { setSelected( id ); setSidebar( 'element' ); } }
+								onToggle={ ( id, key ) => update( id, { [ key ]: ! design.elements.find( ( e ) => e.id === id )?.[ key ] } as Partial< Element > ) }
+								onOrder={ reorder }
+								onClose={ () => setPanel( null ) }
+							/>
 						) }
 					</aside>
 				) }
@@ -643,7 +613,7 @@ export default function Editor() {
 						</g>
 						{ current && selBox && tab === 'art' && (
 							<g className="evcert-selection">
-								<rect x={ selBox.x } y={ selBox.y } width={ Math.max( 1, selBox.w ) } height={ Math.max( 1, selBox.h ) } />
+								<rect ref={ selRef } x={ selBox.x } y={ selBox.y } width={ Math.max( 1, selBox.w ) } height={ Math.max( 1, selBox.h ) } />
 								{ current.type === 'line'
 									? ( [ 1, 2 ] as const ).map( ( end ) => (
 											<circle
@@ -697,17 +667,7 @@ export default function Editor() {
 							</Button>
 						</div>
 						{ sidebarTab === 'element' && current && (
-							<Inspector
-								el={ current }
-								design={ design }
-								mode={ mode }
-								tab={ tab }
-								onChange={ ( patch ) => update( current.id, patch ) }
-								onRemove={ () => remove( current.id ) }
-								onDuplicate={ () => duplicate( current.id ) }
-								onOrder={ ( to ) => reorder( current.id, to ) }
-								onImage={ () => imageRef.current?.click() }
-							/>
+							<Inspector el={ current } design={ design } mode={ mode } tab={ tab } locale={ LOCALE } sample={ config.sample } onChange={ ( patch ) => update( current.id, patch ) } onImage={ () => imageRef.current?.click() } />
 						) }
 						{ sidebarTab === 'design' && (
 							<div className="evcert-inspector">
@@ -740,6 +700,18 @@ export default function Editor() {
 				) }
 			</div>
 
+			{ current && tab === 'art' && ! draft && (
+				<ElementToolbar
+					anchor={ anchor }
+					el={ current }
+					required={ !! current.slot && REQUIRED_SLOTS.includes( current.slot ) }
+					onSelectParent={ () => setSidebar( 'element' ) }
+					onOrder={ ( to ) => reorder( current.id, to ) }
+					onToggle={ ( key ) => update( current.id, { [ key ]: ! current[ key ] } as Partial< Element > ) }
+					onDuplicate={ () => duplicate( current.id ) }
+					onRemove={ () => remove( current.id ) }
+				/>
+			) }
 			<footer className="evcert-footer">
 				<nav className="evcert-breadcrumb" aria-label={ __( 'Selection', 'events-certificate' ) }>
 					<button type="button" onClick={ () => setSelected( null ) }>
@@ -801,192 +773,3 @@ export default function Editor() {
 	);
 }
 
-function ColorField( { label, value, design, mode, onChange }: { label: string; value?: string; design: Design; mode: Mode; onChange: ( v: string ) => void } ) {
-	const [ open, setOpen ] = useState( false );
-	const vars = Object.entries( design.colors );
-	return (
-		<div className="evcert-color-field">
-			<span>{ label }</span>
-			<button type="button" className="evcert-swatch" style={ { background: color( design, value, mode ) } } onClick={ () => setOpen( ! open ) } aria-label={ label } />
-			<code>{ value || __( 'none', 'events-certificate' ) }</code>
-			{ open && (
-				<Popover onClose={ () => setOpen( false ) } placement="left">
-					<div className="evcert-color-popover">
-						<p>{ __( 'Variables', 'events-certificate' ) }</p>
-						<div className="evcert-var-list">
-							<button type="button" onClick={ () => onChange( '' ) }>
-								{ __( 'None', 'events-certificate' ) }
-							</button>
-							{ vars.map( ( [ key, v ] ) => (
-								<button key={ key } type="button" onClick={ () => onChange( `$${ key }` ) }>
-									<span className="evcert-swatch" style={ { background: v[ mode ] } } /> { v.name }
-								</button>
-							) ) }
-						</div>
-						<p>{ __( 'Fixed color', 'events-certificate' ) }</p>
-						<ColorPalette value={ value?.startsWith( '$' ) ? undefined : value } onChange={ ( c ) => onChange( c || '' ) } clearable />
-					</div>
-				</Popover>
-			) }
-		</div>
-	);
-}
-
-function Inspector( props: {
-	el: Element;
-	design: Design;
-	mode: Mode;
-	tab: 'content' | 'art';
-	onChange: ( patch: Partial< Element > ) => void;
-	onRemove: () => void;
-	onDuplicate: () => void;
-	onOrder: ( to: 'up' | 'down' | 'top' | 'bottom' ) => void;
-	onImage: () => void;
-} ) {
-	const { el, design, mode, tab, onChange } = props;
-	const required = !! el.slot && REQUIRED_SLOTS.includes( el.slot );
-	const num = ( v: number ) => Math.round( v * 100 ) / 100;
-	return (
-		<div className="evcert-inspector">
-			<header>
-				<strong>{ el.name || el.type }</strong>
-				{ el.slot && <span className="evcert-slot">{ el.slot }</span> }
-			</header>
-			{ el.type === 'text' && (
-				<>
-					<FieldText
-						key={ el.id }
-						label={ __( 'Text', 'events-certificate' ) }
-						runs={ runsOf( el ) }
-						onChange={ ( runs ) => onChange( { runs, text: undefined } as Partial< Element > ) }
-						sample={ window.evcertEditor.sample }
-						locale={ LOCALE }
-					/>
-					{ tab === 'art' && (
-						<>
-							<div className="evcert-row">
-								<SelectControl __next40pxDefaultSize label={ __( 'Font', 'events-certificate' ) } value={ el.font as any } options={ [ { label: 'Lora', value: 'Lora' }, { label: 'Inter', value: 'Inter' } ] } onChange={ ( font ) => onChange( { font } ) } />
-								<SelectControl
-									__next40pxDefaultSize
-									label={ __( 'Weight', 'events-certificate' ) }
-									value={ String( el.weight ) as any }
-									options={ [ { label: '400', value: '400' }, { label: '500', value: '500' }, { label: '600', value: '600' } ] }
-									onChange={ ( weight ) => onChange( { weight: Number( weight ) } ) }
-								/>
-							</div>
-							<div className="evcert-row">
-								<TextControl __next40pxDefaultSize type="number" label={ __( 'Size (pt)', 'events-certificate' ) } value={ String( num( el.size ) ) } onChange={ ( size ) => onChange( { size: Number( size ) } ) } />
-								<TextControl __next40pxDefaultSize type="number" step="0.05" label={ __( 'Line height', 'events-certificate' ) } value={ String( el.lh ?? 1.2 ) } onChange={ ( lh ) => onChange( { lh: Number( lh ) } ) } />
-								<TextControl __next40pxDefaultSize type="number" step="0.1" label={ __( 'Spacing', 'events-certificate' ) } value={ String( el.ls ?? 0 ) } onChange={ ( ls ) => onChange( { ls: Number( ls ) } ) } />
-							</div>
-							<SelectControl
-								__next40pxDefaultSize
-								label={ __( 'Align', 'events-certificate' ) }
-								value={ el.align || 'left' }
-								options={ [ { label: __( 'Left', 'events-certificate' ), value: 'left' }, { label: __( 'Center', 'events-certificate' ), value: 'center' }, { label: __( 'Right', 'events-certificate' ), value: 'right' } ] }
-								onChange={ ( align ) => onChange( { align: align as 'left' } ) }
-							/>
-							<ToggleControl label={ __( 'Uppercase', 'events-certificate' ) } checked={ !! el.upper } onChange={ ( upper ) => onChange( { upper } ) } />
-							<ToggleControl label={ __( 'Shrink to fit (one line)', 'events-certificate' ) } checked={ !! el.fit } onChange={ ( fit ) => onChange( { fit } ) } />
-							<ColorField label={ __( 'Color', 'events-certificate' ) } value={ el.color } design={ design } mode={ mode } onChange={ ( c ) => onChange( { color: c } ) } />
-						</>
-					) }
-				</>
-			) }
-			{ tab === 'art' && ( el.type === 'rect' || el.type === 'ellipse' || el.type === 'path' ) && (
-				<>
-					<ColorField label={ __( 'Fill', 'events-certificate' ) } value={ el.fill } design={ design } mode={ mode } onChange={ ( fill ) => onChange( { fill } ) } />
-					<ColorField label={ __( 'Stroke', 'events-certificate' ) } value={ el.stroke } design={ design } mode={ mode } onChange={ ( stroke ) => onChange( { stroke } ) } />
-					<RangeControl __next40pxDefaultSize label={ __( 'Stroke width', 'events-certificate' ) } value={ el.strokeWidth || 0 } min={ 0 } max={ 60 } step={ 0.5 } onChange={ ( v ) => onChange( { strokeWidth: v ?? 0 } ) } />
-					{ el.type === 'rect' && (
-						<SelectControl
-							__next40pxDefaultSize
-							label={ __( 'Corner shape', 'events-certificate' ) }
-							value={ ( el.corner || 'round' ) as any }
-							options={ [
-								{ label: __( 'Round', 'events-certificate' ), value: 'round' },
-								{ label: __( 'Scoop', 'events-certificate' ), value: 'scoop' },
-								{ label: __( 'Bevel', 'events-certificate' ), value: 'bevel' },
-								{ label: __( 'Notch', 'events-certificate' ), value: 'notch' },
-								{ label: __( 'Squircle', 'events-certificate' ), value: 'squircle' },
-							] }
-							onChange={ ( corner ) => onChange( { corner: corner as 'round' } ) }
-						/>
-					) }
-					{ el.type === 'rect' && (
-						<div className="evcert-row">
-							{ [ __( '↖', 'events-certificate' ), __( '↗', 'events-certificate' ), __( '↘', 'events-certificate' ), __( '↙', 'events-certificate' ) ].map( ( label, i ) => (
-								<TextControl
-									key={ i }
-									__next40pxDefaultSize
-									type="number"
-									label={ label }
-									value={ String( ( el.radius || [ 0, 0, 0, 0 ] )[ i ] || 0 ) }
-									onChange={ ( v ) => {
-										const radius = [ ...( el.radius || [ 0, 0, 0, 0 ] ) ];
-										radius[ i ] = Number( v );
-										onChange( { radius } );
-									} }
-								/>
-							) ) }
-						</div>
-					) }
-				</>
-			) }
-			{ tab === 'art' && el.type === 'line' && (
-				<>
-					<ColorField label={ __( 'Color', 'events-certificate' ) } value={ el.stroke } design={ design } mode={ mode } onChange={ ( stroke ) => onChange( { stroke } ) } />
-					<RangeControl __next40pxDefaultSize label={ __( 'Width', 'events-certificate' ) } value={ el.strokeWidth || 1 } min={ 0.25 } max={ 20 } step={ 0.25 } onChange={ ( v ) => onChange( { strokeWidth: v ?? 1 } ) } />
-					<SelectControl
-						__next40pxDefaultSize
-						label={ __( 'Style', 'events-certificate' ) }
-						value={ el.dash || 'solid' }
-						options={ [ { label: __( 'Solid', 'events-certificate' ), value: 'solid' }, { label: __( 'Dashed', 'events-certificate' ), value: 'dashed' }, { label: __( 'Dotted', 'events-certificate' ), value: 'dotted' } ] }
-						onChange={ ( dash ) => onChange( { dash: dash as 'solid' } ) }
-					/>
-				</>
-			) }
-			{ tab === 'art' && el.type === 'svg' && (
-				<>
-					<ColorField label={ __( 'Fill', 'events-certificate' ) } value={ el.fill } design={ design } mode={ mode } onChange={ ( fill ) => onChange( { fill } ) } />
-					<ColorField label={ __( 'Stroke', 'events-certificate' ) } value={ el.stroke } design={ design } mode={ mode } onChange={ ( stroke ) => onChange( { stroke } ) } />
-					<p className="evcert-meta">{ __( 'Empty keeps the SVG’s own colors.', 'events-certificate' ) }</p>
-				</>
-			) }
-			{ tab === 'art' && el.type === 'image' && (
-				<Button variant="secondary" onClick={ props.onImage }>
-					{ __( 'Choose image…', 'events-certificate' ) }
-				</Button>
-			) }
-			{ tab === 'art' && (
-				<>
-					{ el.type !== 'line' && (
-						<div className="evcert-row">
-							{ ( [ 'x', 'y', 'w', 'h' ] as const ).map( ( k ) => (
-								<TextControl key={ k } __next40pxDefaultSize type="number" label={ k.toUpperCase() } value={ String( num( ( el as any )[ k ] ) ) } onChange={ ( v ) => onChange( { [ k ]: Number( v ) } as Partial< Element > ) } />
-							) ) }
-						</div>
-					) }
-					{ el.type !== 'line' && (
-						<SelectControl
-							__next40pxDefaultSize
-							label={ __( 'Rotation', 'events-certificate' ) }
-							value={ String( el.rotation || 0 ) as any }
-							options={ [ { label: '0°', value: '0' }, { label: '90°', value: '90' }, { label: '180°', value: '180' }, { label: '270°', value: '270' } ] }
-							onChange={ ( r ) => onChange( { rotation: Number( r ) } ) }
-						/>
-					) }
-					<RangeControl __next40pxDefaultSize label={ __( 'Opacity', 'events-certificate' ) } value={ Math.round( ( el.opacity ?? 1 ) * 100 ) } min={ 0 } max={ 100 } onChange={ ( v ) => onChange( { opacity: ( v ?? 100 ) / 100 } ) } />
-					<div className="evcert-actions">
-						<Button size="small" onClick={ () => props.onOrder( 'top' ) }>{ __( 'Front', 'events-certificate' ) }</Button>
-						<Button size="small" onClick={ () => props.onOrder( 'bottom' ) }>{ __( 'Back', 'events-certificate' ) }</Button>
-						<Button size="small" onClick={ props.onDuplicate }>{ __( 'Duplicate', 'events-certificate' ) }</Button>
-						<Button size="small" isDestructive disabled={ required } onClick={ props.onRemove } label={ required ? __( 'Required: it can be moved, not removed.', 'events-certificate' ) : undefined } showTooltip={ required }>
-							{ __( 'Delete', 'events-certificate' ) }
-						</Button>
-					</div>
-				</>
-			) }
-		</div>
-	);
-}
