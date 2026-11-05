@@ -4,7 +4,7 @@
  * the other elements, and a floating Dock with everything else.
  */
 import apiFetch from '@wordpress/api-fetch';
-import { Button, ColorPalette, DropdownMenu, MenuGroup, MenuItem, Popover, RangeControl, SelectControl, TextareaControl, TextControl, ToggleControl } from '@wordpress/components';
+import { Button, ColorPalette, DropdownMenu, MenuGroup, MenuItem, Popover, RangeControl, SelectControl, TextControl, ToggleControl } from '@wordpress/components';
 import { chevronLeft, drawerRight, listView, moreVertical, plus, redo as redoIcon, undo as undoIcon } from '@wordpress/icons';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
@@ -15,12 +15,14 @@ import {
 	moved,
 	newId,
 	REQUIRED_SLOTS,
-	textHtml,
+	runsHtml,
+	runsOf,
 	type Box,
 	type Design,
 	type Element,
 	type Mode,
 } from './model';
+import FieldText from './FieldText';
 import base from '../../templates/base-design.json';
 import './style.scss';
 
@@ -68,6 +70,7 @@ type Drag =
 	| { kind: 'point'; id: string; end: 1 | 2; start: { x: number; y: number }; origin: Element };
 
 const SNAP = 5;
+const LOCALE = document.documentElement.lang || 'en';
 const HANDLES = [ 'nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w' ];
 
 /** Snaps a moving box to the page and the other elements; returns the offset and the guides to draw. */
@@ -197,7 +200,7 @@ function Shape( { el, design, mode, sample }: { el: Element; design: Design; mod
 			};
 			return (
 				<foreignObject x={ el.x } y={ el.y } width={ el.w } height={ Math.max( el.h, el.size * ( el.lh ?? 1.2 ) * 6 ) } opacity={ opacity } style={ { overflow: 'visible' } }>
-					<div className="evcert-text" style={ style } dangerouslySetInnerHTML={ { __html: textHtml( el.text, sample, el.upper ) } } />
+					<div className="evcert-text" style={ style } dangerouslySetInnerHTML={ { __html: runsHtml( runsOf( el ), sample, LOCALE, el.upper ) } } />
 				</foreignObject>
 			);
 		}
@@ -609,7 +612,13 @@ export default function Editor() {
 											}
 										} }
 									>
-										<Shape el={ el } design={ shown } mode={ mode } sample={ config.sample } />
+										{ el.rotation && el.type !== 'line' ? (
+											<g transform={ `rotate(${ el.rotation } ${ el.x + el.w / 2 } ${ el.y + el.h / 2 })` }>
+												<Shape el={ el } design={ shown } mode={ mode } sample={ config.sample } />
+											</g>
+										) : (
+											<Shape el={ el } design={ shown } mode={ mode } sample={ config.sample } />
+										) }
 									</g>
 								)
 							) }
@@ -797,12 +806,13 @@ function Inspector( props: {
 			</header>
 			{ el.type === 'text' && (
 				<>
-					<TextareaControl
+					<FieldText
+						key={ el.id }
 						label={ __( 'Text', 'events-certificate' ) }
-						help={ __( 'Placeholders: {name}, {event}, {location}, {issued_date}, {signer_name}, {signer_role}, {code}. **Bold**.', 'events-certificate' ) }
-						value={ el.text }
-						onChange={ ( text ) => onChange( { text } ) }
-						rows={ 3 }
+						runs={ runsOf( el ) }
+						onChange={ ( runs ) => onChange( { runs, text: undefined } as Partial< Element > ) }
+						sample={ window.evcertEditor.sample }
+						locale={ LOCALE }
 					/>
 					{ tab === 'art' && (
 						<>
@@ -886,6 +896,15 @@ function Inspector( props: {
 								<TextControl key={ k } __next40pxDefaultSize type="number" label={ k.toUpperCase() } value={ String( num( ( el as any )[ k ] ) ) } onChange={ ( v ) => onChange( { [ k ]: Number( v ) } as Partial< Element > ) } />
 							) ) }
 						</div>
+					) }
+					{ el.type !== 'line' && (
+						<SelectControl
+							__next40pxDefaultSize
+							label={ __( 'Rotation', 'events-certificate' ) }
+							value={ String( el.rotation || 0 ) as any }
+							options={ [ { label: '0°', value: '0' }, { label: '90°', value: '90' }, { label: '180°', value: '180' }, { label: '270°', value: '270' } ] }
+							onChange={ ( r ) => onChange( { rotation: Number( r ) } ) }
+						/>
 					) }
 					<RangeControl __next40pxDefaultSize label={ __( 'Opacity', 'events-certificate' ) } value={ Math.round( ( el.opacity ?? 1 ) * 100 ) } min={ 0 } max={ 100 } onChange={ ( v ) => onChange( { opacity: ( v ?? 100 ) / 100 } ) } />
 					<div className="evcert-actions">

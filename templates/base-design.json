@@ -40,24 +40,20 @@
 		}
 	},
 	"elements": [
-		{"id": "ring-outer", "name": "Background ring", "type": "ellipse", "x": 121, "y": 47.5, "w": 600, "h": 600, "fill": "none", "stroke": "$primary", "strokeWidth": 46, "opacity": 0.05},
-		{"id": "ring-inner", "name": "Background ring (inner)", "type": "ellipse", "x": 231, "y": 157.5, "w": 380, "h": 380, "fill": "none", "stroke": "$primary", "strokeWidth": 24, "opacity": 0.05},
-		{"id": "frame-outer", "name": "Frame", "type": "path", "x": 16, "y": 16, "w": 810, "h": 563, "vw": 810, "vh": 563, "d": "M32 0H778A32 32 0 0 0 810 32V531A32 32 0 0 0 778 563H32A32 32 0 0 0 0 531V32A32 32 0 0 0 32 0Z", "fill": "none", "stroke": "$primary", "strokeWidth": 1, "opacity": 0.35},
-		{"id": "frame-inner", "name": "Frame (inner)", "type": "rect", "x": 32, "y": 32, "w": 778, "h": 531, "fill": "none", "stroke": "$primary", "strokeWidth": 1, "radius": [0, 0, 0, 0], "opacity": 0.35},
-		{"id": "banner", "name": "Banner", "type": "rect", "x": 357, "y": -26, "w": 128, "h": 190, "fill": "$primary", "radius": [0, 0, 64, 64]},
-		{"id": "logo-ring", "name": "Logo placeholder", "type": "ellipse", "x": 381, "y": 56, "w": 80, "h": 80, "fill": "none", "stroke": "$on-primary", "strokeWidth": 2},
-		{"id": "logo-text", "name": "Logo placeholder text", "type": "text", "x": 381, "y": 88, "w": 80, "h": 16, "text": "LOGO", "font": "Inter", "weight": 600, "size": 12, "color": "$on-primary", "align": "center", "lh": 1.2, "ls": 1},
-		{"id": "event", "name": "Event name", "slot": "event", "type": "text", "x": 221, "y": 182, "w": 400, "h": 24, "text": "{event}", "font": "Lora", "weight": 600, "size": 18, "color": "$primary", "align": "center", "lh": 1.2, "upper": true},
-		{"id": "title", "name": "Title", "slot": "title", "type": "text", "x": 184.25, "y": 267.39, "w": 473.5, "h": 17, "text": "Certificate of participation", "font": "Lora", "weight": 600, "size": 16.065, "color": "$muted", "align": "center", "lh": 1, "upper": true},
-		{"id": "name", "name": "Name", "slot": "name", "type": "text", "x": 184.25, "y": 295.39, "w": 473.5, "h": 42, "text": "{name}", "font": "Lora", "weight": 500, "size": 41.761, "color": "$text", "align": "center", "lh": 1, "fit": true, "min": 22},
-		{"id": "body", "name": "Text", "slot": "body", "type": "text", "x": 184.25, "y": 353.39, "w": 473.5, "h": 54, "text": "This certificate is presented for actively participating in **{event}**, held in **{location}**, celebrating collaboration, learning, and innovation within the community.", "font": "Inter", "weight": 400, "size": 13, "color": "$text", "align": "center", "lh": 1.4, "ls": -0.26},
-		{"id": "date", "name": "Date", "slot": "date", "type": "text", "x": 125, "y": 488, "w": 194, "h": 14, "text": "{issued_date}", "font": "Lora", "weight": 400, "size": 12, "color": "$text", "align": "center", "lh": 1},
+		{"id": "frame-outer", "name": "Frame", "type": "rect", "x": 20, "y": 20, "w": 802, "h": 555, "fill": "", "stroke": "$primary", "strokeWidth": 1.5, "radius": [0, 0, 0, 0], "opacity": 0.5},
+		{"id": "frame-inner", "name": "Frame (inner)", "type": "rect", "x": 28, "y": 28, "w": 786, "h": 539, "fill": "", "stroke": "$primary", "strokeWidth": 0.5, "radius": [0, 0, 0, 0], "opacity": 0.5},
+		{"id": "logo", "name": "Logo", "type": "image", "x": 381, "y": 56, "w": 80, "h": 80, "src": "", "fit": "contain"},
+		{"type": "text", "id": "event", "name": "Event name", "slot": "event", "x": 171, "y": 156, "w": 500, "h": 24, "runs": [{"field": "event"}], "font": "Lora", "weight": 600, "size": 18, "color": "$primary", "align": "center", "lh": 1.2, "upper": true},
+		{"type": "text", "id": "title", "name": "Title", "slot": "title", "x": 184.25, "y": 240, "w": 473.5, "h": 17, "runs": [{"text": "Certificate of participation"}], "font": "Lora", "weight": 600, "size": 16, "color": "$muted", "align": "center", "lh": 1, "upper": true},
+		{"type": "text", "id": "name", "name": "Name", "slot": "name", "x": 146, "y": 272, "w": 550, "h": 42, "runs": [{"field": "name"}], "font": "Lora", "weight": 500, "size": 40, "color": "$text", "align": "center", "lh": 1, "fit": true, "min": 22},
+		{"type": "text", "id": "body", "name": "Text", "slot": "body", "x": 171, "y": 334, "w": 500, "h": 54, "runs": [{"text": "Took part in "}, {"field": "event", "b": true}, {"text": ", held in "}, {"field": "location", "b": true}, {"text": " on "}, {"field": "event_date", "format": "long"}, {"text": ", as "}, {"field": "role"}, {"text": ", with a workload of "}, {"field": "hours"}, {"text": "."}], "font": "Inter", "weight": 400, "size": 13, "color": "$text", "align": "center", "lh": 1.5},
+		{"type": "text", "id": "date", "name": "Date", "slot": "date", "x": 125, "y": 488, "w": 194, "h": 14, "runs": [{"field": "issued_date", "format": "long"}], "font": "Lora", "weight": 400, "size": 12, "color": "$text", "align": "center", "lh": 1},
 		{"id": "date-line", "name": "Date line", "type": "line", "x1": 122, "y1": 510.5, "x2": 322, "y2": 510.5, "stroke": "$line", "strokeWidth": 1, "opacity": 0.5},
-		{"id": "date-label", "name": "Date label", "type": "text", "x": 125, "y": 515, "w": 194, "h": 11, "text": "Date of emission", "font": "Inter", "weight": 600, "size": 8, "color": "$muted", "align": "center", "lh": 1.3, "ls": -0.16, "upper": true},
-		{"id": "signature-line", "name": "Signature line", "type": "line", "x1": 521.18, "y1": 510.5, "x2": 721.18, "y2": 510.5, "stroke": "$line", "strokeWidth": 1, "opacity": 0.5},
-		{"id": "signer", "name": "Signer name", "slot": "signer", "type": "text", "x": 524.18, "y": 515, "w": 194, "h": 11, "text": "{signer_name}", "font": "Inter", "weight": 600, "size": 8, "color": "$muted", "align": "center", "lh": 1.3, "ls": -0.16, "upper": true},
-		{"id": "signer-role", "name": "Signer role", "type": "text", "x": 524.18, "y": 526, "w": 194, "h": 12, "text": "{signer_role}", "font": "Inter", "weight": 500, "size": 8, "color": "$muted", "align": "center", "lh": 1.5},
+		{"type": "text", "id": "date-label", "name": "Date label", "x": 125, "y": 515, "w": 194, "h": 11, "runs": [{"text": "Date of issue"}], "font": "Inter", "weight": 600, "size": 8, "color": "$muted", "align": "center", "lh": 1.3, "upper": true},
+		{"id": "signature-line", "name": "Signature line", "type": "line", "x1": 520, "y1": 510.5, "x2": 720, "y2": 510.5, "stroke": "$line", "strokeWidth": 1, "opacity": 0.5},
+		{"type": "text", "id": "signer", "name": "Signer name", "slot": "signer", "x": 523, "y": 515, "w": 194, "h": 11, "runs": [{"field": "signer_name"}], "font": "Inter", "weight": 600, "size": 8, "color": "$muted", "align": "center", "lh": 1.3, "upper": true},
+		{"type": "text", "id": "signer-role", "name": "Signer role", "x": 523, "y": 526, "w": 194, "h": 12, "runs": [{"field": "signer_role"}], "font": "Inter", "weight": 500, "size": 8, "color": "$muted", "align": "center", "lh": 1.5},
 		{"id": "authenticity", "name": "Authenticity", "slot": "authenticity", "type": "qr", "x": 397, "y": 466, "w": 48, "h": 48},
-		{"id": "code", "name": "Code", "slot": "code", "type": "text", "x": 346, "y": 518, "w": 150, "h": 9, "text": "{code}", "font": "Inter", "weight": 500, "size": 6.5, "color": "$muted", "align": "center", "lh": 1.2}
+		{"type": "text", "id": "code", "name": "Code", "slot": "code", "x": 346, "y": 518, "w": 150, "h": 9, "runs": [{"field": "code"}], "font": "Inter", "weight": 500, "size": 6.5, "color": "$muted", "align": "center", "lh": 1.2}
 	]
 }

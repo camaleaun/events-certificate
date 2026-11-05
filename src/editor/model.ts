@@ -25,7 +25,8 @@ export type Base = {
 
 export type TextEl = Base & {
 	type: 'text';
-	text: string;
+	text?: string;
+	runs?: Run[];
 	font: string;
 	weight: number;
 	size: number;
@@ -104,12 +105,86 @@ export const REQUIRED_SLOTS = [ 'name', 'authenticity' ];
 
 export const PLACEHOLDERS = [ 'name', 'event', 'location', 'issued_date', 'signer_name', 'signer_role', 'code', 'hours', 'role' ];
 
-/** Text with {placeholders} filled from sample data and **bold** as <strong>, as HTML. */
-export function textHtml( text: string, sample: Record< string, string >, upper?: boolean ): string {
-	const escaped = text.replace( /&/g, '&amp;' ).replace( /</g, '&lt;' ).replace( />/g, '&gt;' );
-	const filled = escaped.replace( /\{([a-z_]+)\}/g, ( match, key ) => ( sample[ key ] !== undefined ? sample[ key ] : match ) );
-	const html = filled.replace( /\*\*(.+?)\*\*/g, '<strong>$1</strong>' );
-	return upper ? html.toUpperCase().replace( /<(\/?)STRONG>/g, '<$1strong>' ) : html;
+/**
+ * Rich text with fields: a list of runs, plain text or a field (a chip in the
+ * editor), each with its own marks. Stored as data, never as text with
+ * braces, so a field can't be mistyped and formats travel with it.
+ */
+export type Run = { text: string; b?: boolean; i?: boolean } | { field: string; format?: string; b?: boolean; i?: boolean };
+
+export type FieldDef = { key: string; label: string; kind?: 'date' | 'hours' | 'text'; formats?: { key: string; label: string }[] };
+
+/** Fields a text can show. Labels are set by the editor (translated). */
+export const FIELD_KEYS = [ 'name', 'event', 'location', 'issued_date', 'event_date', 'hours', 'role', 'details', 'signer_name', 'signer_role', 'code', 'document' ];
+
+/** Old "{field} and **bold**" text, as runs. */
+export function parseText( text: string ): Run[] {
+	const runs: Run[] = [];
+	const parts = text.split( /(\*\*.+?\*\*)/ );
+	for ( const part of parts ) {
+		const bold = /^\*\*(.+)\*\*$/.exec( part );
+		const body = bold ? bold[ 1 ] : part;
+		for ( const piece of body.split( /(\{[a-z_]+\})/ ) ) {
+			if ( ! piece ) {
+				continue;
+			}
+			const field = /^\{([a-z_]+)\}$/.exec( piece );
+			const run: Run = field ? { field: field[ 1 ] } : { text: piece };
+			if ( bold ) {
+				run.b = true;
+			}
+			runs.push( run );
+		}
+	}
+	return runs;
+}
+
+/** A text element's runs (from runs, or from its old text). */
+export function runsOf( el: { runs?: Run[]; text?: string } ): Run[] {
+	return el.runs || parseText( el.text || '' );
+}
+
+const esc = ( v: string ) => v.replace( /&/g, '&amp;' ).replace( /</g, '&lt;' ).replace( />/g, '&gt;' );
+
+/** Formats a field's sample value. */
+export function fieldValue( field: string, format: string | undefined, sample: Record< string, string >, locale: string ): string {
+	if ( field === 'issued_date' || field === 'event_date' ) {
+		const date = new Date( sample.date_iso || Date.now() );
+		const options: Record< string, Intl.DateTimeFormatOptions > = {
+			long: { day: 'numeric', month: 'long', year: 'numeric' },
+			medium: { day: 'numeric', month: 'short', year: 'numeric' },
+			short: { day: '2-digit', month: '2-digit', year: 'numeric' },
+			month: { month: 'long', year: 'numeric' },
+		};
+		if ( format === 'iso' ) {
+			return date.toISOString().slice( 0, 10 );
+		}
+		return new Intl.DateTimeFormat( locale, options[ format || 'long' ] || options.long ).format( date );
+	}
+	if ( field === 'hours' ) {
+		const hours = sample.hours || '8';
+		return format === 'short' ? `${ hours }h` : sample.hours_long || `${ hours } h`;
+	}
+	return sample[ field ] !== undefined ? sample[ field ] : field;
+}
+
+/** Runs as HTML with the sample values in place of the fields. */
+export function runsHtml( runs: Run[], sample: Record< string, string >, locale: string, upper?: boolean ): string {
+	return runs
+		.map( ( run ) => {
+			let html = esc( 'field' in run ? fieldValue( run.field, run.format, sample, locale ) : run.text );
+			if ( upper ) {
+				html = html.toUpperCase();
+			}
+			if ( run.i ) {
+				html = `<em>${ html }</em>`;
+			}
+			if ( run.b ) {
+				html = `<strong>${ html }</strong>`;
+			}
+			return html;
+		} )
+		.join( '' );
 }
 
 let counter = 0;
@@ -126,7 +201,7 @@ export function create( type: Element[ 'type' ], design: Design ): Element {
 	const id = newId( type );
 	switch ( type ) {
 		case 'text':
-			return { id, type, name: 'Text', x: cx - 120, y: cy - 10, w: 240, h: 20, text: 'Text', font: 'Inter', weight: 400, size: 14, color: '$text', align: 'center', lh: 1.3 };
+			return { id, type, name: 'Text', x: cx - 120, y: cy - 10, w: 240, h: 20, runs: [ { text: 'Text' } ], font: 'Inter', weight: 400, size: 14, color: '$text', align: 'center', lh: 1.3 };
 		case 'rect':
 			return { id, type, name: 'Rectangle', x: cx - 60, y: cy - 40, w: 120, h: 80, fill: '$primary', stroke: '', strokeWidth: 1, radius: [ 0, 0, 0, 0 ] };
 		case 'ellipse':

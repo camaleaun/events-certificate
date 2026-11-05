@@ -1,0 +1,265 @@
+/**
+ * Text with fields as chips (like Google Sheets' custom date format input):
+ * free text between chips, chips inserted from a menu, each chip with its own
+ * options (a date's format), Bold/Italic from buttons or ⌘B/⌘I. The value is a
+ * list of runs, never text with braces.
+ */
+import { Button, Dropdown, MenuGroup, MenuItem, Popover, SelectControl } from '@wordpress/components';
+import { useEffect, useLayoutEffect, useRef, useState } from '@wordpress/element';
+import { __ } from '@wordpress/i18n';
+import { fieldValue, type Run } from './model';
+
+export type FieldInfo = { label: string; formats?: { key: string; label: string }[] };
+
+export function fields(): Record< string, FieldInfo > {
+	const dateFormats = [
+		{ key: 'long', label: __( 'Long (5 November 2026)', 'events-certificate' ) },
+		{ key: 'medium', label: __( 'Medium (5 Nov 2026)', 'events-certificate' ) },
+		{ key: 'short', label: __( 'Short (05/11/2026)', 'events-certificate' ) },
+		{ key: 'month', label: __( 'Month and year', 'events-certificate' ) },
+		{ key: 'iso', label: __( 'ISO (2026-11-05)', 'events-certificate' ) },
+	];
+	return {
+		name: { label: __( 'Participant name', 'events-certificate' ) },
+		event: { label: __( 'Event', 'events-certificate' ) },
+		location: { label: __( 'Location', 'events-certificate' ) },
+		event_date: { label: __( 'Event date', 'events-certificate' ), formats: dateFormats },
+		issued_date: { label: __( 'Date of issue', 'events-certificate' ), formats: dateFormats },
+		hours: {
+			label: __( 'Workload', 'events-certificate' ),
+			formats: [
+				{ key: 'long', label: __( '8 hours', 'events-certificate' ) },
+				{ key: 'short', label: __( '8h', 'events-certificate' ) },
+			],
+		},
+		role: { label: __( 'Role', 'events-certificate' ) },
+		details: { label: __( 'Details (talk title)', 'events-certificate' ) },
+		signer_name: { label: __( 'Signer name', 'events-certificate' ) },
+		signer_role: { label: __( 'Signer role', 'events-certificate' ) },
+		code: { label: __( 'Certificate code', 'events-certificate' ) },
+		document: { label: __( 'Document (masked)', 'events-certificate' ) },
+	};
+}
+
+const esc = ( v: string ) => v.replace( /&/g, '&amp;' ).replace( /</g, '&lt;' ).replace( />/g, '&gt;' );
+
+/** Runs as the editable's HTML: text in spans, fields as non-editable chips. */
+function toHtml( runs: Run[], info: Record< string, FieldInfo > ): string {
+	return runs
+		.map( ( run, index ) => {
+			let html =
+				'field' in run
+					? `<span class="evcert-chip" contenteditable="false" data-field="${ esc( run.field ) }" data-format="${ esc( run.format || '' ) }" data-index="${ index }">${ esc( info[ run.field ]?.label || run.field ) }</span>`
+					: esc( run.text ).replace( /\n/g, '<br>' );
+			if ( run.i ) {
+				html = `<em>${ html }</em>`;
+			}
+			if ( run.b ) {
+				html = `<strong>${ html }</strong>`;
+			}
+			return html;
+		} )
+		.join( '' );
+}
+
+/** The editable's DOM back to runs (merging neighbours with the same marks). */
+function fromDom( root: HTMLElement ): Run[] {
+	const runs: Run[] = [];
+	const push = ( run: Run ) => {
+		const last = runs[ runs.length - 1 ];
+		if ( last && 'text' in last && 'text' in run && !! last.b === !! run.b && !! last.i === !! run.i ) {
+			last.text += run.text;
+			return;
+		}
+		runs.push( run );
+	};
+	const walk = ( node: Node, b: boolean, i: boolean ) => {
+		if ( node.nodeType === Node.TEXT_NODE ) {
+			const text = ( node.textContent || '' ).replace( / /g, ' ' );
+			if ( text ) {
+				push( { text, ...( b ? { b } : {} ), ...( i ? { i } : {} ) } );
+			}
+			return;
+		}
+		if ( ! ( node instanceof HTMLElement ) ) {
+			return;
+		}
+		if ( node.dataset.field ) {
+			push( { field: node.dataset.field, ...( node.dataset.format ? { format: node.dataset.format } : {} ), ...( b ? { b } : {} ), ...( i ? { i } : {} ) } );
+			return;
+		}
+		if ( node.tagName === 'BR' ) {
+			push( { text: '\n', ...( b ? { b } : {} ), ...( i ? { i } : {} ) } );
+			return;
+		}
+		const weight = node.style.fontWeight;
+		const nb = b || node.tagName === 'B' || node.tagName === 'STRONG' || weight === 'bold' || Number( weight ) >= 600;
+		const ni = i || node.tagName === 'I' || node.tagName === 'EM' || node.style.fontStyle === 'italic';
+		node.childNodes.forEach( ( child ) => walk( child, nb, ni ) );
+	};
+	root.childNodes.forEach( ( child ) => walk( child, false, false ) );
+	return runs;
+}
+
+export default function FieldText( { label, runs, onChange, sample, locale }: { label: string; runs: Run[]; onChange: ( runs: Run[] ) => void; sample: Record< string, string >; locale: string } ) {
+	const info = fields();
+	const ref = useRef< HTMLDivElement >( null );
+	const last = useRef< string >( '' );
+	const [ chip, setChip ] = useState< { el: HTMLElement; index: number } | null >( null );
+
+	// Only rewrite the DOM when the value changed from outside (undo, another element).
+	useLayoutEffect( () => {
+		const html = toHtml( runs, info );
+		if ( ref.current && html !== last.current && toHtml( fromDom( ref.current ), info ) !== html ) {
+			ref.current.innerHTML = html;
+		}
+		last.current = html;
+	}, [ runs ] );
+
+	const emit = () => {
+		if ( ref.current ) {
+			const next = fromDom( ref.current );
+			last.current = toHtml( next, info );
+			onChange( next );
+		}
+	};
+
+	const insertField = ( field: string ) => {
+		const root = ref.current;
+		if ( ! root ) {
+			return;
+		}
+		root.focus();
+		const selection = window.getSelection();
+		let range = selection && selection.rangeCount ? selection.getRangeAt( 0 ) : null;
+		if ( ! range || ! root.contains( range.commonAncestorContainer ) ) {
+			range = document.createRange();
+			range.selectNodeContents( root );
+			range.collapse( false );
+		}
+		const span = document.createElement( 'span' );
+		span.className = 'evcert-chip';
+		span.contentEditable = 'false';
+		span.dataset.field = field;
+		span.textContent = info[ field ]?.label || field;
+		range.deleteContents();
+		range.insertNode( span );
+		const space = document.createTextNode( ' ' );
+		span.after( space );
+		range.setStartAfter( space );
+		range.collapse( true );
+		selection?.removeAllRanges();
+		selection?.addRange( range );
+		emit();
+	};
+
+	useEffect( () => {
+		const root = ref.current;
+		if ( ! root ) {
+			return;
+		}
+		const onClick = ( event: MouseEvent ) => {
+			const target = ( event.target as HTMLElement ).closest( '.evcert-chip' ) as HTMLElement | null;
+			if ( target ) {
+				setChip( { el: target, index: Number( target.dataset.index ?? -1 ) } );
+			}
+		};
+		root.addEventListener( 'click', onClick );
+		return () => root.removeEventListener( 'click', onClick );
+	}, [] );
+
+	const chipField = chip?.el.dataset.field || '';
+	const chipInfo = info[ chipField ];
+
+	return (
+		<div className="evcert-field-text">
+			<div className="evcert-field-text-label">{ label }</div>
+			<div className="evcert-field-text-toolbar">
+				<Button size="small" onMouseDown={ ( e: { preventDefault: () => void } ) => e.preventDefault() } onClick={ () => { document.execCommand( 'bold' ); emit(); } } label={ __( 'Bold', 'events-certificate' ) } shortcut="⌘B">
+					<strong>B</strong>
+				</Button>
+				<Button size="small" onMouseDown={ ( e: { preventDefault: () => void } ) => e.preventDefault() } onClick={ () => { document.execCommand( 'italic' ); emit(); } } label={ __( 'Italic', 'events-certificate' ) } shortcut="⌘I">
+					<em>I</em>
+				</Button>
+				<Dropdown
+					popoverProps={ { placement: 'bottom-start' } }
+					renderToggle={ ( { isOpen, onToggle } ) => (
+						<Button size="small" variant="secondary" onMouseDown={ ( e: { preventDefault: () => void } ) => e.preventDefault() } onClick={ onToggle } aria-expanded={ isOpen }>
+							{ __( '+ Field', 'events-certificate' ) }
+						</Button>
+					) }
+					renderContent={ ( { onClose } ) => (
+						<MenuGroup label={ __( 'Insert a field', 'events-certificate' ) }>
+							{ Object.entries( info ).map( ( [ key, f ] ) => (
+								<MenuItem
+									key={ key }
+									info={ fieldValue( key, undefined, sample, locale ) }
+									onClick={ () => {
+										insertField( key );
+										onClose();
+									} }
+								>
+									{ f.label }
+								</MenuItem>
+							) ) }
+						</MenuGroup>
+					) }
+				/>
+			</div>
+			<div
+				ref={ ref }
+				className="evcert-field-text-input"
+				contentEditable
+				suppressContentEditableWarning
+				role="textbox"
+				aria-multiline="true"
+				aria-label={ label }
+				onInput={ emit }
+				onKeyDown={ ( event ) => {
+					if ( ( event.metaKey || event.ctrlKey ) && ( event.key === 'b' || event.key === 'i' ) ) {
+						event.preventDefault();
+						document.execCommand( event.key === 'b' ? 'bold' : 'italic' );
+						emit();
+					}
+					event.stopPropagation();
+				} }
+				onPaste={ ( event ) => {
+					event.preventDefault();
+					document.execCommand( 'insertText', false, event.clipboardData.getData( 'text/plain' ) );
+				} }
+			/>
+			{ chip && chipInfo && (
+				<Popover anchor={ chip.el } onClose={ () => setChip( null ) } placement="bottom-start">
+					<div className="evcert-chip-popover">
+						<strong>{ chipInfo.label }</strong>
+						<p className="evcert-chip-sample">{ fieldValue( chipField, chip.el.dataset.format, sample, locale ) }</p>
+						{ chipInfo.formats && (
+							<SelectControl
+								__next40pxDefaultSize
+								label={ __( 'Format', 'events-certificate' ) }
+								value={ chip.el.dataset.format || chipInfo.formats[ 0 ].key }
+								options={ chipInfo.formats.map( ( f ) => ( { label: `${ f.label } — ${ fieldValue( chipField, f.key, sample, locale ) }`, value: f.key } ) ) }
+								onChange={ ( format ) => {
+									chip.el.dataset.format = format;
+									emit();
+									setChip( { ...chip } );
+								} }
+							/>
+						) }
+						<Button
+							variant="link"
+							isDestructive
+							onClick={ () => {
+								chip.el.remove();
+								setChip( null );
+								emit();
+							} }
+						>
+							{ __( 'Remove field', 'events-certificate' ) }
+						</Button>
+					</div>
+				</Popover>
+			) }
+		</div>
+	);
+}
