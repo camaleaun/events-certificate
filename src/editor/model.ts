@@ -69,6 +69,8 @@ export type Design = {
 	page: { w: number; h: number; bg: string; safe: number; bleed: number };
 	colors: Record< string, ColorVar >;
 	elements: Element[];
+	// Preview values for the fields, only for the editor (certificates use real data).
+	sample?: Record< string, string >;
 };
 
 export type Box = { x: number; y: number; w: number; h: number };
@@ -170,7 +172,11 @@ export function fieldValue( field: string, format: string | undefined, sample: R
 	}
 	if ( field === 'hours' ) {
 		const hours = sample.hours || '8';
-		return format === 'short' ? `${ hours }h` : sample.hours_long || `${ hours } h`;
+		if ( format === 'short' ) {
+			return `${ hours }h`;
+		}
+		const pattern = ( Number( hours ) === 1 ? sample.hours_one : sample.hours_other ) || '%s h';
+		return pattern.replace( '%s', hours );
 	}
 	return sample[ field ] !== undefined ? sample[ field ] : field;
 }

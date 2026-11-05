@@ -171,18 +171,20 @@ function enqueue() {
 				'exitUrl' => menu_page_url( Admin\SLUG, false ),
 				'fonts'   => $url . '/fonts',
 				'sample'  => array(
-					'name'        => 'Mary Anne Sue',
+					'name'        => 'Alex Rivera',
 					'event'       => get_bloginfo( 'name' ),
-					'location'    => 'São Paulo, Brazil',
+					'location'    => __( 'City, Country', 'events-certificate' ),
 					'date_iso'    => gmdate( 'Y-m-d\TH:i:s\Z' ),
 					'date_site'   => wp_date( (string) get_option( 'date_format' ) ),
 					'hours'       => '8',
-					/* translators: %s: number of hours, in the certificate design's sample. */
-					'hours_long'  => sprintf( _n( '%s hour', '%s hours', 8, 'events-certificate' ), '8' ),
+					/* translators: %s: number of hours (workload), e.g. "1 hour". */
+					'hours_one'   => _n( '%s hour', '%s hours', 1, 'events-certificate' ),
+					/* translators: %s: number of hours (workload), e.g. "8 hours". */
+					'hours_other' => _n( '%s hour', '%s hours', 8, 'events-certificate' ),
 					'role'        => __( 'Speaker', 'events-certificate' ),
 					'details'     => __( 'Building accessible blocks', 'events-certificate' ),
 					'document'    => 'CPF •••.•••.789-••',
-					'signer_name' => wp_get_current_user()->display_name,
+					'signer_name' => 'Sam Taylor',
 					'signer_role' => __( 'Event Coordinator', 'events-certificate' ),
 					'code'        => '2611-04K7-M29Q-XAP3',
 					'verify_url'  => untrailingslashit( preg_replace( '#^https?://#', '', home_url( \EventsCertificate\Settings\value( 'slug' ) ) ) ),

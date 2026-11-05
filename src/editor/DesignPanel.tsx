@@ -24,6 +24,17 @@ import { Icon, page as pageIcon } from '@wordpress/icons';
 import { color, type Design, type Mode } from './model';
 
 const MM = 2.83465;
+
+const PREVIEW_FIELDS = (): Array< [ string, string ] > => [
+	[ 'name', __( 'Participant', 'events-certificate' ) ],
+	[ 'event', __( 'Event', 'events-certificate' ) ],
+	[ 'location', __( 'Location', 'events-certificate' ) ],
+	[ 'hours', __( 'Workload (hours)', 'events-certificate' ) ],
+	[ 'role', __( 'Role', 'events-certificate' ) ],
+	[ 'details', __( 'Details', 'events-certificate' ) ],
+	[ 'signer_name', __( 'Signer', 'events-certificate' ) ],
+	[ 'signer_role', __( 'Signer role', 'events-certificate' ) ],
+];
 const SIZES = {
 	a4: { label: 'A4', w: 842, h: 595 },
 	letter: { label: 'Letter', w: 792, h: 612 },
@@ -34,6 +45,7 @@ type Props = {
 	mode: Mode;
 	title: string;
 	status: string;
+	sample: Record< string, string >;
 	onTitle: ( title: string ) => void;
 	onChange: ( design: Design ) => void;
 };
@@ -64,7 +76,7 @@ function DropdownRow( { label, value, children }: { label: string; value: React.
 	);
 }
 
-export default function DesignPanel( { design, mode, title, status, onTitle, onChange }: Props ) {
+export default function DesignPanel( { design, mode, title, status, sample, onTitle, onChange }: Props ) {
 	const { page } = design;
 	const landscape = page.w >= page.h;
 	const sizeKey = ( Object.keys( SIZES ) as Array< keyof typeof SIZES > ).find( ( k ) => ( [ SIZES[ k ].w, SIZES[ k ].h ].sort().join() === [ page.w, page.h ].sort().join() ) ) || 'a4';
@@ -146,6 +158,29 @@ export default function DesignPanel( { design, mode, title, status, onTitle, onC
 
 			<div className="evcert-inspector__section">
 				<Palette design={ design } onChange={ onChange } />
+			</div>
+
+			<div className="evcert-inspector__section">
+				<h2 className="evcert-section-heading">{ __( 'Preview data', 'events-certificate' ) }</h2>
+				<p className="evcert-meta">{ __( 'Sample values for the fields while designing. Each certificate shows its own data.', 'events-certificate' ) }</p>
+				{ PREVIEW_FIELDS().map( ( [ key, label ] ) => (
+					<DropdownRow key={ key } label={ label } value={ sample[ key ] || '—' }>
+						{ () => (
+							<TextControl
+								__next40pxDefaultSize
+								__nextHasNoMarginBottom
+								label={ label }
+								value={ sample[ key ] || '' }
+								onChange={ ( v ) => onChange( { ...design, sample: { ...( design.sample || {} ), [ key ]: v } } ) }
+							/>
+						) }
+					</DropdownRow>
+				) ) }
+				{ design.sample && Object.keys( design.sample ).length > 0 && (
+					<Button variant="link" onClick={ () => onChange( { ...design, sample: undefined } ) }>
+						{ __( 'Reset preview data', 'events-certificate' ) }
+					</Button>
+				) }
 			</div>
 		</div>
 	);

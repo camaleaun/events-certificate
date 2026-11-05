@@ -307,6 +307,7 @@ export default function Editor() {
 	const design = history.present;
 	const [ draft, setDraft ] = useState< Design | null >( null );
 	const shown = draft || design;
+	const sample = useMemo( () => ( { ...config.sample, ...( design.sample || {} ) } ), [ design.sample ] );
 	// Anchored elements resolved to x/y/w/h for drawing, hit testing and snapping.
 	const resolvedShown = useMemo( () => ( { ...shown, elements: shown.elements.map( ( e ) => resolve( e, shown.page ) ) } ), [ shown ] );
 	const resolvedDesign = useMemo( () => ( { ...design, elements: design.elements.map( ( e ) => resolve( e, design.page ) ) } ), [ design ] );
@@ -715,7 +716,7 @@ export default function Editor() {
 												label={ el.name || __( 'Text', 'events-certificate' ) }
 												runs={ editing.runs }
 												onChange={ ( runs ) => setEditing( { id: el.id, runs } ) }
-												sample={ config.sample }
+												sample={ sample }
 												locale={ LOCALE }
 												style={ textStyle( el, shown, mode ) }
 												commands={ textCommands }
@@ -750,10 +751,10 @@ export default function Editor() {
 									>
 										{ el.rotation && el.type !== 'line' ? (
 											<g transform={ `rotate(${ el.rotation } ${ el.x + el.w / 2 } ${ el.y + el.h / 2 })` }>
-												<Shape el={ el } design={ resolvedShown } mode={ mode } sample={ config.sample } />
+												<Shape el={ el } design={ resolvedShown } mode={ mode } sample={ sample } />
 											</g>
 										) : (
-											<Shape el={ el } design={ resolvedShown } mode={ mode } sample={ config.sample } />
+											<Shape el={ el } design={ resolvedShown } mode={ mode } sample={ sample } />
 										) }
 									</g>
 									)
@@ -845,9 +846,9 @@ export default function Editor() {
 							</Button>
 						</div>
 						{ sidebarTab === 'element' && current && (
-							<Inspector el={ current } stored={ currentStored } design={ design } mode={ mode } tab={ tab } locale={ LOCALE } sample={ config.sample } onChange={ ( patch ) => update( current.id, patch ) } onImage={ () => imageRef.current?.click() } />
+							<Inspector el={ current } stored={ currentStored } design={ design } mode={ mode } tab={ tab } locale={ LOCALE } sample={ sample } onChange={ ( patch ) => update( current.id, patch ) } onImage={ () => imageRef.current?.click() } />
 						) }
-						{ sidebarTab === 'design' && <DesignPanel design={ design } mode={ mode } title={ title } status={ statusLabel } onTitle={ setTitle } onChange={ commit } /> }
+						{ sidebarTab === 'design' && <DesignPanel design={ design } mode={ mode } title={ title } status={ statusLabel } sample={ sample } onTitle={ setTitle } onChange={ commit } /> }
 					</aside>
 				) }
 			</div>
