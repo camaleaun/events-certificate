@@ -1,8 +1,4 @@
-/* The design editor takes the whole window, like the block editor's full-screen mode. */
-html.wp-toolbar:has(body.evcert-editor-screen) {
-	padding-top: 0;
-}
-body.evcert-editor-screen #wpadminbar,
+/* The design editor takes the screen below the admin bar, like the block editor in WordPress 7.1. */
 body.evcert-editor-screen #adminmenumain,
 body.evcert-editor-screen #wpfooter,
 body.evcert-editor-screen .notice,
@@ -14,10 +10,6 @@ body.evcert-editor-screen #wpbody-content {
 	margin: 0 !important;
 	padding: 0 !important;
 }
-body.evcert-editor-screen #wpbody-content {
-	padding-bottom: 0 !important;
-}
 body.evcert-editor-screen {
 	overflow: hidden;
-	background: #e9eaec;
 }

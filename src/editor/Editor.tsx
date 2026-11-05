@@ -4,7 +4,8 @@
  * the other elements, and a floating Dock with everything else.
  */
 import apiFetch from '@wordpress/api-fetch';
-import { Button, ColorPalette, Popover, RangeControl, SelectControl, TextareaControl, TextControl, ToggleControl } from '@wordpress/components';
+import { Button, ColorPalette, DropdownMenu, MenuGroup, MenuItem, Popover, RangeControl, SelectControl, TextareaControl, TextControl, ToggleControl } from '@wordpress/components';
+import { chevronLeft, drawerRight, listView, moreVertical, plus, redo as redoIcon, undo as undoIcon } from '@wordpress/icons';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import {
@@ -213,7 +214,8 @@ export default function Editor() {
 	const [ selected, setSelected ] = useState< string | null >( null );
 	const [ mode, setMode ] = useState< Mode >( 'light' );
 	const [ tab, setTab ] = useState< 'content' | 'art' >( 'art' );
-	const [ panel, setPanel ] = useState< 'insert' | 'layers' | 'page' | 'colors' | null >( null );
+	const [ panel, setPanel ] = useState< 'insert' | 'layers' | null >( null );
+	const [ sidebar, setSidebar ] = useState< 'design' | 'element' | null >( 'design' );
 	const [ guides, setGuides ] = useState< Guide[] >( [] );
 	const [ title, setTitle ] = useState( '' );
 	const [ status, setStatus ] = useState< 'loading' | 'saved' | 'dirty' | 'saving' | 'error' >( 'loading' );
@@ -452,243 +454,292 @@ export default function Editor() {
 		error: __( 'Couldn’t save', 'events-certificate' ),
 	}[ status ];
 
+	const layerName = ( el: Element ) => el.name || el.type;
+	const sidebarTab = current ? sidebar : sidebar === 'element' ? 'design' : sidebar;
+
 	return (
-		<div className={ `evcert-editor is-${ mode }` } ref={ wrapRef }>
-			<div className="evcert-stage" onPointerDown={ () => setSelected( null ) }>
-				<svg
-					ref={ svgRef }
-					className="evcert-canvas"
-					width={ ( w + bleed * 2 ) * zoom }
-					height={ ( h + bleed * 2 ) * zoom }
-					viewBox={ `${ -bleed } ${ -bleed } ${ w + bleed * 2 } ${ h + bleed * 2 }` }
-					onPointerMove={ onPointerMove }
-					onPointerUp={ onPointerUp }
-				>
-					<defs>
-						<pattern id="evcert-checker" width="12" height="12" patternUnits="userSpaceOnUse">
-							<rect width="12" height="12" fill="#ffffff" />
-							<rect width="6" height="6" fill="#f0f0f1" />
-							<rect x="6" y="6" width="6" height="6" fill="#f0f0f1" />
-						</pattern>
-						<clipPath id="evcert-page">
-							<rect x={ -bleed } y={ -bleed } width={ w + bleed * 2 } height={ h + bleed * 2 } />
-						</clipPath>
-					</defs>
-					<rect x={ -bleed } y={ -bleed } width={ w + bleed * 2 } height={ h + bleed * 2 } fill={ bg === 'transparent' || bg === 'none' ? 'url(#evcert-checker)' : bg } />
-					<g clipPath="url(#evcert-page)">
-						{ shown.elements.map( ( el ) =>
-							el.hidden ? null : (
-								<g
-									key={ el.id }
-									className={ `evcert-el${ el.locked ? ' is-locked' : '' }` }
-									onPointerDown={ ( event ) => {
-										if ( tab === 'content' && el.type !== 'text' ) {
-											return;
-										}
-										event.stopPropagation();
-										setSelected( el.id );
-										if ( tab === 'art' && ! el.locked ) {
-											startDrag( event, { kind: 'move', id: el.id, start: toPage( event ), origin: el } );
-										}
-									} }
-								>
-									<Shape el={ el } design={ shown } mode={ mode } sample={ config.sample } />
-								</g>
-							)
-						) }
-					</g>
-					{ /* Guides: page, safe margin, bleed. Never in the PDF. */ }
-					<g className="evcert-guides" pointerEvents="none">
-						<rect x={ 0 } y={ 0 } width={ w } height={ h } className="evcert-trim" />
-						<rect x={ safe } y={ safe } width={ w - safe * 2 } height={ h - safe * 2 } className="evcert-safe" />
-						{ guides.map( ( g, i ) =>
-							g.axis === 'x' ? <line key={ i } x1={ g.at } x2={ g.at } y1={ -bleed } y2={ h + bleed } className="evcert-snap" /> : <line key={ i } y1={ g.at } y2={ g.at } x1={ -bleed } x2={ w + bleed } className="evcert-snap" />
-						) }
-					</g>
-					{ current && selBox && tab === 'art' && (
-						<g className="evcert-selection">
-							<rect x={ selBox.x } y={ selBox.y } width={ Math.max( 1, selBox.w ) } height={ Math.max( 1, selBox.h ) } />
-							{ current.type === 'line'
-								? ( [ 1, 2 ] as const ).map( ( end ) => (
-										<circle
-											key={ end }
-											cx={ end === 1 ? current.x1 : current.x2 }
-											cy={ end === 1 ? current.y1 : current.y2 }
-											r={ 5 / zoom }
-											onPointerDown={ ( event ) => startDrag( event, { kind: 'point', id: current.id, end, start: toPage( event ), origin: current } ) }
-										/>
-								  ) )
-								: ! current.locked &&
-								  HANDLES.map( ( hd ) => {
-										const hx = selBox.x + ( hd.includes( 'w' ) ? 0 : hd.includes( 'e' ) ? selBox.w : selBox.w / 2 );
-										const hy = selBox.y + ( hd.includes( 'n' ) ? 0 : hd.includes( 's' ) ? selBox.h : selBox.h / 2 );
-										const s = 8 / zoom;
-										return (
-											<rect
-												key={ hd }
-												className={ `evcert-handle is-${ hd }` }
-												x={ hx - s / 2 }
-												y={ hy - s / 2 }
-												width={ s }
-												height={ s }
-												onPointerDown={ ( event ) => startDrag( event, { kind: 'resize', id: current.id, handle: hd, start: toPage( event ), origin: current } ) }
-											/>
-										);
-								  } ) }
-						</g>
-					) }
-				</svg>
-			</div>
-
-			{ current && (
-				<Inspector
-					el={ current }
-					design={ design }
-					mode={ mode }
-					tab={ tab }
-					onChange={ ( patch ) => update( current.id, patch ) }
-					onRemove={ () => remove( current.id ) }
-					onDuplicate={ () => duplicate( current.id ) }
-					onOrder={ ( to ) => reorder( current.id, to ) }
-					onImage={ () => imageRef.current?.click() }
-				/>
-			) }
-
-			{ panel && (
-				<div className="evcert-card evcert-panel">
-					{ panel === 'insert' && (
-						<div className="evcert-insert">
-							{ (
-								[
-									[ 'text', __( 'Text', 'events-certificate' ) ],
-									[ 'line', __( 'Line', 'events-certificate' ) ],
-									[ 'rect', __( 'Rectangle', 'events-certificate' ) ],
-									[ 'ellipse', __( 'Ellipse', 'events-certificate' ) ],
-									[ 'image', __( 'Image', 'events-certificate' ) ],
-								] as const
-							 ).map( ( [ type, label ] ) => (
-								<Button key={ type } variant="secondary" onClick={ () => insert( type ) }>
-									{ label }
-								</Button>
-							) ) }
-							{ ! design.elements.some( ( el ) => el.type === 'qr' ) && (
-								<Button variant="secondary" onClick={ () => insert( 'qr' ) }>
-									{ __( 'Authenticity (QR)', 'events-certificate' ) }
-								</Button>
-							) }
-						</div>
-					) }
-					{ panel === 'layers' && (
-						<ol className="evcert-layers">
-							{ [ ...design.elements ].reverse().map( ( el ) => (
-								<li key={ el.id } className={ el.id === selected ? 'is-selected' : '' }>
-									<button type="button" className="evcert-layer-name" onClick={ () => setSelected( el.id ) }>
-										{ el.name || el.type }
-										{ el.slot && <span className="evcert-slot">{ el.slot }</span> }
-									</button>
-									<button type="button" title={ __( 'Show/hide', 'events-certificate' ) } onClick={ () => update( el.id, { hidden: ! el.hidden } ) }>
-										{ el.hidden ? '◌' : '●' }
-									</button>
-									<button type="button" title={ __( 'Lock', 'events-certificate' ) } onClick={ () => update( el.id, { locked: ! el.locked } ) }>
-										{ el.locked ? '🔒' : '🔓' }
-									</button>
-								</li>
-							) ) }
-						</ol>
-					) }
-					{ panel === 'colors' && (
-						<div className="evcert-colors">
-							{ Object.entries( design.colors ).map( ( [ key, v ] ) => (
-								<div key={ key } className="evcert-color-row">
-									<span>{ v.name }</span>
-									{ ( [ 'light', 'dark' ] as const ).map( ( m ) => (
-										<label key={ m }>
-											<small>{ m === 'light' ? __( 'Light', 'events-certificate' ) : __( 'Dark', 'events-certificate' ) }</small>
-											<input
-												type="text"
-												value={ v[ m ] }
-												onChange={ ( event ) => commit( { ...design, colors: { ...design.colors, [ key ]: { ...v, [ m ]: event.target.value } } } ) }
-											/>
-										</label>
-									) ) }
-								</div>
-							) ) }
-						</div>
-					) }
-					{ panel === 'page' && (
-						<div className="evcert-page-settings">
-							<TextControl __next40pxDefaultSize label={ __( 'Name', 'events-certificate' ) } value={ title } onChange={ setTitle } />
-							<p>{ sprintf( /* translators: 1: width, 2: height in points. */ __( 'A4 landscape · %1$s × %2$s pt', 'events-certificate' ), String( w ), String( h ) ) }</p>
-							<SelectControl
-								__next40pxDefaultSize
-								label={ __( 'Background', 'events-certificate' ) }
-								value={ design.page.bg as any }
-								options={ [ { label: __( 'Transparent / Background variable', 'events-certificate' ), value: '$background' }, { label: __( 'White', 'events-certificate' ), value: '#ffffff' } ] }
-								onChange={ ( bgValue ) => commit( { ...design, page: { ...design.page, bg: bgValue } } ) }
-							/>
-							<Button variant="secondary" onClick={ () => commit( base as unknown as Design ) }>
-								{ __( 'Restore the Base design', 'events-certificate' ) }
-							</Button>
-						</div>
-					) }
-				</div>
-			) }
-
-			<div className="evcert-dock" role="toolbar" aria-label={ __( 'Design editor', 'events-certificate' ) }>
-				<div className="evcert-dock-group evcert-tabs">
-					<Button isPressed={ tab === 'content' } onClick={ () => setTab( 'content' ) }>
-						{ __( 'Content', 'events-certificate' ) }
-					</Button>
-					<Button isPressed={ tab === 'art' } onClick={ () => setTab( 'art' ) }>
-						{ __( 'Art', 'events-certificate' ) }
-					</Button>
-				</div>
-				<div className="evcert-dock-group">
+		<div className={ `evcert-editor is-${ mode }${ sidebarTab ? ' has-sidebar' : '' }${ panel ? ' has-panel' : '' }` }>
+			<header className="evcert-header">
+				<div className="evcert-header-left">
+					<Button className="evcert-back" icon={ chevronLeft } href={ config.exitUrl } label={ __( 'Back to Certificates', 'events-certificate' ) } />
 					{ tab === 'art' && (
-						<Button isPressed={ panel === 'insert' } onClick={ () => setPanel( panel === 'insert' ? null : 'insert' ) }>
-							{ __( 'Insert', 'events-certificate' ) }
-						</Button>
+						<Button
+							className="evcert-inserter-toggle"
+							variant="primary"
+							icon={ plus }
+							isPressed={ panel === 'insert' }
+							onClick={ () => setPanel( panel === 'insert' ? null : 'insert' ) }
+							label={ __( 'Insert', 'events-certificate' ) }
+						/>
 					) }
-					<Button isPressed={ panel === 'layers' } onClick={ () => setPanel( panel === 'layers' ? null : 'layers' ) }>
-						{ __( 'Layers', 'events-certificate' ) }
-					</Button>
-					<Button isPressed={ panel === 'colors' } onClick={ () => setPanel( panel === 'colors' ? null : 'colors' ) }>
-						{ __( 'Colors', 'events-certificate' ) }
-					</Button>
-					<Button isPressed={ panel === 'page' } onClick={ () => setPanel( panel === 'page' ? null : 'page' ) }>
-						{ __( 'Page', 'events-certificate' ) }
-					</Button>
+					<Button icon={ undoIcon } onClick={ () => dispatch( { type: 'undo' } ) } disabled={ ! history.past.length } accessibleWhenDisabled label={ __( 'Undo', 'events-certificate' ) } />
+					<Button icon={ redoIcon } onClick={ () => dispatch( { type: 'redo' } ) } disabled={ ! history.future.length } accessibleWhenDisabled label={ __( 'Redo', 'events-certificate' ) } />
+					<Button icon={ listView } isPressed={ panel === 'layers' } onClick={ () => setPanel( panel === 'layers' ? null : 'layers' ) } label={ __( 'Layers', 'events-certificate' ) } />
+					<div className="evcert-mode-switch" role="group" aria-label={ __( 'Editing mode', 'events-certificate' ) }>
+						<Button size="compact" isPressed={ tab === 'content' } onClick={ () => { setTab( 'content' ); setPanel( null ); } }>
+							{ __( 'Content', 'events-certificate' ) }
+						</Button>
+						<Button size="compact" isPressed={ tab === 'art' } onClick={ () => setTab( 'art' ) }>
+							{ __( 'Art', 'events-certificate' ) }
+						</Button>
+					</div>
 				</div>
-				<div className="evcert-dock-group">
-					<Button onClick={ () => setMode( mode === 'light' ? 'dark' : 'light' ) } label={ __( 'Light / Dark', 'events-certificate' ) }>
+				<div className="evcert-header-center">
+					<button type="button" className="evcert-document-bar" onClick={ () => { setSelected( null ); setSidebar( 'design' ); } }>
+						<span className="evcert-document-title">{ title || __( 'Certificate', 'events-certificate' ) }</span>
+						<span className="evcert-document-type">· { __( 'Certificate design', 'events-certificate' ) }</span>
+					</button>
+				</div>
+				<div className="evcert-header-right">
+					<span className={ `evcert-status is-${ status }` }>{ statusLabel }</span>
+					<Button onClick={ () => setMode( mode === 'light' ? 'dark' : 'light' ) } label={ mode === 'light' ? __( 'Preview in dark mode', 'events-certificate' ) : __( 'Preview in light mode', 'events-certificate' ) }>
 						{ mode === 'light' ? '☀︎' : '☾' }
 					</Button>
-					<Button onClick={ () => dispatch( { type: 'undo' } ) } disabled={ ! history.past.length } label={ __( 'Undo', 'events-certificate' ) }>
-						↶
-					</Button>
-					<Button onClick={ () => dispatch( { type: 'redo' } ) } disabled={ ! history.future.length } label={ __( 'Redo', 'events-certificate' ) }>
-						↷
-					</Button>
-					<Button onClick={ fit } label={ __( 'Fit to screen', 'events-certificate' ) }>
-						{ Math.round( zoom * 100 ) }%
-					</Button>
-				</div>
-				<div className="evcert-dock-group">
-					<Button onClick={ exportJson }>{ __( 'Export', 'events-certificate' ) }</Button>
-					<Button onClick={ () => fileRef.current?.click() }>{ __( 'Import', 'events-certificate' ) }</Button>
-					<span className={ `evcert-status is-${ status }` }>{ statusLabel }</span>
-					<Button variant="primary" onClick={ save } disabled={ status === 'saving' || status === 'loading' }>
+					<Button icon={ drawerRight } isPressed={ !! sidebarTab } onClick={ () => setSidebar( sidebarTab ? null : current ? 'element' : 'design' ) } label={ __( 'Settings', 'events-certificate' ) } />
+					<Button variant="primary" className="evcert-save" onClick={ save } disabled={ status === 'saving' || status === 'loading' } accessibleWhenDisabled>
 						{ __( 'Save', 'events-certificate' ) }
 					</Button>
-					<Button href={ config.exitUrl }>{ __( 'Exit', 'events-certificate' ) }</Button>
+					<DropdownMenu icon={ moreVertical } label={ __( 'Options', 'events-certificate' ) } popoverProps={ { placement: 'bottom-end' } }>
+						{ ( { onClose } ) => (
+							<>
+								<MenuGroup label={ __( 'Design', 'events-certificate' ) }>
+									<MenuItem onClick={ () => { exportJson(); onClose(); } }>{ __( 'Export (JSON)', 'events-certificate' ) }</MenuItem>
+									<MenuItem onClick={ () => { fileRef.current?.click(); onClose(); } }>{ __( 'Import…', 'events-certificate' ) }</MenuItem>
+									<MenuItem onClick={ () => { commit( base as unknown as Design ); onClose(); } }>{ __( 'Restore the Base design', 'events-certificate' ) }</MenuItem>
+								</MenuGroup>
+								<MenuGroup label={ __( 'View', 'events-certificate' ) }>
+									<MenuItem onClick={ () => { fit(); onClose(); } }>{ __( 'Fit to screen', 'events-certificate' ) }</MenuItem>
+								</MenuGroup>
+							</>
+						) }
+					</DropdownMenu>
 				</div>
+			</header>
+
+			<div className="evcert-body">
+				{ panel && (
+					<aside className="evcert-left-panel">
+						<div className="evcert-panel-header">
+							<strong>{ panel === 'insert' ? __( 'Insert', 'events-certificate' ) : __( 'Layers', 'events-certificate' ) }</strong>
+							<Button size="small" onClick={ () => setPanel( null ) } label={ __( 'Close', 'events-certificate' ) }>
+								×
+							</Button>
+						</div>
+						{ panel === 'insert' && (
+							<div className="evcert-insert">
+								{ (
+									[
+										[ 'text', __( 'Text', 'events-certificate' ), 'T' ],
+										[ 'line', __( 'Line', 'events-certificate' ), '／' ],
+										[ 'rect', __( 'Rectangle', 'events-certificate' ), '▭' ],
+										[ 'ellipse', __( 'Ellipse', 'events-certificate' ), '◯' ],
+										[ 'image', __( 'Image', 'events-certificate' ), '🖼' ],
+									] as const
+								 ).map( ( [ type, label, glyph ] ) => (
+									<button key={ type } type="button" className="evcert-insert-item" onClick={ () => insert( type ) }>
+										<span className="evcert-insert-icon" aria-hidden="true">{ glyph }</span>
+										{ label }
+									</button>
+								) ) }
+								{ ! design.elements.some( ( el ) => el.type === 'qr' ) && (
+									<button type="button" className="evcert-insert-item" onClick={ () => insert( 'qr' ) }>
+										<span className="evcert-insert-icon" aria-hidden="true">▦</span>
+										{ __( 'Authenticity (QR)', 'events-certificate' ) }
+									</button>
+								) }
+							</div>
+						) }
+						{ panel === 'layers' && (
+							<ol className="evcert-layers">
+								{ [ ...design.elements ].reverse().map( ( el ) => (
+									<li key={ el.id } className={ el.id === selected ? 'is-selected' : '' }>
+										<button type="button" className="evcert-layer-name" onClick={ () => { setSelected( el.id ); setSidebar( 'element' ); } }>
+											{ layerName( el ) }
+											{ el.slot && <span className="evcert-slot">{ el.slot }</span> }
+										</button>
+										<button type="button" title={ __( 'Show/hide', 'events-certificate' ) } onClick={ () => update( el.id, { hidden: ! el.hidden } ) }>
+											{ el.hidden ? '◌' : '●' }
+										</button>
+										<button type="button" title={ __( 'Lock', 'events-certificate' ) } onClick={ () => update( el.id, { locked: ! el.locked } ) }>
+											{ el.locked ? '🔒' : '🔓' }
+										</button>
+									</li>
+								) ) }
+							</ol>
+						) }
+					</aside>
+				) }
+
+				<div className="evcert-stage" ref={ wrapRef } onPointerDown={ () => setSelected( null ) }>
+					<svg
+						ref={ svgRef }
+						className="evcert-canvas"
+						width={ ( w + bleed * 2 ) * zoom }
+						height={ ( h + bleed * 2 ) * zoom }
+						viewBox={ `${ -bleed } ${ -bleed } ${ w + bleed * 2 } ${ h + bleed * 2 }` }
+						onPointerMove={ onPointerMove }
+						onPointerUp={ onPointerUp }
+					>
+						<defs>
+							<pattern id="evcert-checker" width="12" height="12" patternUnits="userSpaceOnUse">
+								<rect width="12" height="12" fill="#ffffff" />
+								<rect width="6" height="6" fill="#f0f0f1" />
+								<rect x="6" y="6" width="6" height="6" fill="#f0f0f1" />
+							</pattern>
+							<clipPath id="evcert-page">
+								<rect x={ -bleed } y={ -bleed } width={ w + bleed * 2 } height={ h + bleed * 2 } />
+							</clipPath>
+						</defs>
+						<rect x={ -bleed } y={ -bleed } width={ w + bleed * 2 } height={ h + bleed * 2 } fill={ bg === 'transparent' || bg === 'none' ? 'url(#evcert-checker)' : bg } />
+						<g clipPath="url(#evcert-page)">
+							{ shown.elements.map( ( el ) =>
+								el.hidden ? null : (
+									<g
+										key={ el.id }
+										className={ `evcert-el${ el.locked ? ' is-locked' : '' }` }
+										onPointerDown={ ( event ) => {
+											if ( tab === 'content' && el.type !== 'text' ) {
+												return;
+											}
+											event.stopPropagation();
+											setSelected( el.id );
+											setSidebar( 'element' );
+											if ( tab === 'art' && ! el.locked ) {
+												startDrag( event, { kind: 'move', id: el.id, start: toPage( event ), origin: el } );
+											}
+										} }
+									>
+										<Shape el={ el } design={ shown } mode={ mode } sample={ config.sample } />
+									</g>
+								)
+							) }
+						</g>
+						{ /* Guides: page, safe margin, snapping. Never in the PDF. */ }
+						<g className="evcert-guides" pointerEvents="none">
+							<rect x={ 0 } y={ 0 } width={ w } height={ h } className="evcert-trim" />
+							<rect x={ safe } y={ safe } width={ w - safe * 2 } height={ h - safe * 2 } className="evcert-safe" />
+							{ guides.map( ( g, i ) =>
+								g.axis === 'x' ? <line key={ i } x1={ g.at } x2={ g.at } y1={ -bleed } y2={ h + bleed } className="evcert-snap" /> : <line key={ i } y1={ g.at } y2={ g.at } x1={ -bleed } x2={ w + bleed } className="evcert-snap" />
+							) }
+						</g>
+						{ current && selBox && tab === 'art' && (
+							<g className="evcert-selection">
+								<rect x={ selBox.x } y={ selBox.y } width={ Math.max( 1, selBox.w ) } height={ Math.max( 1, selBox.h ) } />
+								{ current.type === 'line'
+									? ( [ 1, 2 ] as const ).map( ( end ) => (
+											<circle
+												key={ end }
+												cx={ end === 1 ? current.x1 : current.x2 }
+												cy={ end === 1 ? current.y1 : current.y2 }
+												r={ 5 / zoom }
+												onPointerDown={ ( event ) => startDrag( event, { kind: 'point', id: current.id, end, start: toPage( event ), origin: current } ) }
+											/>
+									  ) )
+									: ! current.locked &&
+									  HANDLES.map( ( hd ) => {
+											const hx = selBox.x + ( hd.includes( 'w' ) ? 0 : hd.includes( 'e' ) ? selBox.w : selBox.w / 2 );
+											const hy = selBox.y + ( hd.includes( 'n' ) ? 0 : hd.includes( 's' ) ? selBox.h : selBox.h / 2 );
+											const s = 8 / zoom;
+											return (
+												<rect
+													key={ hd }
+													className={ `evcert-handle is-${ hd }` }
+													x={ hx - s / 2 }
+													y={ hy - s / 2 }
+													width={ s }
+													height={ s }
+													onPointerDown={ ( event ) => startDrag( event, { kind: 'resize', id: current.id, handle: hd, start: toPage( event ), origin: current } ) }
+												/>
+											);
+									  } ) }
+							</g>
+						) }
+					</svg>
+				</div>
+
+				{ sidebarTab && (
+					<aside className="evcert-sidebar" aria-label={ __( 'Settings', 'events-certificate' ) }>
+						<div className="evcert-sidebar-tabs" role="tablist">
+							<button type="button" role="tab" aria-selected={ sidebarTab === 'design' } className={ sidebarTab === 'design' ? 'is-active' : '' } onClick={ () => setSidebar( 'design' ) }>
+								{ __( 'Certificate', 'events-certificate' ) }
+							</button>
+							<button
+								type="button"
+								role="tab"
+								aria-selected={ sidebarTab === 'element' }
+								className={ sidebarTab === 'element' ? 'is-active' : '' }
+								disabled={ ! current }
+								onClick={ () => setSidebar( 'element' ) }
+							>
+								{ __( 'Element', 'events-certificate' ) }
+							</button>
+							<Button size="small" className="evcert-sidebar-close" onClick={ () => setSidebar( null ) } label={ __( 'Close settings', 'events-certificate' ) }>
+								×
+							</Button>
+						</div>
+						{ sidebarTab === 'element' && current && (
+							<Inspector
+								el={ current }
+								design={ design }
+								mode={ mode }
+								tab={ tab }
+								onChange={ ( patch ) => update( current.id, patch ) }
+								onRemove={ () => remove( current.id ) }
+								onDuplicate={ () => duplicate( current.id ) }
+								onOrder={ ( to ) => reorder( current.id, to ) }
+								onImage={ () => imageRef.current?.click() }
+							/>
+						) }
+						{ sidebarTab === 'design' && (
+							<div className="evcert-inspector">
+								<TextControl __next40pxDefaultSize label={ __( 'Name', 'events-certificate' ) } value={ title } onChange={ setTitle } />
+								<p className="evcert-meta">{ sprintf( /* translators: 1: width, 2: height in points. */ __( 'A4 landscape · %1$s × %2$s pt', 'events-certificate' ), String( w ), String( h ) ) }</p>
+								<SelectControl
+									__next40pxDefaultSize
+									label={ __( 'Background', 'events-certificate' ) }
+									value={ design.page.bg as any }
+									options={ [ { label: __( 'Transparent / Background variable', 'events-certificate' ), value: '$background' }, { label: __( 'White', 'events-certificate' ), value: '#ffffff' } ] }
+									onChange={ ( bgValue ) => commit( { ...design, page: { ...design.page, bg: bgValue } } ) }
+								/>
+								<h3 className="evcert-section-title">{ __( 'Colors', 'events-certificate' ) }</h3>
+								<div className="evcert-colors">
+									{ Object.entries( design.colors ).map( ( [ key, v ] ) => (
+										<div key={ key } className="evcert-color-row">
+											<span>{ v.name }</span>
+											{ ( [ 'light', 'dark' ] as const ).map( ( m ) => (
+												<label key={ m } title={ m === 'light' ? __( 'Light', 'events-certificate' ) : __( 'Dark', 'events-certificate' ) }>
+													<span className="evcert-swatch" style={ { background: v[ m ] } } />
+													<input type="text" value={ v[ m ] } onChange={ ( event ) => commit( { ...design, colors: { ...design.colors, [ key ]: { ...v, [ m ]: event.target.value } } } ) } />
+												</label>
+											) ) }
+										</div>
+									) ) }
+								</div>
+							</div>
+						) }
+					</aside>
+				) }
 			</div>
+
+			<footer className="evcert-footer">
+				<nav className="evcert-breadcrumb" aria-label={ __( 'Selection', 'events-certificate' ) }>
+					<button type="button" onClick={ () => setSelected( null ) }>
+						{ __( 'Certificate', 'events-certificate' ) }
+					</button>
+					{ current && (
+						<>
+							<span aria-hidden="true"> › </span>
+							<span>{ layerName( current ) }</span>
+						</>
+					) }
+				</nav>
+				<Button size="small" onClick={ fit } label={ __( 'Fit to screen', 'events-certificate' ) }>
+					{ Math.round( zoom * 100 ) }%
+				</Button>
+			</footer>
 
 			<input ref={ fileRef } type="file" accept="application/json,.json" hidden onChange={ ( event ) => event.target.files?.[ 0 ] && importJson( event.target.files[ 0 ] ) } />
 			<input ref={ imageRef } type="file" accept="image/png,image/jpeg,image/svg+xml" hidden onChange={ ( event ) => event.target.files?.[ 0 ] && onImage( event.target.files[ 0 ] ) } />
-			{ tab === 'content' && ! current && textEls.length > 0 && (
-				<div className="evcert-card evcert-hint">{ __( 'Click a text to edit it. Switch to Art to move and draw.', 'events-certificate' ) }</div>
-			) }
 		</div>
 	);
 }
@@ -739,7 +790,7 @@ function Inspector( props: {
 	const required = !! el.slot && REQUIRED_SLOTS.includes( el.slot );
 	const num = ( v: number ) => Math.round( v * 100 ) / 100;
 	return (
-		<div className="evcert-card evcert-inspector">
+		<div className="evcert-inspector">
 			<header>
 				<strong>{ el.name || el.type }</strong>
 				{ el.slot && <span className="evcert-slot">{ el.slot }</span> }
