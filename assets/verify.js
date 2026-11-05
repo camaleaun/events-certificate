@@ -109,6 +109,17 @@
 		} );
 	} );
 
+	// Native share sheet (phones, Safari) when the browser has one.
+	document.querySelectorAll( '[data-evcert-native-share]' ).forEach( function ( button ) {
+		if ( ! navigator.share ) {
+			return;
+		}
+		button.hidden = false;
+		button.addEventListener( 'click', function () {
+			navigator.share( { title: button.getAttribute( 'data-title' ), url: button.getAttribute( 'data-evcert-native-share' ) } ).catch( function () {} );
+		} );
+	} );
+
 	// Copy link.
 	document.querySelectorAll( '[data-evcert-copy]' ).forEach( function ( button ) {
 		button.addEventListener( 'click', function () {

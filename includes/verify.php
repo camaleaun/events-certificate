@@ -227,7 +227,56 @@ const ICONS = array(
 	'right'    => 'M18 4H6c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-4 14.5H6c-.3 0-.5-.2-.5-.5V6c0-.3.2-.5.5-.5h8v13zm4.5-.5c0 .3-.2.5-.5.5h-2.5v-13H18c.3 0 .5.2.5.5v12z',
 	'shield'   => 'M12 3.176l6.75 3.068v4.574c0 3.9-2.504 7.59-6.035 8.755a2.283 2.283 0 01-1.43 0c-3.53-1.164-6.035-4.856-6.035-8.755V6.244L12 3.176zM6.75 7.21v3.608c0 3.313 2.145 6.388 5.005 7.33.159.053.331.053.49 0 2.86-.942 5.005-4.017 5.005-7.33V7.21L12 4.824 6.75 7.21z',
 	'check'    => 'M16.5 7.5 10 13.9l-2.5-2.4-1 1 3.5 3.6 7.5-7.6z',
+	'share'    => 'M9 11.8l6.1-4.5c.1.4.4.7.9.7h2c.6 0 1-.4 1-1V5c0-.6-.4-1-1-1h-2c-.6 0-1 .4-1 1v.4l-6.4 4.8c-.2-.1-.4-.2-.6-.2H6c-.6 0-1 .4-1 1v2c0 .6.4 1 1 1h2c.2 0 .4-.1.6-.2l6.4 4.8v.4c0 .6.4 1 1 1h2c.6 0 1-.4 1-1v-2c0-.6-.4-1-1-1h-2c-.5 0-.8.3-.9.7L9 12.2v-.4z',
+	'copy'     => 'M5 4.5h11a.5.5 0 0 1 .5.5v11a.5.5 0 0 1-.5.5H5a.5.5 0 0 1-.5-.5V5a.5.5 0 0 1 .5-.5ZM3 5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5Zm17 3v10.75c0 .69-.56 1.25-1.25 1.25H6v1.5h12.75a2.75 2.75 0 0 0 2.75-2.75V8H20Z',
 );
+
+/**
+ * Where a certificate can be shared: LinkedIn's "Add to profile" (the
+ * Licenses & certifications form, prefilled) and the usual share links.
+ *
+ * @param array<string, mixed> $cert Certificate.
+ * @param string               $url  Certificate page address (in the display language).
+ * @return array<string, array{0: string, 1: string}> Key => label, URL.
+ */
+function share_links( array $cert, $url ) {
+	$issued = strtotime( $cert['issued_at'] . ' UTC' );
+	$title  = sprintf(
+		/* translators: %s: event name. */
+		__( 'Certificate of participation: %s', 'events-certificate' ),
+		$cert['event_title']
+	);
+	$text = sprintf(
+		/* translators: %s: event name. */
+		__( 'My certificate from %s', 'events-certificate' ),
+		$cert['event_title']
+	);
+
+	return array(
+		'linkedin-profile' => array(
+			__( 'Add to LinkedIn profile', 'events-certificate' ),
+			add_query_arg(
+				rawurlencode_deep(
+					array(
+						'startTask'        => 'CERTIFICATION_NAME',
+						'name'             => $title,
+						'organizationName' => get_bloginfo( 'name' ),
+						'issueYear'        => gmdate( 'Y', $issued ),
+						'issueMonth'       => gmdate( 'n', $issued ),
+						'certUrl'          => $url,
+						'certId'           => $cert['code'],
+					)
+				),
+				'https://www.linkedin.com/profile/add'
+			),
+		),
+		'linkedin'         => array( 'LinkedIn', 'https://www.linkedin.com/sharing/share-offsite/?url=' . rawurlencode( $url ) ),
+		'x'                => array( 'X', 'https://x.com/intent/post?text=' . rawurlencode( $text ) . '&url=' . rawurlencode( $url ) ),
+		'facebook'         => array( 'Facebook', 'https://www.facebook.com/sharer/sharer.php?u=' . rawurlencode( $url ) ),
+		'whatsapp'         => array( 'WhatsApp', 'https://wa.me/?text=' . rawurlencode( $text . ' ' . $url ) ),
+		'email'            => array( __( 'E-mail', 'events-certificate' ), 'mailto:?subject=' . rawurlencode( $text ) . '&body=' . rawurlencode( $url ) ),
+	);
+}
 
 /**
  * An icon.
@@ -310,7 +359,7 @@ function render_page( $cert, $code, $locale, $invalid ) {
 					<?php if ( 'issued' === $cert['status'] ) : ?>
 						<a class="evcert-dock__tool" href="<?php echo esc_url( page_url( $cert['code'], $locale, array( 'format' => 'pdf' ) ) ); ?>"><?php echo icon( 'download' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?><span>PDF</span></a>
 					<?php endif; ?>
-					<button type="button" class="evcert-dock__tool" data-evcert-copy="<?php echo esc_attr( page_url( $cert['code'], $locale ) ); ?>" data-evcert-copied="<?php esc_attr_e( 'Copied', 'events-certificate' ); ?>"><?php echo icon( 'link' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?><span><?php esc_html_e( 'Link', 'events-certificate' ); ?></span></button>
+					<button type="button" class="evcert-dock__tool" data-evcert-pop="share" aria-expanded="false"><?php echo icon( 'share' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?><span><?php esc_html_e( 'Share', 'events-certificate' ); ?></span></button>
 					<?php
 					// Language: a globe with a name. With two languages it switches to the other (named); with more it opens a menu (named after the current one).
 					$others = array_values( array_diff( locales(), array( $locale ) ) );
@@ -339,6 +388,14 @@ function render_page( $cert, $code, $locale, $invalid ) {
 					<div><dt><?php esc_html_e( 'Issued on', 'events-certificate' ); ?></dt><dd><?php echo esc_html( Render\format_date( (int) $values['issued_ts'], 'site' ) ); ?></dd></div>
 					<div><dt><?php esc_html_e( 'Code', 'events-certificate' ); ?></dt><dd><code><?php echo esc_html( $cert['code'] ); ?></code></dd></div>
 				</dl>
+			</div>
+			<?php $share_url = page_url( $cert['code'], $locale ); ?>
+			<div class="evcert-dock__pop is-menu" data-evcert-popover="share" hidden>
+				<button type="button" class="evcert-dock__item" data-evcert-native-share="<?php echo esc_attr( $share_url ); ?>" data-title="<?php echo esc_attr( $title ); ?>" hidden><?php echo icon( 'share' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?><span><?php esc_html_e( 'Share…', 'events-certificate' ); ?></span></button>
+				<?php foreach ( share_links( $cert, $share_url ) as $key => $link ) : ?>
+					<a class="evcert-dock__item is-<?php echo esc_attr( $key ); ?>" href="<?php echo esc_url( $link[1] ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $link[0] ); ?></a>
+				<?php endforeach; ?>
+				<button type="button" class="evcert-dock__item" data-evcert-copy="<?php echo esc_attr( $share_url ); ?>" data-evcert-copied="<?php esc_attr_e( 'Link copied', 'events-certificate' ); ?>"><?php echo icon( 'copy' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?><span><?php esc_html_e( 'Copy link', 'events-certificate' ); ?></span></button>
 			</div>
 			<?php if ( count( locales() ) > 2 ) : ?>
 				<div class="evcert-dock__pop is-menu" data-evcert-popover="langs" hidden>
