@@ -173,9 +173,19 @@
 	flex: 1;
 	min-width: 0;
 	display: flex;
-	align-items: center;
-	justify-content: center;
+	// Centred with auto margins (not justify/align-content), so a zoomed-in page can still scroll to its left and top edges.
+	padding: 32px;
 	overflow: auto;
+	&.is-panning {
+		cursor: grab;
+		* {
+			cursor: grab !important;
+		}
+	}
+	&.is-grabbing,
+	&.is-grabbing * {
+		cursor: grabbing !important;
+	}
 	background: #f0f0f0;
 	touch-action: none;
 }
@@ -184,6 +194,8 @@
 }
 
 .evcert-canvas {
+	margin: auto;
+	flex: none;
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12), 0 12px 32px rgba(0, 0, 0, 0.08);
 	background: transparent;
 	user-select: none;
@@ -1239,4 +1251,20 @@
 .typography-block-support-panel .components-tools-panel-item.single-column,
 .evcert-grid-2 > * {
 	align-self: end;
+}
+
+// Zoom in the footer.
+.evcert-zoom {
+	display: flex;
+	align-items: center;
+	margin-left: auto;
+	.components-button {
+		height: 22px;
+		min-width: 22px;
+	}
+	.evcert-zoom__level {
+		min-width: 52px;
+		justify-content: center;
+		font-variant-numeric: tabular-nums;
+	}
 }

@@ -5,7 +5,7 @@
  */
 import apiFetch from '@wordpress/api-fetch';
 import { Button, ColorPalette, DropdownMenu, MenuGroup, MenuItem, Popover, Snackbar, Spinner, RangeControl, SelectControl, TextControl, ToggleControl } from '@wordpress/components';
-import { chevronLeft, drawerRight, listView, moreVertical, plus, redo as redoIcon, undo as undoIcon } from '@wordpress/icons';
+import { chevronLeft, drawerRight, lineSolid, listView, moreVertical, plus, redo as redoIcon, undo as undoIcon } from '@wordpress/icons';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import {
@@ -216,24 +216,30 @@ function snap( moving: Box, design: Design, exclude: string, threshold: number )
 	return { dx, dy, guides };
 }
 
-function resized( origin: Element, handle: string, dx: number, dy: number, keepRatio: boolean ): Element {
+/**
+ * A box resized by a handle, like vector apps: Shift keeps the proportions,
+ * Alt/Option resizes from the centre (the opposite side moves too), both
+ * together do both.
+ */
+function resized( origin: Element, handle: string, dx: number, dy: number, keepRatio: boolean, fromCenter = false ): Element {
 	if ( origin.type === 'line' ) {
 		return origin;
 	}
+	const k = fromCenter ? 2 : 1;
 	let { x, y, w, h } = origin;
 	if ( handle.includes( 'e' ) ) {
-		w = Math.max( 4, w + dx );
+		w = Math.max( 4, w + dx * k );
 	}
 	if ( handle.includes( 's' ) ) {
-		h = Math.max( 4, h + dy );
+		h = Math.max( 4, h + dy * k );
 	}
 	if ( handle.includes( 'w' ) ) {
-		const nw = Math.max( 4, w - dx );
+		const nw = Math.max( 4, w - dx * k );
 		x += w - nw;
 		w = nw;
 	}
 	if ( handle.includes( 'n' ) ) {
-		const nh = Math.max( 4, h - dy );
+		const nh = Math.max( 4, h - dy * k );
 		y += h - nh;
 		h = nh;
 	}
@@ -244,8 +250,61 @@ function resized( origin: Element, handle: string, dx: number, dy: number, keepR
 		} else {
 			h = w / ratio;
 		}
+		// The side opposite the handle stays put (or the centre, below).
+		if ( handle.includes( 'n' ) ) {
+			y = origin.y + origin.h - h;
+		}
+		if ( handle.includes( 'w' ) ) {
+			x = origin.x + origin.w - w;
+		}
+		if ( handle === 'n' || handle === 's' ) {
+			x = origin.x + ( origin.w - w ) / 2;
+		} else if ( handle === 'e' || handle === 'w' ) {
+			y = origin.y + ( origin.h - h ) / 2;
+		}
+	}
+	if ( fromCenter ) {
+		x = origin.x + ( origin.w - w ) / 2;
+		y = origin.y + ( origin.h - h ) / 2;
 	}
 	return { ...origin, x, y, w, h };
+}
+
+/** A Cmd (Mac) or Ctrl shortcut as shown in menus. */
+const primary = ( key: string ) => ( /Mac|iP(hone|ad)/.test( navigator.platform ) ? `⌘${ key }` : `Ctrl+${ key }` );
+const displayShortcut = { primary };
+
+const ZOOM_MIN = 0.1;
+const ZOOM_MAX = 8;
+
+/** Zoom in the footer: out, the level (a menu: fit, 50–200%), in. */
+function ZoomControl( { zoom, onZoom, onFit }: { zoom: number; onZoom: ( z: number ) => void; onFit: () => void } ) {
+	return (
+		<div className="evcert-zoom">
+			<Button size="small" icon={ lineSolid } label={ __( 'Zoom out', 'events-certificate' ) } shortcut={ displayShortcut.primary( '-' ) } onClick={ () => onZoom( zoom / 1.25 ) } disabled={ zoom <= ZOOM_MIN } />
+			<DropdownMenu
+				icon={ null }
+				label={ __( 'Zoom', 'events-certificate' ) }
+				text={ `${ Math.round( zoom * 100 ) }%` }
+				toggleProps={ { size: 'small', className: 'evcert-zoom__level' } as any }
+				popoverProps={ { placement: 'top-end' } }
+			>
+				{ ( { onClose } ) => (
+					<MenuGroup>
+						<MenuItem shortcut={ displayShortcut.primary( '0' ) } onClick={ () => { onFit(); onClose(); } }>
+							{ __( 'Zoom to fit', 'events-certificate' ) }
+						</MenuItem>
+						{ [ 0.5, 1, 2 ].map( ( z ) => (
+							<MenuItem key={ z } shortcut={ z === 1 ? displayShortcut.primary( '1' ) : undefined } onClick={ () => { onZoom( z ); onClose(); } }>
+								{ `${ z * 100 }%` }
+							</MenuItem>
+						) ) }
+					</MenuGroup>
+				) }
+			</DropdownMenu>
+			<Button size="small" icon={ plus } label={ __( 'Zoom in', 'events-certificate' ) } shortcut={ displayShortcut.primary( '+' ) } onClick={ () => onZoom( zoom * 1.25 ) } disabled={ zoom >= ZOOM_MAX } />
+		</div>
+	);
 }
 
 /** One element, as SVG. */
@@ -376,6 +435,7 @@ export default function Editor() {
 	const [ title, setTitle ] = useState( '' );
 	const [ status, setStatus ] = useState< 'loading' | 'saved' | 'dirty' | 'saving' | 'error' >( 'loading' );
 	const [ zoom, setZoom ] = useState( 1 );
+	const loaded = status !== 'loading';
 	const svgRef = useRef< SVGSVGElement >( null );
 	const wrapRef = useRef< HTMLDivElement >( null );
 	const dragRef = useRef< Drag >( null );
@@ -410,22 +470,99 @@ export default function Editor() {
 		}
 	}, [ stored ] );
 
-	// Fit the page in the window.
-	const fit = useCallback( () => {
+	// Fit the page in the window (and keep fitting on resize until zoomed by hand).
+	const fittedRef = useRef( true );
+	const fitZoom = useCallback( () => {
+		const wrap = wrapRef.current;
+		if ( ! wrap ) {
+			return 1;
+		}
+		const pad = window.innerWidth < 600 ? 16 : 64;
+		const z = Math.min( ( wrap.clientWidth - pad * 2 ) / design.page.w, ( wrap.clientHeight - pad * 2 - 72 ) / design.page.h );
+		return Math.max( ZOOM_MIN, Math.min( 3, z ) );
+	}, [ design.page.w, design.page.h ] );
+	const fit = useCallback( ( force?: unknown ) => {
+		if ( force === true ) {
+			fittedRef.current = true;
+		}
+		if ( fittedRef.current ) {
+			setZoom( fitZoom() );
+		}
+	}, [ fitZoom ] );
+	/**
+	 * Zooms to a level keeping the point under the pointer (or the stage's
+	 * centre) where it is, like vector apps.
+	 */
+	const zoomTo = ( next: number, at?: { clientX: number; clientY: number } ) => {
+		const wrap = wrapRef.current;
+		const svg = svgRef.current;
+		const z = Math.max( ZOOM_MIN, Math.min( ZOOM_MAX, next ) );
+		fittedRef.current = false;
+		if ( ! wrap || ! svg ) {
+			setZoom( z );
+			return;
+		}
+		const stage = wrap.getBoundingClientRect();
+		const rect = svg.getBoundingClientRect();
+		const px = at ? at.clientX : stage.left + stage.width / 2;
+		const py = at ? at.clientY : stage.top + stage.height / 2;
+		// The page point under (px, py), to put back there after the zoom.
+		const ux = ( px - rect.left ) / zoom;
+		const uy = ( py - rect.top ) / zoom;
+		setZoom( z );
+		requestAnimationFrame( () => {
+			const after = svg.getBoundingClientRect();
+			wrap.scrollLeft += after.left + ux * z - px;
+			wrap.scrollTop += after.top + uy * z - py;
+		} );
+	};
+	const zoomRef = useRef( zoomTo );
+	zoomRef.current = zoomTo;
+
+	// Cmd/Ctrl + wheel and trackpad pinch (a wheel with ctrlKey) zoom around the pointer.
+	useEffect( () => {
 		const wrap = wrapRef.current;
 		if ( ! wrap ) {
 			return;
 		}
-		const pad = window.innerWidth < 600 ? 16 : 64;
-		const z = Math.min( ( wrap.clientWidth - pad * 2 ) / design.page.w, ( wrap.clientHeight - pad * 2 - 72 ) / design.page.h );
-		setZoom( Math.max( 0.2, Math.min( 3, z ) ) );
-	}, [ design.page.w, design.page.h ] );
-	const loaded = status !== 'loading';
+		const onWheel = ( event: WheelEvent ) => {
+			if ( ! event.ctrlKey && ! event.metaKey ) {
+				return;
+			}
+			event.preventDefault();
+			zoomRef.current( zoomLevel.current * Math.exp( -event.deltaY * ( event.ctrlKey && ! event.metaKey ? 0.01 : 0.002 ) ), event );
+		};
+		wrap.addEventListener( 'wheel', onWheel, { passive: false } );
+		return () => wrap.removeEventListener( 'wheel', onWheel );
+	}, [ loaded ] );
+	const zoomLevel = useRef( zoom );
+	zoomLevel.current = zoom;
 	useEffect( () => {
 		if ( loaded ) {
-			fit();
+			fit( true );
 		}
 	}, [ loaded ] );
+
+	// Space + drag pans the view (the hand tool).
+	const [ panning, setPanning ] = useState( false );
+	const panRef = useRef< { x: number; y: number; left: number; top: number } | null >( null );
+	useEffect( () => {
+		const typing = ( t: EventTarget | null ) => !! t && ( ( t as HTMLElement ).isContentEditable || [ 'INPUT', 'TEXTAREA', 'SELECT', 'BUTTON' ].includes( ( t as HTMLElement ).tagName ) );
+		const down = ( event: KeyboardEvent ) => {
+			if ( event.code === 'Space' && ! typing( event.target ) ) {
+				event.preventDefault();
+				setPanning( true );
+			}
+		};
+		const up = ( event: KeyboardEvent ) => event.code === 'Space' && setPanning( false );
+		window.addEventListener( 'keydown', down );
+		window.addEventListener( 'keyup', up );
+		return () => {
+			window.removeEventListener( 'keydown', down );
+			window.removeEventListener( 'keyup', up );
+		};
+	}, [] );
+
 	useEffect( () => {
 		fit();
 		window.addEventListener( 'resize', fit );
@@ -469,7 +606,7 @@ export default function Editor() {
 				found = s.guides;
 			}
 		} else if ( drag.kind === 'resize' ) {
-			next = resized( drag.origin, drag.handle, dx, dy, event.shiftKey || drag.origin.type === 'qr' || !! lockedRatio( drag.origin ) );
+			next = resized( drag.origin, drag.handle, dx, dy, event.shiftKey || drag.origin.type === 'qr' || !! lockedRatio( drag.origin ), event.altKey );
 		} else if ( drag.origin.type === 'line' ) {
 			const key = drag.end === 1 ? { x: 'x1', y: 'y1' } : { x: 'x2', y: 'y2' };
 			let nx = ( drag.origin as any )[ key.x ] + dx;
@@ -601,6 +738,27 @@ export default function Editor() {
 				return;
 			}
 			const mod = event.metaKey || event.ctrlKey;
+			// Zoom: Cmd/Ctrl + / - / 0 (fit) / 1 (100%), instead of the browser's page zoom.
+			if ( mod && ( event.key === '=' || event.key === '+' ) ) {
+				event.preventDefault();
+				zoomTo( zoom * 1.25 );
+				return;
+			}
+			if ( mod && event.key === '-' ) {
+				event.preventDefault();
+				zoomTo( zoom / 1.25 );
+				return;
+			}
+			if ( mod && event.key === '0' ) {
+				event.preventDefault();
+				fit( true );
+				return;
+			}
+			if ( mod && event.key === '1' ) {
+				event.preventDefault();
+				zoomTo( 1 );
+				return;
+			}
 			if ( mod && event.key.toLowerCase() === 'z' ) {
 				event.preventDefault();
 				dispatch( { type: event.shiftKey ? 'redo' : 'undo' } );
@@ -740,7 +898,41 @@ export default function Editor() {
 						<Spinner />
 					</div>
 				) }
-				<div className="evcert-stage" ref={ wrapRef } hidden={ status === 'loading' } onPointerDown={ () => { if ( editing ) { stopEditing(); } setSelected( null ); } }>
+				<div
+					className={ `evcert-stage${ panning ? ' is-panning' : '' }${ panRef.current ? ' is-grabbing' : '' }` }
+					ref={ wrapRef }
+					hidden={ status === 'loading' }
+					onPointerDownCapture={ ( event ) => {
+						if ( ! panning || ! wrapRef.current ) {
+							return;
+						}
+						// The hand tool: nothing gets selected or dragged.
+						event.preventDefault();
+						event.stopPropagation();
+						panRef.current = { x: event.clientX, y: event.clientY, left: wrapRef.current.scrollLeft, top: wrapRef.current.scrollTop };
+						( event.currentTarget as HTMLElement ).setPointerCapture( event.pointerId );
+					} }
+					onPointerMoveCapture={ ( event ) => {
+						const p = panRef.current;
+						if ( p && wrapRef.current ) {
+							event.stopPropagation();
+							wrapRef.current.scrollLeft = p.left - ( event.clientX - p.x );
+							wrapRef.current.scrollTop = p.top - ( event.clientY - p.y );
+						}
+					} }
+					onPointerUpCapture={ ( event ) => {
+						if ( panRef.current ) {
+							event.stopPropagation();
+							panRef.current = null;
+						}
+					} }
+					onPointerDown={ () => {
+						if ( editing ) {
+							stopEditing();
+						}
+						setSelected( null );
+					} }
+				>
 					<svg
 						ref={ svgRef }
 						className="evcert-canvas"
@@ -967,6 +1159,11 @@ export default function Editor() {
 						) }
 					</span>
 				) }
+				<ZoomControl
+					zoom={ zoom }
+					onZoom={ ( z ) => zoomTo( z ) }
+					onFit={ () => fit( true ) }
+				/>
 			</footer>
 
 			{ drawing && ( () => {
