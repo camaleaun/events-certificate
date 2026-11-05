@@ -231,6 +231,7 @@ function values( array $cert ) {
 		'sponsor'   => __( 'Sponsor', 'events-certificate' ),
 	);
 	$hours  = isset( $cert['hours'] ) && '' !== (string) $cert['hours'] ? (float) $cert['hours'] : null;
+	$signer = isset( $data['signer_name'] ) ? null : \EventsCertificate\Signer\current();
 
 	return array(
 		'name'        => (string) ( $cert['name'] ?? '' ),
@@ -242,8 +243,10 @@ function values( array $cert ) {
 		'hours'       => null === $hours ? '' : (string) ( floor( $hours ) === $hours ? (int) $hours : $hours ),
 		'role'        => $roles[ $cert['role'] ?? '' ] ?? (string) ( $cert['role'] ?? '' ),
 		'details'     => (string) ( $cert['details'] ?? '' ),
-		'signer_name' => (string) ( $data['signer_name'] ?? '' ),
-		'signer_role' => (string) ( $data['signer_role'] ?? '' ),
+		// The signer frozen at issue; certificates issued before a signer was set use the current one.
+		'signer_name' => (string) ( $data['signer_name'] ?? ( $signer['name'] ?? '' ) ),
+		'signer_role' => \EventsCertificate\Signer\role_in( (array) ( $data['signer_roles'] ?? ( $signer['roles'] ?? array() ) ), determine_locale() ),
+		'signature'   => (string) wp_json_encode( $data['signature'] ?? ( $signer['signature'] ?? null ) ),
 		'code'        => (string) ( $cert['code'] ?? '' ),
 		'verify_url'  => untrailingslashit( (string) preg_replace( '#^https?://#', '', home_url( Settings\value( 'slug' ) ) ) ),
 		'document'    => (string) ( $cert['doc_masked'] ?? '' ),
@@ -506,6 +509,21 @@ function element_html( array $el, array $design, array $values, array $options )
 			return $img( svg_src( $svg ), sprintf( 'position:absolute;left:%.2Fpt;top:%.2Fpt;width:%.2Fpt;height:%.2Fpt;%s', $x - $sw, $y - $sw, $w + $sw * 2, $h + $sw * 2, $alpha ) );
 
 		case 'svg':
+			// The signature element draws the signer's signature when there is one.
+			$signature = json_decode( $values['signature'] ?? 'null', true );
+			if ( is_array( $signature ) && ! empty( $signature['paths'] ) && ( 'signature' === ( $el['slot'] ?? '' ) || 'signature' === ( $el['id'] ?? '' ) ) ) {
+				// Upright, filling the box the element shows on the page (a design may rotate its own art by 90°).
+				if ( in_array( (int) ( $el['rotation'] ?? 0 ) % 180, array( 90, -90 ), true ) ) {
+					$cx                        = $el['x'] + $el['w'] / 2;
+					$cy                        = $el['y'] + $el['h'] / 2;
+					list( $el['w'], $el['h'] ) = array( $el['h'], $el['w'] );
+					$el['x']                   = $cx - $el['w'] / 2;
+					$el['y']                   = $cy - $el['h'] / 2;
+				}
+				$el['rotation'] = 0;
+				$el             = array_merge( $el, array_intersect_key( $signature, array_flip( array( 'vw', 'vh', 'paths' ) ) ) );
+			}
+			$box     = sprintf( 'position:absolute;left:%.2Fpt;top:%.2Fpt;width:%.2Fpt;height:%.2Fpt;%s', $el['x'], $el['y'], max( 0, $el['w'] ), max( 0, $el['h'] ), ! empty( $el['rotation'] ) ? sprintf( 'transform:rotate(%ddeg);transform-origin:50%% 50%%;', (int) $el['rotation'] ) : '' );
 			$current = color( $design, $el['color'] ?? '$text', $mode );
 			$paths   = '';
 			foreach ( (array) ( $el['paths'] ?? array() ) as $path ) {

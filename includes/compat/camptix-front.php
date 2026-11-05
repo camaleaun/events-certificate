@@ -110,6 +110,21 @@ function certificate_link( $attendee_id ) {
 }
 
 /**
+ * The signer frozen into a certificate.
+ *
+ * @return array<string, mixed>
+ */
+function signer_data() {
+	$signer = \EventsCertificate\Signer\current();
+
+	return $signer ? array(
+		'signer_name'  => $signer['name'],
+		'signer_roles' => $signer['roles'],
+		'signature'    => $signer['signature'],
+	) : array();
+}
+
+/**
  * Where the event happens: the WordCamp's Location on WordCamp.org, else the
  * plugin setting.
  *
@@ -154,7 +169,7 @@ function attendee_data( $attendee ) {
 		'source'         => SOURCE,
 		'source_ref'     => (string) $attendee->ID,
 		'self_service'   => 'attendee',
-		'data'           => array( 'location' => event_location() ),
+		'data'           => array_merge( array( 'location' => event_location() ), signer_data() ),
 	);
 
 	/**
