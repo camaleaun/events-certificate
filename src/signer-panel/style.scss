@@ -1,0 +1,13 @@
+// The block editor renders plugin panels before taxonomy panels and has no API to
+// reorder them: the panels' container becomes a flex column (only when it holds this
+// panel) so the Certificate panel comes after Teams, with side meta boxes still last.
+:has(> .evcert-certificate-panel) {
+	display: flex;
+	flex-direction: column;
+}
+.evcert-certificate-panel {
+	order: 1;
+}
+:has(> .evcert-certificate-panel) > .edit-post-meta-boxes-area {
+	order: 2;
+}

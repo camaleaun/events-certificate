@@ -14,6 +14,7 @@ import type { Design, SvgEl, SvgPath } from '../editor/model';
 import SvgEditor from '../editor/SvgEditor';
 import { PathList } from '../editor/SvgPanel';
 import '../editor/style.scss';
+import './style.scss';
 
 type Signature = { vw: number; vh: number; paths: SvgPath[] };
 type Meta = { _evcert_signs?: boolean; _evcert_signer_role?: Record< string, string >; _evcert_signature?: Signature | null };
