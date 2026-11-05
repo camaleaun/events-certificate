@@ -30,8 +30,7 @@ import {
 	type Mode,
 	type Run,
 	type TextEl,
-	type View,
-} from './model';
+	type View, lockedRatio } from './model';
 import DesignPanel, { setSample } from './DesignPanel';
 import ElementToolbar from './ElementToolbar';
 import FieldText, { type FieldTextCommands } from './FieldText';
@@ -440,7 +439,7 @@ export default function Editor() {
 				found = s.guides;
 			}
 		} else if ( drag.kind === 'resize' ) {
-			next = resized( drag.origin, drag.handle, dx, dy, event.shiftKey || drag.origin.type === 'qr' );
+			next = resized( drag.origin, drag.handle, dx, dy, event.shiftKey || drag.origin.type === 'qr' || !! lockedRatio( drag.origin ) );
 		} else if ( drag.origin.type === 'line' ) {
 			const key = drag.end === 1 ? { x: 'x1', y: 'y1' } : { x: 'x2', y: 'y2' };
 			let nx = ( drag.origin as any )[ key.x ] + dx;

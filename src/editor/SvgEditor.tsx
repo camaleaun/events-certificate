@@ -39,14 +39,18 @@ export default function SvgEditor( { el, design, mode, onApply, onClose }: Props
 					</svg>
 				</div>
 				<div className="evcert-svg-editor__fields">
-					<TextControl
-						__next40pxDefaultSize
-						__nextHasNoMarginBottom
-						label={ __( 'Title', 'events-certificate' ) }
-						help={ __( 'Names the drawing for screen readers. Leave empty when it is decoration.', 'events-certificate' ) }
-						value={ title }
-						onChange={ setTitle }
-					/>
+					<DropdownRow label={ __( 'Title', 'events-certificate' ) } value={ title.trim() || __( 'None', 'events-certificate' ) }>
+						{ () => (
+							<TextControl
+								__next40pxDefaultSize
+								__nextHasNoMarginBottom
+								label={ __( 'Title', 'events-certificate' ) }
+								help={ __( 'Names the drawing for screen readers. Leave empty when it is decoration.', 'events-certificate' ) }
+								value={ title }
+								onChange={ setTitle }
+							/>
+						) }
+					</DropdownRow>
 					<DropdownRow label={ __( 'ViewBox', 'events-certificate' ) } value={ `${ vw } × ${ vh }` }>
 						{ () => (
 							<>

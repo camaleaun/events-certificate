@@ -61,6 +61,59 @@ class RenderTest extends Test_Case {
 	/**
 	 * Corner shapes become path data, radii clamped to half the side.
 	 */
+	/**
+	 * A kept aspect ratio: the height follows the width, or the width follows a filled height.
+	 */
+	public function test_resolve_locked_ratio() {
+		$page = array(
+			'w'    => 800,
+			'h'    => 600,
+			'safe' => 20,
+		);
+		$el   = array(
+			'type'   => 'svg',
+			'lock'   => 2,
+			'layout' => array(
+				'ref' => 'page',
+				'h'   => array(
+					'mode'  => 'stretch',
+					'start' => '0pt',
+					'end'   => '0pt',
+				),
+				'v'   => array(
+					'mode'  => 'center',
+					'start' => '0pt',
+					'size'  => '50pt',
+				),
+			),
+		);
+		$r    = Render\resolve( $el, $page );
+		$this->assertEqualsWithDelta( 400, $r['h'], 0.01 );
+		$this->assertEqualsWithDelta( 100, $r['y'], 0.01 );
+
+		$el['layout']['h']   = array(
+			'mode' => 'end',
+			'end'  => '0pt',
+			'size' => '10pt',
+		);
+		$el['layout']['v']   = array(
+			'mode'  => 'stretch',
+			'start' => '0pt',
+			'end'   => '0pt',
+		);
+		$el['layout']['ref'] = 'safe';
+		$r                   = Render\resolve( $el, $page );
+		$this->assertEqualsWithDelta( 1120, $r['w'], 0.01 );
+		$this->assertEqualsWithDelta( 780 - 1120, $r['x'], 0.01 );
+
+		$image = array(
+			'type'   => 'image',
+			'ratio'  => '4/3',
+			'layout' => $el['layout'],
+		);
+		$this->assertEqualsWithDelta( 560 * 4 / 3, Render\resolve( $image, $page )['w'], 0.01 );
+	}
+
 	public function test_rect_path() {
 		$this->assertSame( 'M0 0L10 0L10 10L0 10Z', Render\rect_path( 0, 0, 10, 10 ) );
 		// Round corners are cubic curves bulging toward the corner (dompdf draws SVG arcs wrong).

@@ -30,7 +30,7 @@ import { justifyBottom, justifyCenter, justifyCenterVertical, justifyLeft, justi
 import { elementIcon } from './icons';
 import { naturalSize, type Picked } from './media';
 import SvgPanel from './SvgPanel';
-import { box as boxOf, color, isLen, layoutFrom, parseLen, refBox, REQUIRED_SLOTS, type AxisMode, type Box, type Layout, type Design, type Element, type Mode } from './model';
+import { box as boxOf, color, isLen, layoutFrom, parseLen, lockedRatio, lockedSide, refBox, REQUIRED_SLOTS, type AxisMode, type Box, type Layout, type Design, type Element, type Mode } from './model';
 
 type Props = {
 	el: Element;
@@ -384,7 +384,7 @@ const SIMPLE = /^-?\d*\.?\d+(pt|mm|cm|in|%)$/;
  * (UnitControl). The settings button switches to a custom value that also
  * takes calc(), like the spacing controls' "Set custom size".
  */
-function LengthField( { label, value, total, onChange }: { label: string; value: string; total: number; onChange: ( v: string ) => void } ) {
+function LengthField( { label, value, total, onChange, locked }: { label: string; value: string; total: number; onChange: ( v: string ) => void; locked?: boolean } ) {
 	const [ custom, setCustom ] = useState( ! SIMPLE.test( value ) );
 	const [ text, setText ] = useState( value );
 	const [ focused, setFocused ] = useState( false );
@@ -413,9 +413,12 @@ function LengthField( { label, value, total, onChange }: { label: string; value:
 		<div className="evcert-length">
 			<HStack className="evcert-length__header">
 				<span className="evcert-length__label">{ label }</span>
-				{ toggle }
+				{ ! locked && toggle }
 			</HStack>
-			{ custom ? (
+			{ locked ? (
+				// Follows the other size (aspect ratio kept): shown, not edited.
+				<UnitControl __next40pxDefaultSize label={ label } hideLabelFromVision units={ LEN_UNITS } value={ value } disabled onChange={ () => undefined } />
+			) : custom ? (
 				<TextControl
 					__next40pxDefaultSize
 					__nextHasNoMarginBottom
@@ -452,14 +455,21 @@ function Anchors( { el, stored, page, onChange }: { el: Element; stored: Element
 	const set = ( next: Layout ) => onChange( { layout: next } as Partial< Element > );
 	const setMode = ( axis: 'h' | 'v', mode: AxisMode ) => set( layoutFrom( { ...layout, [ axis ]: { mode } }, b, page ) );
 	const setRef = ( r: 'page' | 'safe' ) => set( layoutFrom( { ...layout, ref: r }, b, page ) );
-	const field = ( axis: 'h' | 'v', key: 'start' | 'end' | 'size', label: string ) => (
-		<LengthField
-			label={ label }
-			value={ layout[ axis ][ key ] || '0pt' }
-			total={ axis === 'h' ? ref.w : ref.h }
-			onChange={ ( v ) => set( { ...layout, [ axis ]: { ...layout[ axis ], [ key ]: v } } ) }
-		/>
-	);
+	const ratio = lockedRatio( stored );
+	const side = ratio ? lockedSide( layout ) : null;
+	const field = ( axis: 'h' | 'v', key: 'start' | 'end' | 'size', label: string ) => {
+		const follows = key === 'size' && side === ( axis === 'h' ? 'w' : 'h' );
+		return (
+			<LengthField
+				key={ `${ axis }-${ key }-${ follows }` }
+				label={ label }
+				value={ follows ? `${ Math.round( ( axis === 'h' ? b.w : b.h ) * 100 ) / 100 }pt` : layout[ axis ][ key ] || '0pt' }
+				total={ axis === 'h' ? ref.w : ref.h }
+				locked={ follows }
+				onChange={ ( v ) => set( { ...layout, [ axis ]: { ...layout[ axis ], [ key ]: v } } ) }
+			/>
+		);
+	};
 	const fields = ( axis: 'h' | 'v' ) => {
 		const mode = layout[ axis ].mode;
 		const [ first, second ] = labels[ axis ][ mode ];
@@ -470,33 +480,55 @@ function Anchors( { el, stored, page, onChange }: { el: Element; stored: Element
 			</div>
 		);
 	};
+	// Images keep their ratio from Settings > Aspect ratio; the other elements lock here.
+	const canLock = stored.type === 'svg' || stored.type === 'rect' || stored.type === 'ellipse' || stored.type === 'qr';
+	const toggleLock = () => {
+		if ( stored.lock ) {
+			onChange( { lock: undefined } as Partial< Element > );
+			return;
+		}
+		const lock = stored.type === 'svg' && stored.vw && stored.vh ? stored.vw / stored.vh : b.w / b.h;
+		onChange( ( stored.layout ? { lock } : { lock, h: b.w / lock } ) as Partial< Element > );
+	};
 	const fill = ( r: 'page' | 'safe' ) => set( { ref: r, h: { mode: 'stretch', start: '0pt', end: '0pt' }, v: { mode: 'stretch', start: '0pt', end: '0pt' } } );
 	return (
 		<div className="evcert-anchors">
 			<ToggleGroupControl __next40pxDefaultSize __nextHasNoMarginBottom isBlock label={ __( 'Relative to', 'events-certificate' ) } value={ layout.ref || 'page' } onChange={ ( v ) => setRef( v as 'page' ) }>
 				<ToggleGroupControlOption value="page" label={ __( 'Page', 'events-certificate' ) } />
-				<ToggleGroupControlOption value="safe" label={ __( 'Safe margin', 'events-certificate' ) } />
+				<ToggleGroupControlOption value="safe" label={ __( 'Margin', 'events-certificate' ) } aria-label={ __( 'Safe margin', 'events-certificate' ) } showTooltip />
 			</ToggleGroupControl>
 			<ToggleGroupControl __next40pxDefaultSize __nextHasNoMarginBottom label={ __( 'Horizontal', 'events-certificate' ) } value={ layout.h.mode } onChange={ ( v ) => setMode( 'h', v as AxisMode ) }>
 				<ToggleGroupControlOptionIcon value="start" icon={ justifyLeft } label={ __( 'Left', 'events-certificate' ) } />
 				<ToggleGroupControlOptionIcon value="center" icon={ justifyCenter } label={ __( 'Center', 'events-certificate' ) } />
 				<ToggleGroupControlOptionIcon value="end" icon={ justifyRight } label={ __( 'Right', 'events-certificate' ) } />
-				<ToggleGroupControlOptionIcon value="stretch" icon={ justifyStretch } label={ __( 'Stretch', 'events-certificate' ) } />
+				<ToggleGroupControlOptionIcon value="stretch" icon={ justifyStretch } label={ __( 'Fill', 'events-certificate' ) } />
 			</ToggleGroupControl>
 			{ fields( 'h' ) }
 			<ToggleGroupControl __next40pxDefaultSize __nextHasNoMarginBottom label={ __( 'Vertical', 'events-certificate' ) } value={ layout.v.mode } onChange={ ( v ) => setMode( 'v', v as AxisMode ) }>
 				<ToggleGroupControlOptionIcon value="start" icon={ justifyTop } label={ __( 'Top', 'events-certificate' ) } />
 				<ToggleGroupControlOptionIcon value="center" icon={ justifyCenterVertical } label={ __( 'Middle', 'events-certificate' ) } />
 				<ToggleGroupControlOptionIcon value="end" icon={ justifyBottom } label={ __( 'Bottom', 'events-certificate' ) } />
-				<ToggleGroupControlOptionIcon value="stretch" icon={ justifyStretchVertical } label={ __( 'Stretch', 'events-certificate' ) } />
+				<ToggleGroupControlOptionIcon value="stretch" icon={ justifyStretchVertical } label={ __( 'Fill', 'events-certificate' ) } />
 			</ToggleGroupControl>
 			{ fields( 'v' ) }
+			{ canLock && (
+				<Button
+					className="evcert-anchors__lock"
+					variant="tertiary"
+					size="compact"
+					icon={ stored.lock ? link : linkOff }
+					isPressed={ !! stored.lock }
+					onClick={ toggleLock }
+				>
+					{ stored.lock ? __( 'Aspect ratio locked', 'events-certificate' ) : __( 'Lock aspect ratio', 'events-certificate' ) }
+				</Button>
+			) }
 			<HStack justify="flex-start">
 				<Button variant="secondary" size="compact" onClick={ () => fill( 'page' ) }>
 					{ __( 'Fill page', 'events-certificate' ) }
 				</Button>
 				<Button variant="secondary" size="compact" onClick={ () => fill( 'safe' ) }>
-					{ __( 'Fill safe margin', 'events-certificate' ) }
+					{ __( 'Fill margin', 'events-certificate' ) }
 				</Button>
 			</HStack>
 		</div>

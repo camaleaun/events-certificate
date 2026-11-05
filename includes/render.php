@@ -79,12 +79,13 @@ function parse_len( $value, $total ) {
  * @param array<string, mixed> $axis   Axis (mode, start, end, size).
  * @param float                $origin Reference box start.
  * @param float                $total  Reference box size.
+ * @param float|null           $forced Size to use instead of the axis's own (aspect ratio kept).
  * @return float[] Position and size.
  */
-function resolve_axis( array $axis, $origin, $total ) {
+function resolve_axis( array $axis, $origin, $total, $forced = null ) {
 	$start = parse_len( $axis['start'] ?? '', $total );
 	$end   = parse_len( $axis['end'] ?? '', $total );
-	$size  = parse_len( $axis['size'] ?? '', $total );
+	$size  = null === $forced ? parse_len( $axis['size'] ?? '', $total ) : (float) $forced;
 	switch ( $axis['mode'] ?? 'start' ) {
 		case 'end':
 			return array( $origin + $total - $end - $size, $size );
@@ -116,7 +117,35 @@ function resolve( array $el, array $page ) {
 	list( $el['x'], $el['w'] ) = resolve_axis( (array) ( $layout['h'] ?? array() ), $ref[0], $ref[2] );
 	list( $el['y'], $el['h'] ) = resolve_axis( (array) ( $layout['v'] ?? array() ), $ref[1], $ref[3] );
 
+	// Aspect ratio kept (src/editor/model.ts resolve()): the height follows the width, unless only the height fills.
+	$ratio  = locked_ratio( $el );
+	$fill_h = 'stretch' === ( $layout['h']['mode'] ?? '' );
+	$fill_v = 'stretch' === ( $layout['v']['mode'] ?? '' );
+	if ( $ratio && ! ( $fill_h && $fill_v ) ) {
+		if ( $fill_v ) {
+			list( $el['x'], $el['w'] ) = resolve_axis( (array) ( $layout['h'] ?? array() ), $ref[0], $ref[2], $el['h'] * $ratio );
+		} else {
+			list( $el['y'], $el['h'] ) = resolve_axis( (array) ( $layout['v'] ?? array() ), $ref[1], $ref[3], $el['w'] / $ratio );
+		}
+	}
+
 	return $el;
+}
+
+/**
+ * The width ÷ height an element keeps: an image's aspect ratio setting, or
+ * the lock of other elements.
+ *
+ * @param array<string, mixed> $el Element.
+ * @return float 0 when free.
+ */
+function locked_ratio( array $el ) {
+	if ( 'image' === ( $el['type'] ?? '' ) ) {
+		$parts = array_map( 'floatval', explode( '/', (string) ( $el['ratio'] ?? 'auto' ) ) );
+		return 2 === count( $parts ) && $parts[0] > 0 && $parts[1] > 0 ? $parts[0] / $parts[1] : 0.0;
+	}
+
+	return ! empty( $el['lock'] ) && (float) $el['lock'] > 0 ? (float) $el['lock'] : 0.0;
 }
 
 /**

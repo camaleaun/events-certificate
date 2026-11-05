@@ -56,9 +56,6 @@ export function FillSwatch( { value, current, design, mode, onChange }: { value?
 			) }
 			renderContent={ () => (
 				<div className="evcert-color-popover">
-					<Button variant={ value ? 'secondary' : 'primary' } size="compact" onClick={ () => onChange( undefined ) }>
-						{ __( 'Current color', 'events-certificate' ) }
-					</Button>
 					<p className="evcert-color-popover__label">{ __( 'Theme', 'events-certificate' ) }</p>
 					<ColorPalette
 						colors={ palette }
@@ -71,7 +68,8 @@ export function FillSwatch( { value, current, design, mode, onChange }: { value?
 						} }
 					/>
 					<p className="evcert-color-popover__label">{ __( 'Custom', 'events-certificate' ) }</p>
-					<ColorPalette value={ value && ! variable ? value : undefined } onChange={ ( c ) => onChange( c || undefined ) } clearable />
+					<ColorPalette value={ value && ! variable ? value : undefined } onChange={ ( c ) => onChange( c || undefined ) } />
+					<p className="evcert-meta">{ __( 'Clear to use the current color.', 'events-certificate' ) }</p>
 				</div>
 			) }
 		/>

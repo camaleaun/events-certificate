@@ -23,6 +23,8 @@ export type Base = {
 	locked?: boolean;
 	hidden?: boolean;
 	layout?: Layout;
+	// Keeps width ÷ height: the size along one axis follows the other (images use their aspect ratio setting).
+	lock?: number;
 	// Per-device position, size and visibility for the web views (the print page uses the element's own).
 	views?: Partial< Record< Screen, ElementView > >;
 };
@@ -454,10 +456,10 @@ export function refBox( page: Design[ 'page' ], ref?: 'page' | 'safe' ): Box {
 	return ref === 'safe' ? { x: page.safe, y: page.safe, w: page.w - page.safe * 2, h: page.h - page.safe * 2 } : { x: 0, y: 0, w: page.w, h: page.h };
 }
 
-function resolveAxis( axis: Axis, origin: number, total: number ): [ number, number ] {
+function resolveAxis( axis: Axis, origin: number, total: number, forced?: number ): [ number, number ] {
 	const start = parseLen( axis.start, total );
 	const end = parseLen( axis.end, total );
-	const size = parseLen( axis.size, total );
+	const size = forced !== undefined ? forced : parseLen( axis.size, total );
 	switch ( axis.mode ) {
 		case 'end':
 			return [ origin + total - end - size, size ];
@@ -477,9 +479,38 @@ export function resolve< T extends Element >( el: T, page: Design[ 'page' ] ): T
 		return el;
 	}
 	const r = refBox( page, layout.ref );
-	const [ x, w ] = resolveAxis( layout.h, r.x, r.w );
-	const [ y, h ] = resolveAxis( layout.v, r.y, r.h );
+	let [ x, w ] = resolveAxis( layout.h, r.x, r.w );
+	let [ y, h ] = resolveAxis( layout.v, r.y, r.h );
+	const ratio = lockedRatio( el );
+	const side = ratio ? lockedSide( layout ) : null;
+	if ( ratio && side === 'w' ) {
+		[ x, w ] = resolveAxis( layout.h, r.x, r.w, h * ratio );
+	} else if ( ratio && side === 'h' ) {
+		[ y, h ] = resolveAxis( layout.v, r.y, r.h, w / ratio );
+	}
 	return { ...el, x, y, w, h };
+}
+
+/** The width ÷ height an element keeps, if any: an image's aspect ratio setting, or the lock of other elements. */
+export function lockedRatio( el: Element ): number | undefined {
+	if ( el.type === 'image' ) {
+		const parts = ( el.ratio || 'auto' ).split( '/' ).map( Number );
+		return parts.length === 2 && parts[ 0 ] > 0 && parts[ 1 ] > 0 ? parts[ 0 ] / parts[ 1 ] : undefined;
+	}
+	return el.lock && el.lock > 0 ? el.lock : undefined;
+}
+
+/**
+ * Which size follows the other when the ratio is kept: the height, unless only
+ * the height fills (stretch), then the width. Filling both axes keeps both.
+ */
+export function lockedSide( layout: Layout ): 'w' | 'h' | null {
+	const h = layout.h.mode === 'stretch';
+	const v = layout.v.mode === 'stretch';
+	if ( h && v ) {
+		return null;
+	}
+	return v ? 'w' : 'h';
 }
 
 /** Writes a length back, in the unit it was written in (% stays %, anything else becomes pt). */
