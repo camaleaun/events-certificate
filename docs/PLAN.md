@@ -1478,24 +1478,25 @@ O certificado aparece em lugares com formatos muito diferentes. A arte tem
   - Dependências do Composer prefixadas com Strauss (`EventsCertificate\Vendor\`)
     para não conflitar com outros plugins.
   - **Recomendação:** PHP 7.4+ com a 4.4, que cobre hospedagens antigas.
-- **Motor de PDF: decidir com um spike (etapa 0).** Agora precisamos de SVG,
-  formas, QR e, quem sabe, assinatura digital.
-  - **TCPDF 6.x** (LGPL-3, PHP 7.1+). Ele traz `ImageSVG()` (SVG em vetor), QR
-    nativo (`write2DBarcode`), `Line/Rect/RoundedRect/Ellipse`, opacidade,
-    rotação, fontes Unicode, **assinatura digital** e PDF/A.
-    - Contras: o tamanho (vai só com as fontes que usarmos) e a conversão de TTF,
-      que grava arquivos de fonte. As fontes empacotadas vão já convertidas no
-      build. As enviadas são convertidas em `uploads/evcert-fonts/` com proteção
-      (ver o risco no spike).
-  - **tFPDF + php-qrcode** (o plano anterior): leve e lê TTF direto, mas **não
-    desenha SVG**. Teria de rasterizar o SVG (no navegador, ao enviar) e implementar
-    elipse, rotação e opacidade por conta própria.
-  - O spike gera a mesma arte de teste (fundo SVG, formas, texto com acentos e
-    cirílico, nome longo encolhido, QR) nas duas, e compara fidelidade (SVGs reais
-    exportados do Figma/Illustrator), tamanho do plugin, tempo e memória por PDF e o
-    funcionamento no Playground.
-  - **Recomendação a confirmar no spike: TCPDF.**
-
+- **Motor de PDF: dompdf** (decidido no spike da etapa 0, em
+  `docs/spikes/pdf-engine/RESULTS.md`), com **chillerlan/php-qrcode 4.4** para o
+  QR em SVG. Os dois vão empacotados com as licenças e com os namespaces
+  prefixados (Strauss). As fontes próprias do dompdf (7,5 MB) ficam de fora,
+  porque o plugin traz as suas.
+  - **Resultado:** 5,7% de pixels diferentes do Figma, contra 85,6% do TCPDF, que
+    errou os SVGs e está **descontinuado**. O tc-lib-pdf pede PHP 8.2, e o tFPDF
+    não desenha SVG.
+  - **PDF de cerca de 73 KB**, gerado em 0,2–0,4 s e com 20–24 MB de memória.
+    Funciona no **Playground** (1 s a frio).
+  - **Um formato, três saídas:** os elementos (JSON versionado) geram **um HTML
+    posicionado com SVG embutido**, que serve:
+    1. à **página web responsiva** (escalada num contêiner);
+    2. ao **PDF leve** (dompdf lê o mesmo HTML);
+    3. aos **bitmaps de compartilhamento**, desenhados pelo navegador num
+       `<canvas>` a partir do mesmo SVG. No servidor, só quando houver Imagick.
+  - **A tratar:** achatar a opacidade aninhada dos SVGs no upload, quebra de linha
+    própria (2.6), texto posicionado pela linha de base e "encolher para caber"
+    sem quebra.
 - **Layout:** são os elementos do editor (2.6), em mm, numa página de tamanho fixo.
   O texto por papel é feito com a visibilidade "só para os papéis…" de cada
   elemento.
