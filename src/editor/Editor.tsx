@@ -29,7 +29,7 @@ import {
 	type Mode,
 	type Run,
 	type TextEl,
-	type View, lockedRatio, isRequired } from './model';
+	type View, lockedRatio, isRequired, type SvgPath } from './model';
 import DesignPanel, { setSample } from './DesignPanel';
 import ElementToolbar from './ElementToolbar';
 import FieldText, { type FieldTextCommands } from './FieldText';
@@ -249,12 +249,41 @@ function resized( origin: Element, handle: string, dx: number, dy: number, keepR
 }
 
 /** One element, as SVG. */
+/** The organizer's signature from the sample data (JSON), if any. */
+function signatureOf( sample: Record< string, string > ): { vw: number; vh: number; paths: SvgPath[] } | null {
+	try {
+		const sig = sample.signature ? JSON.parse( sample.signature ) : null;
+		return sig && sig.vw > 0 && sig.vh > 0 && Array.isArray( sig.paths ) && sig.paths.length ? sig : null;
+	} catch {
+		return null;
+	}
+}
+
 function Shape( { el, design, mode, sample }: { el: Element; design: Design; mode: Mode; sample: Record< string, string > } ) {
 	const opacity = el.opacity ?? 1;
 	switch ( el.type ) {
 		case 'rect':
 			return <path d={ rectPath( el.x, el.y, el.w, el.h, el.radius, el.corner ) } fill={ color( design, el.fill, mode ) } stroke={ color( design, el.stroke, mode ) } strokeWidth={ el.strokeWidth || 0 } opacity={ opacity } />;
-		case 'svg':
+		case 'svg': {
+			// The signature element previews the organizer's signature when one is set, upright like on certificates (includes/render.php).
+			const signer = el.slot === 'signature' || el.id === 'signature' ? signatureOf( sample ) : null;
+			if ( signer ) {
+				const turn = ( ( ( el.rotation || 0 ) % 360 ) + 360 ) % 360;
+				const swap = turn === 90 || turn === 270;
+				const cx = el.x + el.w / 2;
+				const cy = el.y + el.h / 2;
+				const w = swap ? el.h : el.w;
+				const h = swap ? el.w : el.h;
+				return (
+					<g transform={ turn ? `rotate(${ -turn } ${ cx } ${ cy })` : undefined }>
+						<svg x={ cx - w / 2 } y={ cy - h / 2 } width={ w } height={ h } viewBox={ `0 0 ${ signer.vw } ${ signer.vh }` } opacity={ opacity } overflow="visible">
+							{ signer.paths.map( ( p, i ) => (
+								<path key={ i } d={ p.d } fill={ color( design, p.fill || el.color || '$text', mode ) } fillRule={ p.rule } />
+							) ) }
+						</svg>
+					</g>
+				);
+			}
 			return (
 				<svg x={ el.x } y={ el.y } width={ el.w } height={ el.h } viewBox={ `0 0 ${ el.vw } ${ el.vh }` } opacity={ opacity } overflow="visible">
 					{ svgPaths( el ).map( ( p, i ) => (
@@ -262,6 +291,7 @@ function Shape( { el, design, mode, sample }: { el: Element; design: Design; mod
 					) ) }
 				</svg>
 			);
+		}
 		case 'ellipse':
 			return <ellipse cx={ el.x + el.w / 2 } cy={ el.y + el.h / 2 } rx={ el.w / 2 } ry={ el.h / 2 } fill={ color( design, el.fill, mode ) } stroke={ color( design, el.stroke, mode ) } strokeWidth={ el.strokeWidth || 0 } opacity={ opacity } />;
 		case 'path':
@@ -306,7 +336,8 @@ export default function Editor() {
 	const design = useMemo( () => toView( stored, view ), [ stored, view ] );
 	const [ draft, setDraft ] = useState< Design | null >( null );
 	const shown = draft || design;
-	const sample = useMemo( () => ( { ...config.sample, ...( design.sample || {} ) } ), [ design.sample ] );
+	// Preview values: the design's own, where set (an empty one means not set), over the defaults.
+	const sample = useMemo( () => ( { ...config.sample, ...Object.fromEntries( Object.entries( design.sample || {} ).filter( ( [ , v ] ) => v !== '' ) ) } ), [ design.sample ] );
 	// Anchored elements resolved to x/y/w/h for drawing, hit testing and snapping.
 	const resolvedShown = useMemo( () => ( { ...shown, elements: shown.elements.map( ( e ) => resolve( e, shown.page ) ) } ), [ shown ] );
 	const resolvedDesign = useMemo( () => ( { ...design, elements: design.elements.map( ( e ) => resolve( e, design.page ) ) } ), [ design ] );

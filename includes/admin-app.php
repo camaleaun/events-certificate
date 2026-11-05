@@ -182,6 +182,11 @@ function enqueue() {
 	if ( ! $design || Designs\POST_TYPE !== get_post_type( $design ) ) {
 		$design = Designs\site_design_id();
 	}
+	$signer   = \EventsCertificate\Signer\current();
+	$camptix  = $GLOBALS['camptix'] ?? null;
+	$options  = is_object( $camptix ) && method_exists( $camptix, 'get_options' ) ? (array) $camptix->get_options() : array();
+	$event    = trim( (string) ( $options['event_name'] ?? '' ) );
+	$location = function_exists( 'EventsCertificate\Compat\CampTix\event_location' ) ? \EventsCertificate\Compat\CampTix\event_location() : (string) \EventsCertificate\Settings\value( 'location' );
 	wp_register_script( 'evcert-editor-data', false, array( 'wp-i18n' ), \EventsCertificate\VERSION, false );
 	wp_enqueue_script( 'evcert-editor-data' );
 	editor_translations();
@@ -193,9 +198,11 @@ function enqueue() {
 				'exitUrl' => Admin\page_url(),
 				'fonts'   => $url . '/fonts',
 				'sample'  => array(
-					'name'        => 'Alex Rivera',
-					'event'       => get_bloginfo( 'name' ),
-					'location'    => __( 'City, Country', 'events-certificate' ),
+					// The organizer who signs previews the participant too, when there is one.
+					'name'        => $signer ? $signer['name'] : 'Alex Rivera',
+					// Real values where the site has them (an emptied preview value falls back to these).
+					'event'       => '' !== $event ? $event : get_bloginfo( 'name' ),
+					'location'    => '' !== $location ? $location : __( 'City, Country', 'events-certificate' ),
 					'date_iso'    => gmdate( 'Y-m-d\TH:i:s\Z' ),
 					'date_site'   => wp_date( (string) get_option( 'date_format' ) ),
 					'hours'       => '8',
@@ -206,8 +213,10 @@ function enqueue() {
 					'role'        => __( 'Speaker', 'events-certificate' ),
 					'details'     => __( 'Building accessible blocks', 'events-certificate' ),
 					'document'    => 'CPF •••.•••.789-••',
-					'signer_name' => 'Sam Taylor',
-					'signer_role' => __( 'Event Coordinator', 'events-certificate' ),
+					// The organizer who signs, when there is one (Signer\current()); else sample values.
+					'signer_name' => $signer ? $signer['name'] : 'Sam Taylor',
+					'signer_role' => $signer && $signer['roles'] ? \EventsCertificate\Signer\role_in( $signer['roles'], determine_locale() ) : __( 'Event Coordinator', 'events-certificate' ),
+					'signature'   => $signer && $signer['signature'] ? (string) wp_json_encode( $signer['signature'] ) : '',
 					'code'        => '2611-04K7-M29Q-XAP3',
 					'verify_url'  => untrailingslashit( preg_replace( '#^https?://#', '', home_url( \EventsCertificate\Settings\value( 'slug' ) ) ) ),
 				) + \EventsCertificate\Render\phrases(),
