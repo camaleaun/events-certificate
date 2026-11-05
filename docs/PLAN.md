@@ -1208,6 +1208,69 @@ anterior) e entra uma tela própria em tela cheia.** O armazenamento continua ig
   acima do certificado;
 - sem JS: a página mostra o certificado e uma lista simples de links e dados.
 
+#### Desenhar no próprio canvas (sem depender de SVG para tudo)
+
+**Referências de interação:**
+- **Google Slides e Google Desenhos:** a principal, pela simplicidade para quem
+  vem do editor do WordPress;
+- Figma, Illustrator, Inkscape e Canva;
+- os apps abertos da **storytold** (github.com/storytold): *VectorCraft* (pen,
+  seleção direta, barra de tarefas contextual), *FigCraft* (painéis, atalhos e
+  "todo comando é uma ação": UI, CLI e MCP) e *DesignCraft* (diagramação, com
+  *"quebras de linha idênticas na tela e no PDF"*).
+  - São apps nativos em Rust, MIT/Apache-2.0. Servem de **inspiração de UX**, e
+    não de código.
+
+**Ferramentas de desenho** (no Dock: *Inserir* → ferramenta; desenha clicando e
+arrastando, como no Google Desenhos):
+
+| Ferramenta | Como desenha | Parâmetros |
+|---|---|---|
+| **Linha** | arrastar do ponto A ao B. **Shift** trava em 0°/45°/90° | cor, espessura, tracejado (contínuo/tracejado/pontilhado), pontas (reta/redonda/seta), opacidade |
+| **Retângulo** | arrastar. **Shift** = quadrado | preenchimento, contorno, **raio por canto** |
+| **Elipse** | arrastar. **Shift** = círculo | preenchimento, contorno |
+| **Caneta (pen)** | cliques criam pontos retos; **clicar e arrastar** cria uma curva Bézier; fecha clicando no primeiro ponto | contorno, preenchimento (quando fechada) |
+| **Polígono/estrela** (depois do MVP) | arrastar + número de lados/pontas | — |
+| **Texto** e **Imagem** | como antes (2.6) | — |
+
+- **Edição de pontos** (seleção direta, como no VectorCraft): duplo clique numa
+  linha ou caminho mostra os pontos e as alças Bézier para ajustar. **Esc** sai.
+- **Barra contextual** junto da seleção (2.6, mini-barra): para uma forma,
+  preenchimento, contorno, espessura e tracejado em um toque, como no Google
+  Slides.
+- **Armazenamento:** linhas, formas e caminhos são **elementos JSON** com os
+  pontos em pt, e o caminho com os dados no formato `d` do SVG. Eles geram o SVG
+  no editor e são desenhados em vetor no PDF. Uma moldura como a do Campus
+  Connect pode ser **desenhada** em vez de enviada como arquivo.
+- **Imagens SVG continuam aceitas** para logos e artes prontas, sanitizadas
+  (2.6).
+
+**Guias e áreas reservadas** (sempre visíveis no editor, nunca no PDF):
+- **Guias inteligentes** durante o arraste, com *snap*:
+  - **centro da página** (horizontal e vertical), em destaque;
+  - centros e bordas dos outros elementos;
+  - **espaçamento igual** entre três ou mais elementos (como no Figma e no Google
+    Slides), com a medida mostrada.
+- **Margem de segurança** (padrão 10 mm, configurável), uma faixa tracejada nas
+  extremidades:
+  - textos e o QR **não deveriam** passar dela, porque impressoras e cortes
+    comem as bordas;
+  - um aviso aparece quando um elemento de conteúdo invade a margem.
+- **Sangria** (padrão 3 mm, para gráfica): fundos e decorações podem ir até ela.
+  O PDF "para gráfica" (opção) a inclui com marcas de corte. O PDF normal corta
+  na página.
+- **Áreas reservadas** dos slots obrigatórios (nome e autenticidade) ficam
+  destacadas quando uma decoração passa por cima delas.
+- **Réguas** em mm ou pt, com **guias manuais** que se arrastam da régua (como no
+  Google Slides), mostrar ou ocultar guias (`Ctrl+;`), e uma grade opcional.
+
+**Quebra de linha igual na tela e no PDF** (a lição do DesignCraft): um único
+algoritmo de quebra, implementado em JS (editor) e em PHP (PDF), usando as
+**métricas dos mesmos arquivos TTF** (`opentype.js` no navegador e a
+`php-font-lib` no servidor). Ele calcula as linhas, e os dois lados desenham as
+linhas já quebradas. Isso também vale para o "encolher para caber" com nomes
+reais. Teste: a mesma lista de textos dá as mesmas quebras nos dois lados.
+
 #### Pranchetas: Documento (PDF), Mobile e Social
 
 O certificado aparece em lugares com formatos muito diferentes. A arte tem
