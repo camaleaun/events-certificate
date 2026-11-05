@@ -126,6 +126,27 @@ class RenderTest extends Test_Case {
 	}
 
 	/**
+	 * The signer follows the current one, like the design; the recorded one only when nobody signs.
+	 */
+	public function test_signer_follows_current() {
+		$cert    = array(
+			'code'      => '2611-04K7-M29Q-XAP3',
+			'data_json' => wp_json_encode(
+				array(
+					'signer_name'  => 'Recorded Signer',
+					'signer_roles' => array( 'en_US' => 'Old role' ),
+				)
+			),
+		);
+		$current = \EventsCertificate\Signer\current();
+		$values  = Render\values( $cert );
+		$this->assertSame( $current ? $current['name'] : 'Recorded Signer', $values['signer_name'] );
+		if ( ! $current ) {
+			$this->assertSame( 'Old role', $values['signer_role'] );
+		}
+	}
+
+	/**
 	 * Sites that aren't public draw no QR code, code, verification hint or address.
 	 */
 	public function test_non_public_sites_drop_verification() {

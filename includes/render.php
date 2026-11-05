@@ -509,7 +509,8 @@ function values( array $cert ) {
 		'sponsor'   => __( 'Sponsor', 'events-certificate' ),
 	);
 	$hours  = isset( $cert['hours'] ) && '' !== (string) $cert['hours'] ? (float) $cert['hours'] : null;
-	$signer = isset( $data['signer_name'] ) ? null : \EventsCertificate\Signer\current();
+	// The signer is part of the look, like the design: the current one; what was recorded at issue only when none is set.
+	$signer = \EventsCertificate\Signer\current();
 
 	return array(
 		'name'        => (string) ( $cert['name'] ?? '' ),
@@ -521,10 +522,9 @@ function values( array $cert ) {
 		'hours'       => null === $hours ? '' : (string) ( floor( $hours ) === $hours ? (int) $hours : $hours ),
 		'role'        => $roles[ $cert['role'] ?? '' ] ?? (string) ( $cert['role'] ?? '' ),
 		'details'     => (string) ( $cert['details'] ?? '' ),
-		// The signer frozen at issue; certificates issued before a signer was set use the current one.
-		'signer_name' => (string) ( $data['signer_name'] ?? ( $signer['name'] ?? '' ) ),
-		'signer_role' => \EventsCertificate\Signer\role_in( (array) ( $data['signer_roles'] ?? ( $signer['roles'] ?? array() ) ), determine_locale() ),
-		'signature'   => (string) wp_json_encode( $data['signature'] ?? ( $signer['signature'] ?? null ) ),
+		'signer_name' => (string) ( $signer ? $signer['name'] : ( $data['signer_name'] ?? '' ) ),
+		'signer_role' => \EventsCertificate\Signer\role_in( (array) ( $signer ? $signer['roles'] : ( $data['signer_roles'] ?? array() ) ), determine_locale() ),
+		'signature'   => (string) wp_json_encode( $signer ? $signer['signature'] : ( $data['signature'] ?? null ) ),
 		'code'        => (string) ( $cert['code'] ?? '' ),
 		'verify_url'  => untrailingslashit( (string) preg_replace( '#^https?://#', '', home_url( Settings\value( 'slug' ) ) ) ),
 		'document'    => (string) ( $cert['doc_masked'] ?? '' ),
