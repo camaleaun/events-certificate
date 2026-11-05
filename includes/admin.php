@@ -60,6 +60,21 @@ function menu_parent() {
 }
 
 /**
+ * The Certificates screen's address, under its parent menu
+ * (edit.php?post_type=tix_ticket&page=evcert-certificates with CampTix).
+ * menu_page_url() can't tell from a screen outside that menu, such as the
+ * design editor.
+ *
+ * @return string
+ */
+function page_url() {
+	$parent = menu_parent();
+	$base   = '' !== $parent && false !== strpos( $parent, '.php' ) ? $parent : 'admin.php';
+
+	return add_query_arg( 'page', SLUG, admin_url( $base ) );
+}
+
+/**
  * Registers the Certificates screen.
  */
 function register_menu() {

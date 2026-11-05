@@ -14,7 +14,6 @@ import {
 	create,
 	moved,
 	newId,
-	REQUIRED_SLOTS,
 	placed,
 	fromView,
 	migrate,
@@ -30,7 +29,7 @@ import {
 	type Mode,
 	type Run,
 	type TextEl,
-	type View, lockedRatio } from './model';
+	type View, lockedRatio, isRequired } from './model';
 import DesignPanel, { setSample } from './DesignPanel';
 import ElementToolbar from './ElementToolbar';
 import FieldText, { type FieldTextCommands } from './FieldText';
@@ -472,7 +471,7 @@ export default function Editor() {
 
 	const remove = ( id: string ) => {
 		const el = design.elements.find( ( e ) => e.id === id );
-		if ( ! el || ( el.slot && REQUIRED_SLOTS.includes( el.slot ) ) ) {
+		if ( ! el || isRequired( el, design.elements ) ) {
 			return;
 		}
 		commit( { ...design, elements: design.elements.filter( ( e ) => e.id !== id ) } );
@@ -493,6 +492,17 @@ export default function Editor() {
 		const [ el ] = list.splice( i, 1 );
 		const j = to === 'top' ? list.length : to === 'bottom' ? 0 : to === 'up' ? Math.min( list.length, i + 1 ) : Math.max( 0, i - 1 );
 		list.splice( j, 0, el );
+		commit( { ...design, elements: list } );
+	};
+	/** Restacks an element just in front of or behind another (dragging in Layers). */
+	const move = ( id: string, target: string, place: 'front' | 'behind' ) => {
+		const list = [ ...design.elements ];
+		const [ el ] = list.splice( list.findIndex( ( e ) => e.id === id ), 1 );
+		const t = list.findIndex( ( e ) => e.id === target );
+		if ( ! el || t < 0 ) {
+			return;
+		}
+		list.splice( place === 'front' ? t + 1 : t, 0, el );
 		commit( { ...design, elements: list } );
 	};
 	const insert = ( type: Element[ 'type' ] ) => {
@@ -685,6 +695,9 @@ export default function Editor() {
 								onSelect={ ( id ) => { setSelected( id ); setSidebar( 'element' ); } }
 								onToggle={ ( id, key ) => update( id, { [ key ]: ! design.elements.find( ( e ) => e.id === id )?.[ key ] } as Partial< Element > ) }
 								onOrder={ reorder }
+								onMove={ move }
+								onRename={ ( id, name ) => update( id, { name } as Partial< Element > ) }
+								onRemove={ remove }
 								onClose={ () => setPanel( null ) }
 							/>
 						) }
@@ -889,7 +902,7 @@ export default function Editor() {
 					onInsertField={ ( field ) => textCommands.current?.insertField( field ) }
 					onToggleEdit={ () => ( editing ? stopEditing() : current && startEditing( current ) ) }
 					el={ current }
-					required={ !! current.slot && REQUIRED_SLOTS.includes( current.slot ) }
+					required={ isRequired( current, design.elements ) }
 					onSelectParent={ () => setSidebar( 'element' ) }
 					onOrder={ ( to ) => reorder( current.id, to ) }
 					onToggle={ ( key ) => update( current.id, { [ key ]: ! current[ key ] } as Partial< Element > ) }

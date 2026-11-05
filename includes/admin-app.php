@@ -190,7 +190,7 @@ function enqueue() {
 		'window.evcertEditor = ' . wp_json_encode(
 			array(
 				'design'  => $design,
-				'exitUrl' => menu_page_url( Admin\SLUG, false ),
+				'exitUrl' => Admin\page_url(),
 				'fonts'   => $url . '/fonts',
 				'sample'  => array(
 					'name'        => 'Alex Rivera',

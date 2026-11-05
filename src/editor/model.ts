@@ -117,6 +117,11 @@ export function color( design: Design, value: string | undefined, mode: Mode ): 
 /** Slots the certificate can't do without: they can be moved, not removed. */
 export const REQUIRED_SLOTS = [ 'name', 'authenticity', 'code', 'verify' ];
 
+/** Whether an element can't be deleted: the only one left of a required slot (a duplicate can go). */
+export function isRequired( el: Element, elements: Element[] ): boolean {
+	return !! el.slot && REQUIRED_SLOTS.includes( el.slot ) && elements.filter( ( e ) => e.slot === el.slot ).length < 2;
+}
+
 export const PLACEHOLDERS = [ 'name', 'event', 'location', 'issued_date', 'signer_name', 'signer_role', 'code', 'hours', 'role' ];
 
 /**
