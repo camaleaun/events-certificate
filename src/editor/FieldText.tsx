@@ -91,6 +91,18 @@ function toggleMark( chip: HTMLElement, root: HTMLElement | null, mark: 'b' | 'i
 
 const esc = ( v: string ) => v.replace( /&/g, '&amp;' ).replace( /</g, '&lt;' ).replace( />/g, '&gt;' );
 
+/**
+ * A text that is only a standard text (a 'text' group field): it edits like
+ * an empty paragraph, the translated words as its placeholder; typing
+ * replaces them, emptying it brings the placeholder back.
+ */
+function phraseOnly( runs: Run[], info: Record< string, FieldInfo > ): Run | null {
+	return runs.length === 1 && 'field' in runs[ 0 ] && info[ runs[ 0 ].field ]?.group === 'text' ? runs[ 0 ] : null;
+}
+
+/** Whether the editable holds nothing (a lone <br> or spaces count as nothing). */
+const isBlank = ( runs: Run[] ) => runs.every( ( r ) => 'text' in r && ! r.text.trim() );
+
 /** Runs as the editable's HTML: text in spans, fields as non-editable chips. */
 function toHtml( runs: Run[], info: Record< string, FieldInfo > ): string {
 	return runs
@@ -173,11 +185,18 @@ export default function FieldText( { label, runs, onChange, sample, locale, inli
 	const ref = useRef< HTMLDivElement >( null );
 	const last = useRef< string >( '' );
 	const [ chip, setChip ] = useState< { el: HTMLElement; index: number } | null >( null );
+	// The standard text this element stands for while it shows as a placeholder.
+	const phrase = useRef< Run | null >( phraseOnly( runs, info ) );
+	const placeholder = phraseOnly( runs, info );
+	if ( placeholder ) {
+		phrase.current = placeholder;
+	}
+	const placeholderText = phrase.current && 'field' in phrase.current ? info[ phrase.current.field ]?.label || '' : '';
 
 	// Only rewrite the DOM when the value changed from outside (undo, another element).
 	useLayoutEffect( () => {
-		const html = toHtml( runs, info );
-		if ( ref.current && html !== last.current && toHtml( fromDom( ref.current ), info ) !== html ) {
+		const html = placeholder ? '' : toHtml( runs, info );
+		if ( ref.current && html !== last.current && ( placeholder ? ! isBlank( fromDom( ref.current ) ) : toHtml( fromDom( ref.current ), info ) !== html ) ) {
 			ref.current.innerHTML = html;
 		}
 		last.current = html;
@@ -186,10 +205,16 @@ export default function FieldText( { label, runs, onChange, sample, locale, inli
 	const emit = () => {
 		if ( ref.current ) {
 			const next = fromDom( ref.current );
+			if ( isBlank( next ) && phrase.current ) {
+				last.current = '';
+				onChange( [ phrase.current ] );
+				return;
+			}
 			last.current = toHtml( next, info );
 			onChange( next );
 		}
 	};
+	const editableClass = ( base: string ) => [ base, placeholder && 'is-placeholder', placeholder?.b && 'is-placeholder-b', placeholder?.i && 'is-placeholder-i' ].filter( Boolean ).join( ' ' );
 
 	const insertField = ( field: string ) => {
 		const root = ref.current;
@@ -350,7 +375,8 @@ export default function FieldText( { label, runs, onChange, sample, locale, inli
 			<>
 			<div
 					ref={ ref }
-					className={ inline ? 'evcert-text evcert-text--editing' : 'evcert-field-text-input' }
+					className={ editableClass( inline ? 'evcert-text evcert-text--editing' : 'evcert-field-text-input' ) }
+					data-placeholder={ placeholderText || undefined }
 					style={ inline ? style : undefined }
 					contentEditable
 					suppressContentEditableWarning
@@ -432,7 +458,8 @@ export default function FieldText( { label, runs, onChange, sample, locale, inli
 			</div>
 			<div
 				ref={ ref }
-				className={ inline ? 'evcert-text evcert-text--editing' : 'evcert-field-text-input' }
+				className={ editableClass( inline ? 'evcert-text evcert-text--editing' : 'evcert-field-text-input' ) }
+					data-placeholder={ placeholderText || undefined }
 				style={ inline ? style : undefined }
 				contentEditable
 				suppressContentEditableWarning
