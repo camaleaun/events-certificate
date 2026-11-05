@@ -242,6 +242,7 @@ export default function Editor() {
 	const [ svgModal, setSvgModal ] = useState< string | null >( null );
 	const [ editing, setEditing ] = useState< { id: string; runs: Run[] } | null >( null );
 	const textCommands = useRef< FieldTextCommands | null >( null );
+	const clickToEdit = useRef< Element | null >( null );
 	const [ editAnchor, setEditAnchor ] = useState< HTMLElement | null >( null );
 	useEffect( () => {
 		setEditAnchor( editing ? ( document.querySelector( '.evcert-text--editing' ) as HTMLElement | null ) : null );
@@ -254,7 +255,8 @@ export default function Editor() {
 		}
 	};
 	const stopEditing = () => {
-		if ( editing ) {
+		const original = editing ? design.elements.find( ( e ) => e.id === editing.id ) : null;
+		if ( editing && original && JSON.stringify( runsOf( original as TextEl ) ) !== JSON.stringify( editing.runs ) ) {
 			update( editing.id, { runs: editing.runs, text: undefined } as Partial< Element > );
 		}
 		setEditing( null );
@@ -376,7 +378,10 @@ export default function Editor() {
 	const onPointerUp = () => {
 		if ( dragRef.current && draft ) {
 			commit( draft );
+		} else if ( clickToEdit.current ) {
+			startEditing( clickToEdit.current );
 		}
+		clickToEdit.current = null;
 		dragRef.current = null;
 		setDraft( null );
 		setGuides( [] );
@@ -477,6 +482,12 @@ export default function Editor() {
 			} else if ( ( event.key === 'Delete' || event.key === 'Backspace' ) && selected ) {
 				event.preventDefault();
 				remove( selected );
+			} else if ( event.key === 'Enter' && selected && ! editing ) {
+				const el = design.elements.find( ( e ) => e.id === selected );
+				if ( el && el.type === 'text' ) {
+					event.preventDefault();
+					startEditing( el );
+				}
 			} else if ( event.key === 'Escape' ) {
 				setSelected( null );
 				setPanel( null );
@@ -645,6 +656,8 @@ export default function Editor() {
 											if ( editing ) {
 												stopEditing();
 											}
+											// A second click on the selected text (without dragging) edits it.
+											clickToEdit.current = selected === el.id && el.type === 'text' ? el : null;
 											setSelected( el.id );
 											setSidebar( 'element' );
 											if ( tab === 'content' ) {

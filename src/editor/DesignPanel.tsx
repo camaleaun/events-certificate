@@ -7,18 +7,16 @@
 import {
 	Button,
 	ColorIndicator,
-	ColorPicker,
 	Dropdown,
+	__experimentalPaletteEdit as PaletteEdit,
 	SelectControl,
 	TextControl,
-	ToggleControl,
 	__experimentalHStack as HStack,
 	__experimentalItem as Item,
 	__experimentalItemGroup as ItemGroup,
 	__experimentalNumberControl as NumberControl,
 	__experimentalToggleGroupControl as ToggleGroupControl,
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
-	__experimentalZStack as ZStack,
 } from '@wordpress/components';
 import { useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
@@ -147,53 +145,49 @@ export default function DesignPanel( { design, mode, title, status, onTitle, onC
 			</div>
 
 			<div className="evcert-inspector__section">
-				<h2 className="evcert-section-heading">{ __( 'Colors', 'events-certificate' ) }</h2>
-				<p className="evcert-meta">{ __( 'Each color has a light and a dark value. Elements use these colors, so changing one here changes them all.', 'events-certificate' ) }</p>
-				<ItemGroup isBordered isSeparated className="evcert-palette">
-					{ Object.entries( design.colors ).map( ( [ key, v ] ) => (
-						<ColorVariable
-							key={ key }
-							name={ v.name }
-							light={ v.light }
-							dark={ v.dark }
-							onChange={ ( next ) => onChange( { ...design, colors: { ...design.colors, [ key ]: { ...v, ...next } } } ) }
-						/>
-					) ) }
-				</ItemGroup>
+				<Palette design={ design } onChange={ onChange } />
 			</div>
 		</div>
 	);
 }
 
-function ColorVariable( { name, light, dark, onChange }: { name: string; light: string; dark: string; onChange: ( v: { name?: string; light?: string; dark?: string } ) => void } ) {
+const TRANSPARENT = '#ffffff00';
+
+/**
+ * The color variables, edited with core's PaletteEdit (the Styles > Colors >
+ * Palette editor of the Site Editor): add, rename, recolor and remove. Each
+ * variable has a light and a dark value; the toggle picks which one the
+ * palette shows. Adding, renaming or removing applies to both modes.
+ */
+function Palette( { design, onChange }: { design: Design; onChange: ( design: Design ) => void } ) {
 	const [ which, setWhich ] = useState< 'light' | 'dark' >( 'light' );
-	const value = which === 'light' ? light : dark;
-	const swatch = ( c: string ) => ( c === 'transparent' ? undefined : c );
+	const colors = Object.entries( design.colors ).map( ( [ slug, v ] ) => ( { slug, name: v.name, color: v[ which ] === 'transparent' ? TRANSPARENT : v[ which ] } ) );
 	return (
-		<Dropdown
-			popoverProps={ { placement: 'left-start', offset: 36, shift: true } }
-			renderToggle={ ( { isOpen, onToggle } ) => (
-				<Item onClick={ onToggle } aria-expanded={ isOpen } className={ isOpen ? 'is-open' : '' }>
-					<HStack justify="flex-start">
-						<ZStack isLayered={ false } offset={ -8 }>
-							<ColorIndicator colorValue={ swatch( light ) } />
-							<ColorIndicator colorValue={ swatch( dark ) } />
-						</ZStack>
-						<span className="evcert-palette__name">{ name }</span>
-					</HStack>
-				</Item>
-			) }
-			renderContent={ () => (
-				<div className="evcert-row-popover">
-					<TextControl __next40pxDefaultSize __nextHasNoMarginBottom label={ __( 'Name', 'events-certificate' ) } value={ name } onChange={ ( n ) => onChange( { name: n } ) } />
-					<ToggleGroupControl __next40pxDefaultSize __nextHasNoMarginBottom isBlock label={ __( 'Mode', 'events-certificate' ) } value={ which } onChange={ ( v ) => setWhich( v as 'light' ) }>
-						<ToggleGroupControlOption value="light" label={ __( 'Light', 'events-certificate' ) } />
-						<ToggleGroupControlOption value="dark" label={ __( 'Dark', 'events-certificate' ) } />
-					</ToggleGroupControl>
-					<ToggleControl __nextHasNoMarginBottom label={ __( 'Transparent', 'events-certificate' ) } checked={ value === 'transparent' } onChange={ ( t ) => onChange( { [ which ]: t ? 'transparent' : '#ffffff' } ) } />
-					{ value !== 'transparent' && <ColorPicker color={ value } onChange={ ( c ) => onChange( { [ which ]: c } ) } enableAlpha={ false } /> }
-				</div>
-			) }
-		/>
+		<>
+			<ToggleGroupControl __next40pxDefaultSize __nextHasNoMarginBottom isBlock label={ __( 'Palette for', 'events-certificate' ) } value={ which } onChange={ ( v ) => setWhich( v as 'light' ) }>
+				<ToggleGroupControlOption value="light" label={ __( 'Light', 'events-certificate' ) } />
+				<ToggleGroupControlOption value="dark" label={ __( 'Dark', 'events-certificate' ) } />
+			</ToggleGroupControl>
+			<div className="evcert-palette-edit">
+				<PaletteEdit
+					paletteLabel={ __( 'Colors', 'events-certificate' ) }
+					paletteLabelHeadingLevel={ 2 }
+					colors={ colors }
+					slugPrefix="custom-"
+					emptyMessage={ __( 'No colors yet. Add one with +.', 'events-certificate' ) }
+					popoverProps={ { placement: 'left-start', offset: 36 } }
+					onChange={ ( next: Array< { slug: string; name: string; color: string } > = [] ) => {
+						const updated: Design[ 'colors' ] = {};
+						for ( const c of next ) {
+							const old = design.colors[ c.slug ];
+							const value = c.color === TRANSPARENT ? 'transparent' : c.color;
+							updated[ c.slug ] = old ? { ...old, name: c.name, [ which ]: value } : { name: c.name, light: value, dark: value };
+						}
+						onChange( { ...design, colors: updated } );
+					} }
+				/>
+			</div>
+			<p className="evcert-meta">{ __( 'Elements use these colors, so editing one here changes every element that uses it. A color added here gets the same value in both modes until you change one.', 'events-certificate' ) }</p>
+		</>
 	);
 }

@@ -116,7 +116,7 @@ export default function Inspector( { el, design, mode, tab, locale, sample, onCh
 			</div>
 
 			{ el.type === 'text' && (
-				<div className="evcert-inspector__section evcert-meta">{ __( 'Double-click the text on the canvas to edit it. Fields are inserted from the toolbar. Locked texts can still be edited, not moved.', 'events-certificate' ) }</div>
+				<div className="evcert-inspector__section evcert-meta">{ __( 'Click the selected text again (or press Enter) to edit it on the canvas. Fields are inserted from the toolbar. Locked texts can still be edited, not moved.', 'events-certificate' ) }</div>
 			) }
 
 			{ tab === 'art' && el.type === 'image' && (
