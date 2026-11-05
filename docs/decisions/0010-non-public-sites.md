@@ -1,4 +1,4 @@
-# 0010 — Sites that are not public show a QR placeholder
+# 0010 — Sites that are not public print no verification
 
 **Status:** Accepted (2026-11-04)
 
@@ -7,9 +7,11 @@
 On Playground, localhost and other non-public sites (detected by
 `Environment\is_public()`, overridable with `evcert_is_public_site`), nobody
 else can open the verification address, so certificates do not claim
-authenticity: the QR code is replaced by a decorative placeholder
-(`assets/qr-placeholder.svg`) and a text explains the limitation. The editor
-always shows the same placeholder where each certificate gets its real QR code.
+authenticity: they leave out the QR code, the verification hint and any text
+showing the verification address (revised 2026-11-05; at first a decorative
+QR placeholder was drawn, which still looked checkable). The code stays, as
+the certificate's reference. The editor always shows the placeholders, since
+the design is made for when the site is public.
 
 ## Why
 

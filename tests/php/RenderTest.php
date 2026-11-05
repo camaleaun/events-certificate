@@ -114,6 +114,63 @@ class RenderTest extends Test_Case {
 		$this->assertEqualsWithDelta( 560 * 4 / 3, Render\resolve( $image, $page )['w'], 0.01 );
 	}
 
+	/**
+	 * Sites that aren't public draw no QR code, verification hint or address; the code stays.
+	 */
+	public function test_non_public_sites_drop_verification() {
+		$design = array(
+			'page'   => array(
+				'w'  => 100,
+				'h'  => 100,
+				'bg' => '#fff',
+			),
+			'colors' => array(
+				'text' => array(
+					'light' => '#000',
+					'dark'  => '#fff',
+				),
+			),
+		);
+		$values = Render\values( array( 'code' => '2611-04K7-M29Q-XAP3' ) );
+		$opts   = array( 'mode' => 'light' );
+		$qr     = array(
+			'type' => 'qr',
+			'x'    => 0,
+			'y'    => 0,
+			'w'    => 10,
+			'h'    => 10,
+		);
+		$hint   = array(
+			'type' => 'text',
+			'slot' => 'verify',
+			'x'    => 0,
+			'y'    => 0,
+			'w'    => 10,
+			'h'    => 10,
+			'runs' => array( array( 'field' => 'verify_url' ) ),
+		);
+		$code   = array(
+			'type' => 'text',
+			'slot' => 'code',
+			'x'    => 0,
+			'y'    => 0,
+			'w'    => 10,
+			'h'    => 10,
+			'runs' => array( array( 'field' => 'code' ) ),
+		);
+
+		add_filter( 'evcert_is_public_site', '__return_false' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- the plugin's own hook.
+		$this->assertSame( '', Render\element_html( $qr, $design, $values, $opts ) );
+		$this->assertSame( '', Render\element_html( $hint, $design, $values, $opts ) );
+		$this->assertStringContainsString( '2611-04K7-M29Q-XAP3', Render\element_html( $code, $design, $values, $opts ) );
+		remove_filter( 'evcert_is_public_site', '__return_false' );
+
+		add_filter( 'evcert_is_public_site', '__return_true' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- the plugin's own hook.
+		$this->assertNotSame( '', Render\element_html( $qr, $design, $values, $opts ) );
+		$this->assertNotSame( '', Render\element_html( $hint, $design, $values, $opts ) );
+		remove_filter( 'evcert_is_public_site', '__return_true' );
+	}
+
 	public function test_rect_path() {
 		$this->assertSame( 'M0 0L10 0L10 10L0 10Z', Render\rect_path( 0, 0, 10, 10 ) );
 		// Round corners are cubic curves bulging toward the corner (dompdf draws SVG arcs wrong).

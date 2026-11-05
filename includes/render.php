@@ -520,6 +520,10 @@ function element_html( array $el, array $design, array $values, array $options )
 		return '' === $src ? '' : sprintf( '<img alt="%s" src="%s" style="%s">', esc_attr( $alt ), esc_attr( $src ), esc_attr( $style ) );
 	};
 
+	if ( ! verifiable() && is_verification( $el ) ) {
+		return '';
+	}
+
 	switch ( $type ) {
 		case 'text':
 			$size = (float) ( $el['size'] ?? 14 );
@@ -536,7 +540,7 @@ function element_html( array $el, array $design, array $values, array $options )
 				$size,
 				(float) ( $el['lh'] ?? 1.2 ),
 				color( $design, $el['color'] ?? '$text', $mode ),
-				in_array( $el['align'] ?? 'left', array( 'left', 'center', 'right' ), true ) ? $el['align'] : 'left',
+				in_array( $el['align'] ?? 'left', array( 'left', 'center', 'right' ), true ) ? ( $el['align'] ?? 'left' ) : 'left',
 				! empty( $el['ls'] ) ? sprintf( 'letter-spacing:%.2Fpt;', $el['ls'] ) : '',
 				! empty( $el['fit'] ) ? 'white-space:nowrap;' : '',
 				$alpha
@@ -645,6 +649,37 @@ function element_html( array $el, array $design, array $values, array $options )
 	}
 
 	return '';
+}
+
+/**
+ * Whether certificates here can be checked by others: on a site that isn't
+ * public (localhost, Playground…) nobody else can open the verification
+ * address, so certificates carry no QR code, address or hint (docs/decisions/0010).
+ *
+ * @return bool
+ */
+function verifiable() {
+	return Environment\is_public();
+}
+
+/**
+ * Whether an element only serves verification: the QR code, the verification
+ * hint, or a text that shows the verification address. The code itself stays.
+ *
+ * @param array<string, mixed> $el Element.
+ * @return bool
+ */
+function is_verification( array $el ) {
+	if ( 'qr' === ( $el['type'] ?? '' ) || 'verify' === ( $el['slot'] ?? '' ) ) {
+		return true;
+	}
+	foreach ( (array) ( $el['runs'] ?? array() ) as $run ) {
+		if ( in_array( $run['field'] ?? '', array( 'verify_url', 'verify_hint' ), true ) ) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 /**
