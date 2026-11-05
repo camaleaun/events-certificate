@@ -30,7 +30,7 @@
         }
     },
     "scripts": {
-        "lint": "parallel-lint --exclude vendor --exclude node_modules --exclude build --exclude docs .",
+        "lint": "parallel-lint --exclude vendor --exclude vendor-prefixed --exclude node_modules --exclude build --exclude docs .",
         "phpcs": "phpcs",
         "phpcbf": "phpcbf",
         "test": "phpunit",
@@ -47,7 +47,7 @@
         "phpcbf": "Fix what PHPCS can fix automatically.",
         "test": "PHPUnit tests (loads the WordPress site the plugin is installed in; set WP_LOAD for another).",
         "check": "Lint, PHPCS and tests.",
-        "prefix-namespaces": "Copy dompdf and php-qrcode into vendor-prefixed/ with the EventsCertificate\\Vendor\\ prefix (needs bin/strauss.phar, see bin/README)."
+        "prefix-namespaces": "Copy dompdf and php-qrcode into vendor-prefixed/ with the EventsCertificate\\Vendor\\ prefix (needs bin/strauss.phar, see bin/README.md)."
     },
     "extra": {
         "strauss": {

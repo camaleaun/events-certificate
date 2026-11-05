@@ -22,6 +22,9 @@ while IFS= read -r line || [ -n "$line" ]; do
 	fi
 done < "$plugin/.distignore"
 
+# Third-party libraries ship (with their licenses) but are not our code to check: docs/decisions/0003.
+dirs+=("vendor-prefixed")
+
 join() {
 	local IFS=,
 	echo "$*"

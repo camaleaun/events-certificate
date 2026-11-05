@@ -22,6 +22,10 @@ defined( 'ABSPATH' ) || exit;
 
 const VERSION = '0.1.0-dev';
 
+// Bundled libraries (dompdf, php-qrcode), namespaced EventsCertificate\Vendor\ by Strauss: docs/decisions/0003.
+if ( is_readable( __DIR__ . '/vendor-prefixed/autoload.php' ) ) {
+	require_once __DIR__ . '/vendor-prefixed/autoload.php';
+}
 require_once __DIR__ . '/includes/install.php';
 require_once __DIR__ . '/includes/settings.php';
 require_once __DIR__ . '/includes/environment.php';
