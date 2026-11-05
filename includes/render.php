@@ -149,6 +149,20 @@ function locked_ratio( array $el ) {
 }
 
 /**
+ * The page background in a mode: one value for both, or one per mode
+ * (src/editor/model.ts pageBg()); '' = none, the page's own color shows.
+ *
+ * @param array<string, mixed> $page Page.
+ * @param string               $mode light|dark.
+ * @return string
+ */
+function page_bg( array $page, $mode ) {
+	$bg = $page['bg'] ?? '';
+
+	return is_array( $bg ) ? (string) ( $bg[ $mode ] ?? '' ) : (string) $bg;
+}
+
+/**
  * A color: "$name" reads the palette in the mode; anything else is literal.
  *
  * @param array<string, mixed> $design Design.
@@ -877,7 +891,7 @@ function element_html( array $el, array $design, array $values, array $options )
 
 		case 'qr':
 			// Modules in the text color on the page color (so the dark mode inverts it), with a solid quiet zone.
-			$page_bg = color( $design, $design['page']['bg'] ?? '', $mode );
+			$page_bg = color( $design, page_bg( (array) $design['page'], $mode ), $mode );
 			if ( in_array( $page_bg, array( 'none', 'transparent' ), true ) ) {
 				$page_bg = 'dark' === $mode ? '#000000' : '#ffffff';
 			}
@@ -958,7 +972,7 @@ function artwork( array $design, array $values, array $options = array() ) {
 		$options
 	);
 	$page    = (array) $design['page'];
-	$bg      = color( $design, $page['bg'] ?? '', $options['mode'] );
+	$bg      = color( $design, page_bg( $page, (string) $options['mode'] ), $options['mode'] );
 	$html    = '';
 	foreach ( (array) $design['elements'] as $el ) {
 		if ( ! is_array( $el ) || ! empty( $el['hidden'] ) ) {

@@ -75,7 +75,8 @@ export type Element = TextEl | RectEl | EllipseEl | PathEl | LineEl | ImageEl | 
 
 export type Design = {
 	version: 1;
-	page: { w: number; h: number; bg: string; safe: number; bleed: number };
+	// bg: one color for both modes, or one per mode (e.g. none in Light, a dark color in Dark); '' = the page's own color.
+	page: { w: number; h: number; bg: string | { light?: string; dark?: string }; safe: number; bleed: number };
 	colors: Record< string, ColorVar >;
 	elements: Element[];
 	// Preview values for the fields, only for the editor (certificates use real data).
@@ -393,6 +394,18 @@ function phraseRuns( runs: Run[] ): Run[] {
 		const { text, ...marks } = run;
 		return [ m[ 1 ] && { ...marks, text: m[ 1 ] }, { ...marks, field: key }, m[ 3 ] && { ...marks, text: m[ 3 ] } ].filter( Boolean ) as Run[];
 	} );
+}
+
+/** The page background in a mode ('' = none: the page's own color shows). */
+export function pageBg( page: Design[ 'page' ], mode: Mode ): string {
+	return typeof page.bg === 'string' ? page.bg : page.bg?.[ mode ] || '';
+}
+
+/** The page background with one mode's value changed (the other mode keeps what it showed). */
+export function withPageBg( page: Design[ 'page' ], mode: Mode, value: string ): Design[ 'page' ][ 'bg' ] {
+	const both = typeof page.bg === 'string' ? { light: page.bg, dark: page.bg } : { light: page.bg?.light || '', dark: page.bg?.dark || '' };
+	const next = { ...both, [ mode ]: value };
+	return next.light === next.dark ? next.light : next;
 }
 
 export function migrate( design: Design ): Design {

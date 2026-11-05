@@ -29,7 +29,7 @@ import {
 	type Mode,
 	type Run,
 	type TextEl,
-	type View, lockedRatio, isRequired, type SvgPath } from './model';
+	type View, lockedRatio, isRequired, type SvgPath, pageBg } from './model';
 import DesignPanel, { setSample } from './DesignPanel';
 import ElementToolbar from './ElementToolbar';
 import FieldText, { type FieldTextCommands } from './FieldText';
@@ -797,7 +797,7 @@ export default function Editor() {
 	} );
 
 	const { w, h, safe, bleed } = shown.page;
-	const bg = color( shown, shown.page.bg, mode );
+	const bg = color( shown, pageBg( shown.page, mode ), mode );
 	const selBox = current ? box( current ) : null;
 	const textEls = useMemo( () => shown.elements.filter( ( el ) => el.type === 'text' ), [ shown ] );
 	const statusLabel = {

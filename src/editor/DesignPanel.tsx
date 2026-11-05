@@ -21,7 +21,7 @@ import {
 import { useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import { Icon, page as pageIcon } from '@wordpress/icons';
-import { color, type Design, type Mode } from './model';
+import { color, type Design, type Mode, pageBg, withPageBg } from './model';
 
 const MM = 2.83465;
 
@@ -83,8 +83,10 @@ export default function DesignPanel( { design, mode, title, status, sample, defa
 	const landscape = page.w >= page.h;
 	const sizeKey = ( Object.keys( SIZES ) as Array< keyof typeof SIZES > ).find( ( k ) => ( [ SIZES[ k ].w, SIZES[ k ].h ].sort().join() === [ page.w, page.h ].sort().join() ) ) || 'a4';
 	const setPage = ( patch: Partial< Design[ 'page' ] > ) => onChange( { ...design, page: { ...page, ...patch } } );
-	const bg = color( design, page.bg, mode );
-	const bgVar = page.bg.startsWith( '$' ) ? design.colors[ page.bg.slice( 1 ) ] : null;
+	// The background of the mode being designed (Light/Dark in the toolbar): each mode can have its own.
+	const bgValue = pageBg( page, mode );
+	const bg = color( design, bgValue, mode );
+	const bgVar = bgValue.startsWith( '$' ) ? design.colors[ bgValue.slice( 1 ) ] : null;
 
 	return (
 		<div className="evcert-design-panel">
@@ -125,25 +127,25 @@ export default function DesignPanel( { design, mode, title, status, sample, defa
 					) }
 				</DropdownRow>
 				<DropdownRow
-					label={ __( 'Background', 'events-certificate' ) }
+					label={ mode === 'dark' ? __( 'Background (Dark)', 'events-certificate' ) : __( 'Background (Light)', 'events-certificate' ) }
 					value={
 						<HStack spacing={ 2 } justify="flex-start">
 							<ColorIndicator colorValue={ bg === 'transparent' || bg === 'none' ? undefined : bg } />
-							<span>{ bgVar ? bgVar.name : page.bg || __( 'Default (page color)', 'events-certificate' ) }</span>
+							<span>{ bgVar ? bgVar.name : bgValue || __( 'Default (page color)', 'events-certificate' ) }</span>
 						</HStack>
 					}
 				>
 					{ ( close ) => (
 						<ItemGroup isBordered isSeparated>
 							{ /* No background: the page's own color shows (light or dark on the certificate page, the paper in the PDF). */ }
-							<Item onClick={ () => { setPage( { bg: '' } ); close(); } }>
+							<Item onClick={ () => { setPage( { bg: withPageBg( page, mode, '' ) } ); close(); } }>
 								<HStack justify="flex-start">
 									<ColorIndicator colorValue={ undefined } />
 									<span>{ __( 'Default (page color)', 'events-certificate' ) }</span>
 								</HStack>
 							</Item>
 							{ Object.entries( design.colors ).map( ( [ key, v ] ) => (
-								<Item key={ key } onClick={ () => { setPage( { bg: `$${ key }` } ); close(); } }>
+								<Item key={ key } onClick={ () => { setPage( { bg: withPageBg( page, mode, `$${ key }` ) } ); close(); } }>
 									<HStack justify="flex-start">
 										<ColorIndicator colorValue={ v[ mode ] === 'transparent' ? undefined : v[ mode ] } />
 										<span>{ v.name }</span>
