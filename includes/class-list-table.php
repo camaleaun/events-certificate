@@ -249,12 +249,52 @@ class List_Table extends \WP_List_Table {
 		}
 
 		return sprintf(
-			'<strong><a class="row-title" href="%s" target="_blank">%s</a></strong>%s%s',
+			'%s<strong><a class="row-title" href="%s" target="_blank">%s</a></strong>%s%s',
+			$this->avatar( $item ),
 			esc_url( $url ),
 			esc_html( $item['name'] ),
 			$item['email'] ? '<br><span class="description">' . esc_html( $item['email'] ) . '</span>' : '',
 			$this->row_actions( $actions )
 		);
+	}
+
+	/**
+	 * The participant's avatar, as WordPress.org shows it: from their
+	 * WordPress.org username (wordpress.org/grav-redirect.php sends the
+	 * browser to that account's Gravatar), else from the certificate's email.
+	 *
+	 * @param array<string, mixed> $item Certificate.
+	 * @return string
+	 */
+	private function avatar( array $item ) {
+		$size     = 32;
+		$username = sanitize_user( (string) ( $item['wporg_username'] ?? '' ), true );
+		if ( '' !== $username ) {
+			return sprintf(
+				'<img class="evcert-avatar avatar avatar-%1$d photo" src="%2$s" srcset="%3$s 2x" width="%1$d" height="%1$d" alt="" loading="lazy">',
+				$size,
+				esc_url(
+					add_query_arg(
+						array(
+							'user' => $username,
+							's'    => $size,
+						),
+						'https://wordpress.org/grav-redirect.php'
+					)
+				),
+				esc_url(
+					add_query_arg(
+						array(
+							'user' => $username,
+							's'    => $size * 2,
+						),
+						'https://wordpress.org/grav-redirect.php'
+					)
+				)
+			);
+		}
+
+		return (string) get_avatar( (string) ( $item['email'] ?? '' ), $size, '', '', array( 'class' => 'evcert-avatar' ) );
 	}
 
 	/**

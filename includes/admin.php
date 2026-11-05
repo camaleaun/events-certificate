@@ -92,6 +92,13 @@ function register_menu() {
 }
 
 /**
+ * The avatar beside the name, placed like the Users screen's.
+ */
+function list_styles() {
+	wp_add_inline_style( 'list-tables', '.column-name .evcert-avatar{float:left;margin:1px 10px 0 0;border-radius:50%}' );
+}
+
+/**
  * Before the Certificates screen prints: the per-page screen option and the
  * revoke action (row or bulk), then back to the list with a notice.
  */
@@ -105,6 +112,7 @@ function load_screen() {
 		)
 	);
 	add_filter( 'set_screen_option_evcert_certificates_per_page', __NAMESPACE__ . '\save_per_page', 10, 3 );
+	add_action( 'admin_enqueue_scripts', __NAMESPACE__ . '\list_styles' );
 
 	$table  = new List_Table();
 	$action = $table->current_action();
