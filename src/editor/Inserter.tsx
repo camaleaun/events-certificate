@@ -19,7 +19,7 @@ export default function Inserter( { hasQr, onInsert, onClose }: { hasQr: boolean
 		{ type: 'rect', title: __( 'Rectangle', 'events-certificate' ), keywords: 'square shape box frame' },
 		{ type: 'ellipse', title: __( 'Ellipse', 'events-certificate' ), keywords: 'circle shape ring' },
 		{ type: 'image', title: __( 'Image', 'events-certificate' ), keywords: 'logo picture png jpg' },
-		{ type: 'svg', title: __( 'SVG code', 'events-certificate' ), keywords: 'icon logo ornament vector' },
+		{ type: 'svg', title: __( 'SVG', 'events-certificate' ), keywords: 'icon logo ornament vector path signature' },
 		...( hasQr ? [] : [ { type: 'qr' as const, title: __( 'Authenticity (QR)', 'events-certificate' ), keywords: 'qr code verify' } ] ),
 	];
 	const term = search.trim().toLowerCase();

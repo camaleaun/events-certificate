@@ -60,7 +60,7 @@ function Row( { label, children }: { label: string; children: React.ReactNode } 
 }
 
 /** A row whose value is a tertiary button opening a dropdown, like PostStatus/PostSchedule. */
-function DropdownRow( { label, value, children }: { label: string; value: React.ReactNode; children: ( close: () => void ) => React.ReactNode } ) {
+export function DropdownRow( { label, value, children }: { label: string; value: React.ReactNode; children: ( close: () => void ) => React.ReactNode } ) {
 	return (
 		<Row label={ label }>
 			<Dropdown

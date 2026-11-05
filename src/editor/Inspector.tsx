@@ -12,6 +12,7 @@ import {
 	FontSizePicker,
 	RangeControl,
 	SelectControl,
+	TextareaControl,
 	TextControl,
 	ToggleControl,
 	__experimentalNumberControl as NumberControl,
@@ -25,9 +26,11 @@ import {
 } from '@wordpress/components';
 import { useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { justifyBottom, justifyCenter, justifyCenterVertical, justifyLeft, justifyRight, justifyStretch, justifyStretchVertical, justifyTop, alignCenter, alignLeft, alignRight, cornerBottomLeft, cornerBottomRight, cornerTopLeft, cornerTopRight, formatUppercase, Icon, link, linkOff, reset } from '@wordpress/icons';
+import { justifyBottom, justifyCenter, justifyCenterVertical, justifyLeft, justifyRight, justifyStretch, justifyStretchVertical, justifyTop, alignCenter, alignLeft, alignRight, cornerBottomLeft, cornerBottomRight, cornerTopLeft, cornerTopRight, formatUppercase, Icon, link, linkOff, reset, settings } from '@wordpress/icons';
 import { elementIcon } from './icons';
-import { color, isLen, layoutFrom, parseLen, refBox, REQUIRED_SLOTS, type AxisMode, type Layout, type Design, type Element, type Mode } from './model';
+import { naturalSize, type Picked } from './media';
+import SvgPanel from './SvgPanel';
+import { box as boxOf, color, isLen, layoutFrom, parseLen, refBox, REQUIRED_SLOTS, type AxisMode, type Box, type Layout, type Design, type Element, type Mode } from './model';
 
 type Props = {
 	el: Element;
@@ -38,7 +41,8 @@ type Props = {
 	locale: string;
 	sample: Record< string, string >;
 	onChange: ( patch: Partial< Element > ) => void;
-	onImage: () => void;
+	onImage: ( picked: Picked ) => void;
+	onBox: ( b: Box ) => void;
 };
 
 const FONT_SIZES = [ 8, 10, 12, 14, 16, 18, 24, 32, 42 ].map( ( size ) => ( { name: `${ size } pt`, slug: String( size ), size } ) );
@@ -83,7 +87,7 @@ export function ColorItem( { label, value, design, mode, onChange }: { label: st
 	);
 }
 
-export default function Inspector( { el, stored, design, mode, tab, locale, sample, onChange, onImage }: Props ) {
+export default function Inspector( { el, stored, design, mode, tab, locale, sample, onChange, onImage, onBox }: Props ) {
 	const [ linked, setLinked ] = useState( true );
 	const required = !! el.slot && REQUIRED_SLOTS.includes( el.slot );
 	const typeLabel = {
@@ -124,12 +128,66 @@ export default function Inspector( { el, stored, design, mode, tab, locale, samp
 			) }
 
 			{ tab === 'art' && el.type === 'image' && (
-				<div className="evcert-inspector__section">
-					<Button variant="secondary" __next40pxDefaultSize onClick={ onImage }>
-						{ __( 'Replace image…', 'events-certificate' ) }
-					</Button>
-				</div>
+				<ToolsPanel label={ __( 'Settings', 'events-certificate' ) } resetAll={ () => onChange( { ratio: 'auto', fit: 'cover' } as Partial< Element > ) }>
+					<ToolsPanelItem label={ __( 'Alternative text', 'events-certificate' ) } hasValue={ () => !! el.alt } onDeselect={ () => onChange( { alt: '' } as Partial< Element > ) } isShownByDefault>
+						<TextareaControl
+							__nextHasNoMarginBottom
+							label={ __( 'Alternative text', 'events-certificate' ) }
+							help={ __( 'Describe the purpose of the image. Read aloud on the certificate page; leave empty if the image is purely decorative.', 'events-certificate' ) }
+							value={ el.alt || '' }
+							onChange={ ( alt ) => onChange( { alt } as Partial< Element > ) }
+						/>
+					</ToolsPanelItem>
+					<ToolsPanelItem label={ __( 'Aspect ratio', 'events-certificate' ) } hasValue={ () => ( el.ratio || 'auto' ) !== 'auto' } onDeselect={ () => onChange( { ratio: 'auto' } as Partial< Element > ) } isShownByDefault>
+						<SelectControl
+							__next40pxDefaultSize
+							__nextHasNoMarginBottom
+							label={ __( 'Aspect ratio', 'events-certificate' ) }
+							value={ ( el.ratio || 'auto' ) as any }
+							options={ [
+								{ label: __( 'Original', 'events-certificate' ), value: 'auto' },
+								{ label: __( 'Square - 1:1', 'events-certificate' ), value: '1' },
+								{ label: __( 'Standard - 4:3', 'events-certificate' ), value: '4/3' },
+								{ label: __( 'Portrait - 3:4', 'events-certificate' ), value: '3/4' },
+								{ label: __( 'Classic - 3:2', 'events-certificate' ), value: '3/2' },
+								{ label: __( 'Classic Portrait - 2:3', 'events-certificate' ), value: '2/3' },
+								{ label: __( 'Wide - 16:9', 'events-certificate' ), value: '16/9' },
+								{ label: __( 'Tall - 9:16', 'events-certificate' ), value: '9/16' },
+							] }
+							onChange={ async ( ratio ) => {
+								const b = boxOf( el );
+								let r = ratio.split( '/' ).map( Number ).reduce( ( x, y ) => x / y );
+								if ( ratio === 'auto' ) {
+									if ( ! el.src ) {
+										onChange( { ratio } as Partial< Element > );
+										return;
+									}
+									const n = await naturalSize( el.src ).catch( () => null );
+									r = n ? n.width / n.height : b.w / b.h;
+								}
+								onChange( { ratio } as Partial< Element > );
+								onBox( { ...b, h: Math.round( ( b.w / r ) * 100 ) / 100 } );
+							} }
+						/>
+					</ToolsPanelItem>
+					<ToolsPanelItem label={ __( 'Scale', 'events-certificate' ) } hasValue={ () => el.fit === 'contain' } onDeselect={ () => onChange( { fit: 'cover' } as Partial< Element > ) } isShownByDefault>
+						<ToggleGroupControl
+							__next40pxDefaultSize
+							__nextHasNoMarginBottom
+							isBlock
+							label={ __( 'Scale', 'events-certificate' ) }
+							value={ el.fit || 'cover' }
+							help={ el.fit === 'contain' ? __( 'Image is contained without distortion.', 'events-certificate' ) : __( 'Image covers the space evenly.', 'events-certificate' ) }
+							onChange={ ( fit ) => onChange( { fit } as Partial< Element > ) }
+						>
+							<ToggleGroupControlOption value="cover" label={ __( 'Cover', 'events-certificate' ) } />
+							<ToggleGroupControlOption value="contain" label={ __( 'Contain', 'events-certificate' ) } />
+						</ToggleGroupControl>
+					</ToolsPanelItem>
+				</ToolsPanel>
 			) }
+
+			{ tab === 'art' && el.type === 'svg' && <SvgPanel el={ el } design={ design } mode={ mode } onChange={ ( patch ) => onChange( patch as Partial< Element > ) } /> }
 
 			{ tab === 'art' && el.type === 'text' && (
 				<ToolsPanel
@@ -182,7 +240,8 @@ export default function Inspector( { el, stored, design, mode, tab, locale, samp
 				<ToolsPanel label={ __( 'Color', 'events-certificate' ) } resetAll={ () => {} } className="color-block-support-panel">
 					<div className="evcert-color-items">
 						{ el.type === 'text' && <ColorItem label={ __( 'Text', 'events-certificate' ) } value={ el.color } design={ design } mode={ mode } onChange={ ( c ) => onChange( { color: c } ) } /> }
-						{ ( el.type === 'rect' || el.type === 'ellipse' || el.type === 'path' || el.type === 'svg' ) && <ColorItem label={ __( 'Fill', 'events-certificate' ) } value={ el.fill } design={ design } mode={ mode } onChange={ ( fill ) => onChange( { fill } ) } /> }
+						{ ( el.type === 'rect' || el.type === 'ellipse' || el.type === 'path' ) && <ColorItem label={ __( 'Fill', 'events-certificate' ) } value={ el.fill } design={ design } mode={ mode } onChange={ ( fill ) => onChange( { fill } ) } /> }
+						{ el.type === 'svg' && <ColorItem label={ __( 'Current color', 'events-certificate' ) } value={ el.color || '$text' } design={ design } mode={ mode } onChange={ ( c ) => onChange( { color: c } as Partial< Element > ) } /> }
 						{ el.type !== 'text' && el.type !== 'svg' && <ColorItem label={ el.type === 'line' ? __( 'Line', 'events-certificate' ) : __( 'Stroke', 'events-certificate' ) } value={ ( el as any ).stroke } design={ design } mode={ mode } onChange={ ( stroke ) => onChange( { stroke } as Partial< Element > ) } /> }
 					</div>
 				</ToolsPanel>
@@ -311,11 +370,22 @@ const AXIS_LABELS = () => ( {
 	},
 } );
 
+const LEN_UNITS = [
+	{ value: 'pt', label: 'pt', step: 1 },
+	{ value: 'mm', label: 'mm', step: 1 },
+	{ value: 'cm', label: 'cm', step: 0.1 },
+	{ value: 'in', label: 'in', step: 0.01 },
+	{ value: '%', label: '%', step: 1 },
+];
+const SIMPLE = /^-?\d*\.?\d+(pt|mm|cm|in|%)$/;
+
 /**
- * An open length field: "20pt", "10mm", "5%", "calc(100% - 40pt)". Commits
- * on blur or Enter when valid, and shows what it resolves to.
+ * A length: a value and a unit, like the block editor's dimension fields
+ * (UnitControl). The settings button switches to a custom value that also
+ * takes calc(), like the spacing controls' "Set custom size".
  */
 function LengthField( { label, value, total, onChange }: { label: string; value: string; total: number; onChange: ( v: string ) => void } ) {
+	const [ custom, setCustom ] = useState( ! SIMPLE.test( value ) );
 	const [ text, setText ] = useState( value );
 	const [ focused, setFocused ] = useState( false );
 	const shown = focused ? text : value;
@@ -325,19 +395,51 @@ function LengthField( { label, value, total, onChange }: { label: string; value:
 			onChange( /^-?\d*\.?\d+$/.test( text.trim() ) ? `${ text.trim() }pt` : text.trim() );
 		}
 	};
-	return (
-		<TextControl
-			__next40pxDefaultSize
-			__nextHasNoMarginBottom
-			label={ label }
-			value={ shown }
-			className={ valid ? '' : 'is-invalid' }
-			help={ valid ? `= ${ Math.round( parseLen( shown, total ) * 10 ) / 10 } pt` : __( 'Use pt, mm, % or calc(100% - 20pt).', 'events-certificate' ) }
-			onFocus={ () => { setText( value ); setFocused( true ); } }
-			onBlur={ () => { commitText(); setFocused( false ); } }
-			onKeyDown={ ( event: { key: string } ) => event.key === 'Enter' && commitText() }
-			onChange={ setText }
+	const toggle = (
+		<Button
+			size="small"
+			icon={ settings }
+			isPressed={ custom }
+			label={ custom ? __( 'Use a value and unit', 'events-certificate' ) : __( 'Set custom value (calc)', 'events-certificate' ) }
+			onClick={ () => {
+				if ( custom && ! SIMPLE.test( value ) ) {
+					onChange( `${ Math.round( parseLen( value, total ) * 100 ) / 100 }pt` );
+				}
+				setCustom( ! custom );
+			} }
 		/>
+	);
+	return (
+		<div className="evcert-length">
+			<HStack className="evcert-length__header">
+				<span className="evcert-length__label">{ label }</span>
+				{ toggle }
+			</HStack>
+			{ custom ? (
+				<TextControl
+					__next40pxDefaultSize
+					__nextHasNoMarginBottom
+					label={ label }
+					hideLabelFromVision
+					value={ shown }
+					className={ valid ? '' : 'is-invalid' }
+					help={ valid ? `= ${ Math.round( parseLen( shown, total ) * 10 ) / 10 } pt` : __( 'Use pt, mm, % or calc(100% - 20pt).', 'events-certificate' ) }
+					onFocus={ () => { setText( value ); setFocused( true ); } }
+					onBlur={ () => { commitText(); setFocused( false ); } }
+					onKeyDown={ ( event: { key: string } ) => event.key === 'Enter' && commitText() }
+					onChange={ setText }
+				/>
+			) : (
+				<UnitControl
+					__next40pxDefaultSize
+					label={ label }
+					hideLabelFromVision
+					units={ LEN_UNITS }
+					value={ value }
+					onChange={ ( v ) => v && SIMPLE.test( v ) && v !== value && onChange( v ) }
+				/>
+			) }
+		</div>
 	);
 }
 

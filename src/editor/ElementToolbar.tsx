@@ -3,10 +3,12 @@
  * (block-editor/src/components/block-toolbar + block-popover): element icon,
  * movers, lock, and an Options menu with Delete in its own last group.
  */
-import { DropdownMenu, MenuGroup, MenuItem, Popover, Toolbar, ToolbarButton, ToolbarDropdownMenu, ToolbarGroup } from '@wordpress/components';
+import { DropdownMenu, MenuGroup, MenuItem, Popover, Toolbar, ToolbarButton, ToolbarDropdownMenu, ToolbarGroup, ToolbarItem } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
-import { arrowDown, arrowUp, copy, formatBold, formatItalic, lock, moreVertical, plus, trash, unlock, unseen } from '@wordpress/icons';
+import { arrowDown, arrowUp, copy, formatBold, formatItalic, lock, moreVertical, pencil, plus, trash, unlock, unseen } from '@wordpress/icons';
 import { fields } from './FieldText';
+import { ReplaceImage } from './ImageSource';
+import type { Picked } from './media';
 import { elementIcon } from './icons';
 import type { Element } from './model';
 
@@ -23,9 +25,11 @@ type Props = {
 	onBold?: () => void;
 	onItalic?: () => void;
 	onInsertField?: ( field: string ) => void;
+	onToggleEdit?: () => void;
+	onImage?: ( picked: Picked ) => void;
 };
 
-export default function ElementToolbar( { anchor, el, required, onSelectParent, onOrder, onToggle, onDuplicate, onRemove, editing, onBold, onItalic, onInsertField }: Props ) {
+export default function ElementToolbar( { anchor, el, required, onSelectParent, onOrder, onToggle, onDuplicate, onRemove, editing, onBold, onItalic, onInsertField, onToggleEdit, onImage }: Props ) {
 	const info = fields();
 	if ( ! anchor ) {
 		return null;
@@ -47,6 +51,23 @@ export default function ElementToolbar( { anchor, el, required, onSelectParent, 
 				<ToolbarGroup>
 					<ToolbarButton icon={ elementIcon( el.type ) } label={ el.name || el.type } onClick={ onSelectParent } />
 				</ToolbarGroup>
+				{ el.type === 'text' && (
+					<ToolbarGroup>
+						<ToolbarButton
+							icon={ pencil }
+							isPressed={ !! editing }
+							label={ editing ? __( 'Done editing', 'events-certificate' ) : __( 'Edit text', 'events-certificate' ) }
+							shortcut="↵"
+							onMouseDown={ ( e: { preventDefault: () => void } ) => e.preventDefault() }
+							onClick={ onToggleEdit }
+						/>
+					</ToolbarGroup>
+				) }
+				{ el.type === 'image' && onImage && (
+					<ToolbarGroup>
+						<ToolbarItem>{ ( toggleProps ) => <ReplaceImage src={ el.src } attachment={ el.attachment } onPick={ onImage } toggleProps={ toggleProps as any } /> }</ToolbarItem>
+					</ToolbarGroup>
+				) }
 				{ editing && (
 					<ToolbarGroup>
 						<ToolbarButton icon={ formatBold } label={ __( 'Bold', 'events-certificate' ) } shortcut="⌘B" onMouseDown={ ( e: { preventDefault: () => void } ) => e.preventDefault() } onClick={ onBold } />
@@ -68,7 +89,9 @@ export default function ElementToolbar( { anchor, el, required, onSelectParent, 
 					<ToolbarButton icon={ el.locked ? lock : unlock } isPressed={ !! el.locked } label={ el.locked ? __( 'Unlock', 'events-certificate' ) : __( 'Lock', 'events-certificate' ) } onClick={ () => onToggle( 'locked' ) } />
 				</ToolbarGroup>
 				<ToolbarGroup>
-					<DropdownMenu icon={ moreVertical } label={ __( 'Options', 'events-certificate' ) } popoverProps={ { placement: 'bottom-start' } } toggleProps={ { size: 'compact' } as any }>
+					<ToolbarItem>
+						{ ( toggleProps ) => (
+					<DropdownMenu icon={ moreVertical } label={ __( 'Options', 'events-certificate' ) } popoverProps={ { placement: 'bottom-start' } } toggleProps={ toggleProps }>
 						{ ( { onClose } ) => (
 							<>
 								<MenuGroup>
@@ -95,6 +118,8 @@ export default function ElementToolbar( { anchor, el, required, onSelectParent, 
 							</>
 						) }
 					</DropdownMenu>
+						) }
+					</ToolbarItem>
 				</ToolbarGroup>
 			</Toolbar>
 		</Popover>

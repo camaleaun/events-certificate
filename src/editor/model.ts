@@ -41,7 +41,10 @@ export type TextEl = Base & {
 };
 export type CornerShape = 'round' | 'scoop' | 'bevel' | 'notch' | 'squircle';
 export type RectEl = Base & { type: 'rect'; fill?: string; stroke?: string; strokeWidth?: number; radius?: number[]; corner?: CornerShape };
-export type SvgEl = Base & { type: 'svg'; markup: string; vw: number; vh: number; fill?: string };
+/** One path of an SVG element: its outline (path data) and fill (a color or a $variable; none = the current color). */
+export type SvgPath = { d: string; fill?: string; rule?: 'nonzero' | 'evenodd' };
+/** An SVG drawing kept as fields, never as markup: a viewBox size and a list of filled paths. */
+export type SvgEl = Base & { type: 'svg'; vw: number; vh: number; paths: SvgPath[]; color?: string; markup?: string; fill?: string };
 export type EllipseEl = Base & { type: 'ellipse'; fill?: string; stroke?: string; strokeWidth?: number };
 export type PathEl = Base & { type: 'path'; d: string; vw: number; vh: number; fill?: string; stroke?: string; strokeWidth?: number };
 export type LineEl = Omit< Base, 'x' | 'y' | 'w' | 'h' > & {
@@ -59,7 +62,7 @@ export type LineEl = Omit< Base, 'x' | 'y' | 'w' | 'h' > & {
 	w?: number;
 	h?: number;
 };
-export type ImageEl = Base & { type: 'image'; src: string; fit?: 'contain' | 'cover' };
+export type ImageEl = Base & { type: 'image'; src: string; fit?: 'contain' | 'cover'; alt?: string; attachment?: number; ratio?: string };
 export type QrEl = Base & { type: 'qr' };
 
 export type Element = TextEl | RectEl | EllipseEl | PathEl | LineEl | ImageEl | QrEl | SvgEl;
@@ -223,8 +226,10 @@ export function create( type: Element[ 'type' ], design: Design ): Element {
 			return { id, type, name: 'Line', x1: cx - 100, y1: cy, x2: cx + 100, y2: cy, stroke: '$line', strokeWidth: 1, dash: 'solid' };
 		case 'qr':
 			return { id, type, name: 'Authenticity', slot: 'authenticity', x: cx - 24, y: cy - 24, w: 48, h: 48 };
+		case 'svg':
+			return { id, type, name: 'SVG', x: cx - 48, y: cy - 48, w: 96, h: 96, vw: 24, vh: 24, paths: [ { d: 'M12 2 22 12 12 22 2 12Z' } ] };
 		default:
-			return { id, type: 'image', name: 'Image', x: cx - 60, y: cy - 60, w: 120, h: 120, src: '', fit: 'contain' };
+			return { id, type: 'image', name: 'Image', x: cx - 130, y: cy - 90, w: 260, h: 180, src: '', fit: 'cover', alt: '' };
 	}
 }
 
@@ -280,68 +285,81 @@ export function rectPath( x: number, y: number, w: number, h: number, radius: nu
 }
 
 /**
- * SVG kept from pasted code: as little as possible, like the wp_kses() lists
- * themes use for their SVG icons — <svg> with its size and viewBox and paths
- * with their fill. Groups are unwrapped (their fill goes to their paths). No stroke, no other shapes, no styles, scripts,
- * links or embedded content. The server sanitizes again with the same list
- * (wp_kses) when the design is saved.
+ * SVG is kept as fields, like the wp_kses() lists themes use for their icons
+ * but stricter: a viewBox size and paths with path data, a fill and a fill
+ * rule. Pasted code is read into those fields; groups are unwrapped (their
+ * fill goes to their paths); strokes, other shapes, styles, scripts, links
+ * and embedded content are dropped. The server checks the fields again.
  */
-export const SVG_ALLOWED: Record< string, string[] > = {
-	svg: [ 'width', 'height', 'viewbox' ],
-	path: [ 'd', 'fill', 'fill-rule', 'clip-rule' ],
-};
-export const SVG_TAGS = Object.keys( SVG_ALLOWED );
 
-/** Sanitizes SVG code; returns the inner markup and the viewBox size, or null. */
-export function sanitizeSvg( code: string ): { markup: string; vw: number; vh: number } | null {
-	const doc = new DOMParser().parseFromString( code, 'image/svg+xml' );
+/** Path data: only path commands and numbers, starting with a move. */
+export function isPathData( d: string ): boolean {
+	return /^[MmLlHhVvCcSsQqTtAaZz0-9eE.,\s+-]*$/.test( d ) && /^\s*[Mm]/.test( d );
+}
+
+/** A fill: a hex/rgb color, none, currentColor or a $variable. */
+export function isFill( value: string ): boolean {
+	return /^(none|currentcolor|#[0-9a-f]{3,8}|rgba?\([\d\s.,%]+\)|\$[a-z0-9_-]+)$/i.test( value.trim() );
+}
+
+/** Reads SVG code into fields; returns the viewBox size and the paths, or null. */
+export function sanitizeSvg( code: string ): { vw: number; vh: number; paths: SvgPath[] } | null {
+	const text = code.trim();
+	const doc = new DOMParser().parseFromString( /^<svg[\s>]/i.test( text ) ? text : `<svg xmlns="http://www.w3.org/2000/svg">${ text }</svg>`, 'image/svg+xml' );
 	const root = doc.documentElement;
 	if ( ! root || root.nodeName.toLowerCase() !== 'svg' || doc.querySelector( 'parsererror' ) ) {
 		return null;
 	}
-	// Unwrap groups: their paths move up, inheriting the group's fill.
-	for ( let group = root.querySelector( 'g' ); group; group = root.querySelector( 'g' ) ) {
-		const fill = group.getAttribute( 'fill' );
-		for ( const path of Array.from( group.querySelectorAll( 'path' ) ) ) {
-			if ( fill && ! path.hasAttribute( 'fill' ) ) {
-				path.setAttribute( 'fill', fill );
+	const inherited = ( node: globalThis.Element, name: string ): string | null => {
+		for ( let n: globalThis.Element | null = node; n; n = n.parentElement ) {
+			if ( n.getAttribute( name ) ) {
+				return n.getAttribute( name );
 			}
 		}
-		group.replaceWith( ...Array.from( group.childNodes ) );
-	}
-	const clean = ( node: globalThis.Element ) => {
-		for ( const child of Array.from( node.children ) ) {
-			const tag = child.nodeName.toLowerCase();
-			if ( tag === 'svg' || ! SVG_ALLOWED[ tag ] ) {
-				child.remove();
-				continue;
-			}
-			for ( const attr of Array.from( child.attributes ) ) {
-				const name = attr.name.toLowerCase();
-				const value = attr.value.trim();
-				const color = name !== 'fill' || /^(none|currentcolor|#[0-9a-f]{3,8}|rgba?\([\d\s.,%]+\))$/i.test( value );
-				if ( ! SVG_ALLOWED[ tag ].includes( name ) || ! color ) {
-					child.removeAttribute( attr.name );
-				}
-			}
-			clean( child );
-		}
+		return null;
 	};
-	clean( root );
+	const paths: SvgPath[] = [];
+	for ( const node of Array.from( root.getElementsByTagName( 'path' ) ) ) {
+		const d = ( node.getAttribute( 'd' ) || '' ).trim().replace( /\s+/g, ' ' );
+		if ( ! d || ! isPathData( d ) ) {
+			continue;
+		}
+		const fill = inherited( node, 'fill' );
+		const rule = inherited( node, 'fill-rule' );
+		paths.push( { d, ...( fill && isFill( fill ) && fill.toLowerCase() !== 'currentcolor' ? { fill } : {} ), ...( rule === 'evenodd' ? { rule: 'evenodd' as const } : {} ) } );
+	}
+	if ( ! paths.length ) {
+		return null;
+	}
 	const box = ( root.getAttribute( 'viewBox' ) || '' ).split( /[\s,]+/ ).map( Number );
 	const vw = box.length === 4 && box[ 2 ] > 0 ? box[ 2 ] : Number( root.getAttribute( 'width' ) ) || 100;
 	const vh = box.length === 4 && box[ 3 ] > 0 ? box[ 3 ] : Number( root.getAttribute( 'height' ) ) || 100;
-	const markup = Array.from( root.childNodes )
-		.map( ( n ) => ( n.nodeType === 1 ? new XMLSerializer().serializeToString( n ) : '' ) )
-		.join( '' )
-		.replace( / xmlns="http:\/\/www\.w3\.org\/2000\/svg"/g, '' );
-	return { markup, vw, vh };
+	return { vw, vh, paths };
 }
 
-/** SVG markup with every fill (except "none") replaced, to recolor an icon with a color variable. */
-export function recolor( markup: string, fill?: string ): string {
-	return fill ? markup.replace( /fill="(?!none)[^"]*"/g, `fill="${ fill }"` ) : markup;
+/** The paths of an SVG element; designs saved before the fields kept markup (and one fill for all). */
+export function svgPaths( el: SvgEl ): SvgPath[] {
+	if ( el.paths ) {
+		return el.paths;
+	}
+	const parsed = el.markup ? sanitizeSvg( el.markup ) : null;
+	return ( parsed?.paths || [] ).map( ( p ) => ( el.fill ? { ...p, fill: el.fill } : p ) );
 }
+
+/** Moves SVG elements saved as markup to fields. */
+export function migrate( design: Design ): Design {
+	return {
+		...design,
+		elements: design.elements.map( ( el ) => {
+			if ( el.type !== 'svg' || el.paths ) {
+				return el;
+			}
+			const { markup, fill, ...rest } = el;
+			return { ...rest, paths: svgPaths( el ) } as Element;
+		} ),
+	};
+}
+
 
 /**
  * Anchors and relative sizes, like Figma's constraints: per axis, an element

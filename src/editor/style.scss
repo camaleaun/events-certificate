@@ -479,9 +479,11 @@
 	display: inline-block;
 	padding: 0 8px;
 	margin: 0 1px;
-	border: 1px solid #c3c4c7;
+	// Tinted from the text's own color, so chips read in light and dark mode.
+	border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
 	border-radius: 4px;
-	background: #f6f7f7;
+	background: color-mix(in srgb, currentColor 12%, transparent);
+	color: inherit;
 	font-size: 12px;
 	line-height: 20px;
 	cursor: pointer;
@@ -626,15 +628,23 @@
 }
 
 /* Element toolbar (block-editor-block-contextual-toolbar). */
+.evcert-element-toolbar-popover {
+	// Absolute and shrink-to-fit: without this the last group (Options) overflowed the border.
+	width: max-content;
+}
 .evcert-element-toolbar-popover .components-popover__content {
 	overflow: visible;
 }
-.evcert-element-toolbar.components-toolbar {
+.evcert-element-toolbar.components-accessible-toolbar {
+	// Its intrinsic width came out short of its groups (the Options group overflowed the border).
+	width: max-content;
 	background: #fff;
 	border: 1px solid #1e1e1e;
 	border-radius: 2px;
 	min-height: 48px;
 	.components-toolbar-group {
+		// Groups were laid out at their min-content width, so the last one overflowed the border.
+		min-width: max-content;
 		border: 0;
 		border-right: 1px solid #ddd;
 		min-height: 46px;
@@ -820,4 +830,144 @@
 	.is-invalid input {
 		border-color: #cc1818;
 	}
+}
+
+// The options menu sits inside the bordered toolbar like the block toolbar's.
+.evcert-element-toolbar.components-accessible-toolbar {
+	.components-dropdown-menu,
+	.components-dropdown {
+		display: flex;
+		height: 100%;
+	}
+	.components-toolbar-group > .components-button.has-text,
+	.components-toolbar-group .components-dropdown > .components-button:not(.has-icon) {
+		padding: 0 12px;
+	}
+}
+
+// Empty image: the core Image block's placeholder, scaled with the page. Like
+// core's is-small/is-medium, it drops the instructions, then the buttons (the
+// toolbar's Add image stays), then the label as the element gets smaller.
+.evcert-image-ph {
+	width: 100%;
+	height: 100%;
+	container-type: size;
+	cursor: move;
+}
+.evcert-image-ph .evcert-image-placeholder {
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+	min-width: 0;
+	overflow: hidden;
+	.components-placeholder__fieldset {
+		gap: 8px;
+		flex-wrap: wrap;
+	}
+	button {
+		cursor: pointer;
+	}
+}
+@container (max-width: 300px) or (max-height: 190px) {
+	.evcert-image-placeholder.components-placeholder {
+		padding: 8px;
+		gap: 8px;
+	}
+	.evcert-image-placeholder .components-placeholder__instructions {
+		display: none;
+	}
+}
+@container (max-width: 210px) or (max-height: 130px) {
+	.evcert-image-placeholder .components-placeholder__fieldset {
+		display: none;
+	}
+	.evcert-image-placeholder.components-placeholder {
+		align-items: center;
+		justify-content: center;
+	}
+}
+@container (max-width: 110px) or (max-height: 56px) {
+	.evcert-image-placeholder .components-placeholder__label {
+		font-size: 0;
+		margin: 0;
+	}
+	.evcert-image-placeholder .components-placeholder__label svg {
+		margin: 0;
+	}
+}
+.evcert-url-popover,
+.evcert-replace-popover__url {
+	padding: 8px;
+	min-width: 260px;
+}
+.evcert-replace-popover__label {
+	margin: 0 0 8px;
+	font-size: 11px;
+	font-weight: 500;
+	text-transform: uppercase;
+	color: #757575;
+}
+.evcert-replace-popover .components-popover__content {
+	padding: 0;
+}
+.evcert-replace-popover .components-menu-group {
+	padding: 8px;
+	border-bottom: 1px solid #ddd;
+}
+
+// SVG paths, like the palette's color list.
+.evcert-svg-panel__header {
+	margin-bottom: 8px;
+	.evcert-section-heading {
+		margin: 0;
+	}
+}
+.evcert-length__header {
+	margin-bottom: 8px;
+}
+.evcert-length__label {
+	font-size: 11px;
+	font-weight: 500;
+	text-transform: uppercase;
+	line-height: 1.4;
+}
+.evcert-svg-path.components-item {
+	padding: 4px 8px;
+}
+.evcert-svg-path__swatch.components-button {
+	padding: 0;
+	min-width: 0;
+	height: auto;
+}
+.evcert-svg-path__swatch .component-color-indicator.is-current {
+	box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2);
+	outline: 1px dashed #949494;
+	outline-offset: 2px;
+}
+.evcert-svg-path__d {
+	flex: 1;
+	min-width: 0;
+	input {
+		font-family: Menlo, Consolas, monaco, monospace;
+		font-size: 12px;
+	}
+	&.is-invalid input {
+		border-color: #cc1818;
+	}
+}
+.evcert-code textarea {
+	font-family: Menlo, Consolas, monaco, monospace;
+	font-size: 12px;
+}
+.evcert-code.is-invalid textarea {
+	border-color: #cc1818;
+}
+.evcert-length {
+	min-width: 0;
+}
+.evcert-chip-marks {
+	display: flex;
+	gap: 4px;
+	margin: 8px 0;
 }

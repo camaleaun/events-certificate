@@ -4,7 +4,7 @@
  * the other elements, and a floating Dock with everything else.
  */
 import apiFetch from '@wordpress/api-fetch';
-import { Button, ColorPalette, DropdownMenu, MenuGroup, MenuItem, Modal, Popover, Spinner, RangeControl, SelectControl, TextareaControl, TextControl, ToggleControl } from '@wordpress/components';
+import { Button, ColorPalette, DropdownMenu, MenuGroup, MenuItem, Popover, Spinner, RangeControl, SelectControl, TextControl, ToggleControl } from '@wordpress/components';
 import { chevronLeft, drawerRight, listView, moreVertical, plus, redo as redoIcon, undo as undoIcon } from '@wordpress/icons';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
@@ -16,11 +16,11 @@ import {
 	newId,
 	REQUIRED_SLOTS,
 	placed,
-	recolor,
+	migrate,
+	svgPaths,
 	resolve,
 	rectPath,
 	runsHtml,
-	sanitizeSvg,
 	runsOf,
 	type Box,
 	type Design,
@@ -33,7 +33,9 @@ import DesignPanel from './DesignPanel';
 import ElementToolbar from './ElementToolbar';
 import FieldText, { type FieldTextCommands } from './FieldText';
 import Inserter from './Inserter';
+import { ImagePlaceholder } from './ImageSource';
 import Inspector from './Inspector';
+import type { Picked } from './media';
 import ListView from './ListView';
 import base from '../../templates/base-design.json';
 import './style.scss';
@@ -247,14 +249,14 @@ function Shape( { el, design, mode, sample }: { el: Element; design: Design; mod
 	switch ( el.type ) {
 		case 'rect':
 			return <path d={ rectPath( el.x, el.y, el.w, el.h, el.radius, el.corner ) } fill={ color( design, el.fill, mode ) } stroke={ color( design, el.stroke, mode ) } strokeWidth={ el.strokeWidth || 0 } opacity={ opacity } />;
-		case 'svg': {
-			const fill = el.fill ? color( design, el.fill, mode ) : undefined;
+		case 'svg':
 			return (
 				<svg x={ el.x } y={ el.y } width={ el.w } height={ el.h } viewBox={ `0 0 ${ el.vw } ${ el.vh }` } opacity={ opacity } overflow="visible">
-					<g fill={ fill || 'currentColor' } style={ { color: color( design, '$text', mode ) } } dangerouslySetInnerHTML={ { __html: recolor( el.markup, fill ) } } />
+					{ svgPaths( el ).map( ( p, i ) => (
+						<path key={ i } d={ p.d } fill={ color( design, p.fill || el.color || '$text', mode ) } fillRule={ p.rule } />
+					) ) }
 				</svg>
 			);
-		}
 		case 'ellipse':
 			return <ellipse cx={ el.x + el.w / 2 } cy={ el.y + el.h / 2 } rx={ el.w / 2 } ry={ el.h / 2 } fill={ color( design, el.fill, mode ) } stroke={ color( design, el.stroke, mode ) } strokeWidth={ el.strokeWidth || 0 } opacity={ opacity } />;
 		case 'path':
@@ -270,14 +272,7 @@ function Shape( { el, design, mode, sample }: { el: Element; design: Design; mod
 		case 'image':
 			return el.src ? (
 				<image href={ el.src } x={ el.x } y={ el.y } width={ el.w } height={ el.h } preserveAspectRatio={ el.fit === 'cover' ? 'xMidYMid slice' : 'xMidYMid meet' } opacity={ opacity } />
-			) : (
-				<g opacity={ opacity }>
-					<rect x={ el.x } y={ el.y } width={ el.w } height={ el.h } fill="#dcdcde" />
-					<text x={ el.x + el.w / 2 } y={ el.y + el.h / 2 } textAnchor="middle" dominantBaseline="middle" fontSize={ 10 } fill="#50575e">
-						{ __( 'Image', 'events-certificate' ) }
-					</text>
-				</g>
-			);
+			) : null;
 		case 'qr':
 			// The authenticity slot: a QR-shaped placeholder (the real code is drawn on certificates).
 			return (
@@ -317,8 +312,7 @@ export default function Editor() {
 	const tab = 'art' as 'content' | 'art';
 	const [ panel, setPanel ] = useState< 'insert' | 'layers' | null >( null );
 	const [ sidebar, setSidebar ] = useState< 'design' | 'element' | null >( 'design' );
-	const [ svgModal, setSvgModal ] = useState< string | null >( null );
-	const [ editing, setEditing ] = useState< { id: string; runs: Run[] } | null >( null );
+		const [ editing, setEditing ] = useState< { id: string; runs: Run[] } | null >( null );
 	const textCommands = useRef< FieldTextCommands | null >( null );
 	const clickToEdit = useRef< Element | null >( null );
 	const [ editAnchor, setEditAnchor ] = useState< HTMLElement | null >( null );
@@ -347,7 +341,6 @@ export default function Editor() {
 	const wrapRef = useRef< HTMLDivElement >( null );
 	const dragRef = useRef< Drag >( null );
 	const fileRef = useRef< HTMLInputElement >( null );
-	const imageRef = useRef< HTMLInputElement >( null );
 	const savedRef = useRef< Design | null >( null );
 	const selRef = useRef< SVGRectElement >( null );
 	const [ anchor, setAnchor ] = useState< SVGRectElement | null >( null );
@@ -364,6 +357,7 @@ export default function Editor() {
 						loaded = parsed;
 					}
 				} catch ( e ) {}
+				loaded = migrate( loaded );
 				savedRef.current = loaded;
 				dispatch( { type: 'load', design: loaded } );
 				setTitle( post.title.raw );
@@ -498,9 +492,6 @@ export default function Editor() {
 		setSelected( el.id );
 		setSidebar( 'element' );
 		setPanel( null );
-		if ( type === 'image' ) {
-			imageRef.current?.click();
-		}
 	};
 
 	const save = async () => {
@@ -529,18 +520,27 @@ export default function Editor() {
 				throw new Error( 'format' );
 			}
 			delete parsed.$schema;
-			commit( { ...( base as unknown as Design ), ...parsed } );
+			commit( migrate( { ...( base as unknown as Design ), ...parsed } ) );
 			setSelected( null );
 		} catch ( e ) {
 			// eslint-disable-next-line no-alert
 			window.alert( __( 'This file is not a certificate design.', 'events-certificate' ) );
 		}
 	};
-	const onImage = ( file: File ) => {
-		const reader = new FileReader();
-		reader.onload = () => selected && update( selected, { src: String( reader.result ) } as Partial< Element > );
-		reader.readAsDataURL( file );
+	/** An image picked for an element: keeps the element's width and, unless it covers, the image's ratio. */
+	const pickImage = ( id: string, picked: Picked ) => {
+		const el = design.elements.find( ( e ) => e.id === id );
+		if ( ! el || el.type !== 'image' ) {
+			return;
+		}
+		let next: Element = { ...el, src: picked.src, attachment: picked.attachment, alt: picked.alt ?? el.alt };
+		if ( picked.width && picked.height && ( ! el.ratio || el.ratio === 'auto' ) ) {
+			const b = box( resolve( el, design.page ) );
+			next = placed( next, { ...b, h: Math.round( ( b.w * picked.height ) / picked.width * 100 ) / 100 }, design.page );
+		}
+		commit( { ...design, elements: design.elements.map( ( e ) => ( e.id === id ? next : e ) ) } );
 	};
+	const setBox = ( id: string, b: Box ) => commit( { ...design, elements: design.elements.map( ( e ) => ( e.id === id ? placed( e, b, design.page ) : e ) ) } );
 
 	// Keyboard: arrows nudge, Delete removes, Cmd/Ctrl+Z/Shift+Z/D/S.
 	useEffect( () => {
@@ -666,7 +666,7 @@ export default function Editor() {
 				{ panel && (
 					<aside className="evcert-left-panel">
 						{ panel === 'insert' ? (
-							<Inserter hasQr={ design.elements.some( ( el ) => el.type === 'qr' ) } onInsert={ ( type ) => ( type === 'svg' ? setSvgModal( '' ) : insert( type ) ) } onClose={ () => setPanel( null ) } />
+							<Inserter hasQr={ design.elements.some( ( el ) => el.type === 'qr' ) } onInsert={ insert } onClose={ () => setPanel( null ) } />
 						) : (
 							<ListView
 								elements={ design.elements }
@@ -722,6 +722,19 @@ export default function Editor() {
 												commands={ textCommands }
 												onDone={ stopEditing }
 											/>
+										</foreignObject>
+									) : el.type === 'image' && ! el.src ? (
+										<foreignObject key={ el.id } x={ el.x } y={ el.y } width={ el.w } height={ el.h } className={ `evcert-el${ selected === el.id ? ' is-selected' : '' }` } onPointerDown={ ( event ) => {
+											event.stopPropagation();
+											setSelected( el.id );
+											setSidebar( 'element' );
+											if ( ! el.locked && ( event.target as HTMLElement ).closest( 'button, input, a' ) === null ) {
+												startDrag( event, { kind: 'move', id: el.id, start: toPage( event ), origin: el } );
+											}
+										} }>
+											<div className="evcert-image-ph">
+												<ImagePlaceholder onPick={ ( picked ) => pickImage( el.id, picked ) } />
+											</div>
 										</foreignObject>
 									) : (
 									<g
@@ -846,7 +859,7 @@ export default function Editor() {
 							</Button>
 						</div>
 						{ sidebarTab === 'element' && current && (
-							<Inspector el={ current } stored={ currentStored } design={ design } mode={ mode } tab={ tab } locale={ LOCALE } sample={ sample } onChange={ ( patch ) => update( current.id, patch ) } onImage={ () => imageRef.current?.click() } />
+							<Inspector el={ current } stored={ currentStored } design={ design } mode={ mode } tab={ tab } locale={ LOCALE } sample={ sample } onChange={ ( patch ) => update( current.id, patch ) } onBox={ ( b ) => setBox( current.id, b ) } onImage={ ( picked ) => pickImage( current.id, picked ) } />
 						) }
 						{ sidebarTab === 'design' && <DesignPanel design={ design } mode={ mode } title={ title } status={ statusLabel } sample={ sample } onTitle={ setTitle } onChange={ commit } /> }
 					</aside>
@@ -860,6 +873,7 @@ export default function Editor() {
 					onBold={ () => textCommands.current?.bold() }
 					onItalic={ () => textCommands.current?.italic() }
 					onInsertField={ ( field ) => textCommands.current?.insertField( field ) }
+					onToggleEdit={ () => ( editing ? stopEditing() : current && startEditing( current ) ) }
 					el={ current }
 					required={ !! current.slot && REQUIRED_SLOTS.includes( current.slot ) }
 					onSelectParent={ () => setSidebar( 'element' ) }
@@ -867,6 +881,7 @@ export default function Editor() {
 					onToggle={ ( key ) => update( current.id, { [ key ]: ! current[ key ] } as Partial< Element > ) }
 					onDuplicate={ () => duplicate( current.id ) }
 					onRemove={ () => remove( current.id ) }
+					onImage={ ( picked ) => pickImage( current.id, picked ) }
 				/>
 			) }
 			<footer className="evcert-footer">
@@ -881,51 +896,9 @@ export default function Editor() {
 						</>
 					) }
 				</nav>
-				<Button size="small" onClick={ fit } label={ __( 'Fit to screen', 'events-certificate' ) }>
-					{ Math.round( zoom * 100 ) }%
-				</Button>
 			</footer>
 
-			{ svgModal !== null && (
-				<Modal title={ __( 'Insert SVG code', 'events-certificate' ) } onRequestClose={ () => setSvgModal( null ) }>
-					<TextareaControl
-						__nextHasNoMarginBottom
-						label={ __( 'Paste the SVG code (an icon, a logo, an ornament)', 'events-certificate' ) }
-						help={ __( 'Only <svg> (size, viewBox) and paths with their fill are kept; groups are unwrapped. Strokes, other shapes, styles, scripts and links are removed.', 'events-certificate' ) }
-						value={ svgModal }
-						onChange={ setSvgModal }
-						rows={ 8 }
-					/>
-					<div className="evcert-actions" style={ { marginTop: 16 } }>
-						<Button
-							variant="primary"
-							disabled={ ! sanitizeSvg( svgModal ) }
-							accessibleWhenDisabled
-							onClick={ () => {
-								const clean = sanitizeSvg( svgModal );
-								if ( ! clean ) {
-									return;
-								}
-								const size = 120;
-								const ratio = clean.vw / clean.vh;
-								const el = { id: newId( 'svg' ), type: 'svg', name: 'SVG', x: w / 2 - size / 2, y: h / 2 - size / 2 / ratio, w: size, h: size / ratio, ...clean } as Element;
-								commit( { ...design, elements: [ ...design.elements, el ] } );
-								setSelected( el.id );
-								setSidebar( 'element' );
-								setSvgModal( null );
-								setPanel( null );
-							} }
-						>
-							{ __( 'Insert', 'events-certificate' ) }
-						</Button>
-						<Button variant="tertiary" onClick={ () => setSvgModal( null ) }>
-							{ __( 'Cancel', 'events-certificate' ) }
-						</Button>
-					</div>
-				</Modal>
-			) }
 			<input ref={ fileRef } type="file" accept="application/json,.json" hidden onChange={ ( event ) => event.target.files?.[ 0 ] && importJson( event.target.files[ 0 ] ) } />
-			<input ref={ imageRef } type="file" accept="image/png,image/jpeg,image/svg+xml" hidden onChange={ ( event ) => event.target.files?.[ 0 ] && onImage( event.target.files[ 0 ] ) } />
 		</div>
 	);
 }

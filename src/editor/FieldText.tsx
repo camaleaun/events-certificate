@@ -7,6 +7,7 @@
 import { Button, Dropdown, MenuGroup, MenuItem, Popover, SelectControl } from '@wordpress/components';
 import { useEffect, useLayoutEffect, useRef, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
+import { formatBold, formatItalic } from '@wordpress/icons';
 import { fieldValue, type Run } from './model';
 
 export type FieldInfo = { label: string; formats?: { key: string; label: string }[] };
@@ -41,6 +42,39 @@ export function fields(): Record< string, FieldInfo > {
 		verify_url: { label: __( 'Verification address', 'events-certificate' ) },
 		document: { label: __( 'Document (masked)', 'events-certificate' ) },
 	};
+}
+
+const MARKS = { b: 'strong, b', i: 'em, i' };
+
+/** Is the chip bold/italic: inside a <strong>/<em> of the editable. */
+function hasMark( chip: HTMLElement, root: HTMLElement | null, mark: 'b' | 'i' ): boolean {
+	const anc = chip.parentElement?.closest( MARKS[ mark ] );
+	return !! anc && !! root?.contains( anc );
+}
+
+/** Bold or italic on one chip: wraps it, or moves it out of the mark (splitting the mark around it). */
+function toggleMark( chip: HTMLElement, root: HTMLElement | null, mark: 'b' | 'i' ) {
+	const anc = chip.parentElement?.closest( MARKS[ mark ] ) as HTMLElement | null;
+	if ( ! anc || ! root?.contains( anc ) ) {
+		const wrap = document.createElement( mark === 'b' ? 'strong' : 'em' );
+		chip.replaceWith( wrap );
+		wrap.appendChild( chip );
+		return;
+	}
+	const range = document.createRange();
+	if ( anc.lastChild && chip !== anc.lastChild && ! chip.contains( anc.lastChild ) ) {
+		range.setStartAfter( chip );
+		range.setEndAfter( anc.lastChild );
+		const tail = anc.cloneNode( false ) as HTMLElement;
+		tail.append( range.extractContents() );
+		anc.after( tail );
+	}
+	range.setStartBefore( chip );
+	range.setEndAfter( anc.lastChild as Node );
+	anc.after( range.extractContents() );
+	if ( ! anc.textContent && ! anc.querySelector( '.evcert-chip' ) ) {
+		anc.remove();
+	}
 }
 
 const esc = ( v: string ) => v.replace( /&/g, '&amp;' ).replace( /</g, '&lt;' ).replace( />/g, '&gt;' );
@@ -216,6 +250,55 @@ export default function FieldText( { label, runs, onChange, sample, locale, inli
 	const chipField = chip?.el.dataset.field || '';
 	const chipInfo = info[ chipField ];
 
+	const chipPopover = chip && chipInfo && (
+					<Popover anchor={ chip.el } onClose={ () => setChip( null ) } placement="bottom-start">
+						<div className="evcert-chip-popover">
+							<strong>{ chipInfo.label }</strong>
+							<p className="evcert-chip-sample">{ fieldValue( chipField, chip.el.dataset.format, sample, locale ) }</p>
+							{ chipInfo.formats && (
+								<SelectControl
+									__next40pxDefaultSize
+									label={ __( 'Format', 'events-certificate' ) }
+									value={ chip.el.dataset.format || chipInfo.formats[ 0 ].key }
+									options={ chipInfo.formats.map( ( f ) => ( { label: `${ f.label } — ${ fieldValue( chipField, f.key, sample, locale ) }`, value: f.key } ) ) }
+									onChange={ ( format ) => {
+										chip.el.dataset.format = format;
+										emit();
+										setChip( { ...chip } );
+									} }
+								/>
+							) }
+							<div className="evcert-chip-marks">
+								{ ( [ [ 'b', formatBold, __( 'Bold', 'events-certificate' ) ], [ 'i', formatItalic, __( 'Italic', 'events-certificate' ) ] ] as const ).map( ( [ mark, icon, text ] ) => (
+									<Button
+										key={ mark }
+										size="compact"
+										icon={ icon }
+										label={ text }
+										isPressed={ hasMark( chip.el, ref.current, mark ) }
+										onClick={ () => {
+											toggleMark( chip.el, ref.current, mark );
+											emit();
+											setChip( { ...chip } );
+										} }
+									/>
+								) ) }
+							</div>
+							<Button
+								variant="link"
+								isDestructive
+								onClick={ () => {
+									chip.el.remove();
+									setChip( null );
+									emit();
+								} }
+							>
+								{ __( 'Remove field', 'events-certificate' ) }
+							</Button>
+						</div>
+					</Popover>
+	);
+
 	if ( inline ) {
 		return (
 			<>
@@ -254,38 +337,7 @@ export default function FieldText( { label, runs, onChange, sample, locale, inli
 						document.execCommand( 'insertText', false, event.clipboardData.getData( 'text/plain' ) );
 					} }
 				/>
-			{ chip && chipInfo && (
-					<Popover anchor={ chip.el } onClose={ () => setChip( null ) } placement="bottom-start">
-						<div className="evcert-chip-popover">
-							<strong>{ chipInfo.label }</strong>
-							<p className="evcert-chip-sample">{ fieldValue( chipField, chip.el.dataset.format, sample, locale ) }</p>
-							{ chipInfo.formats && (
-								<SelectControl
-									__next40pxDefaultSize
-									label={ __( 'Format', 'events-certificate' ) }
-									value={ chip.el.dataset.format || chipInfo.formats[ 0 ].key }
-									options={ chipInfo.formats.map( ( f ) => ( { label: `${ f.label } — ${ fieldValue( chipField, f.key, sample, locale ) }`, value: f.key } ) ) }
-									onChange={ ( format ) => {
-										chip.el.dataset.format = format;
-										emit();
-										setChip( { ...chip } );
-									} }
-								/>
-							) }
-							<Button
-								variant="link"
-								isDestructive
-								onClick={ () => {
-									chip.el.remove();
-									setChip( null );
-									emit();
-								} }
-							>
-								{ __( 'Remove field', 'events-certificate' ) }
-							</Button>
-						</div>
-					</Popover>
-				) }
+			{ chipPopover }
 			</>
 		);
 	}
@@ -360,38 +412,7 @@ export default function FieldText( { label, runs, onChange, sample, locale, inli
 					document.execCommand( 'insertText', false, event.clipboardData.getData( 'text/plain' ) );
 				} }
 			/>
-			{ chip && chipInfo && (
-				<Popover anchor={ chip.el } onClose={ () => setChip( null ) } placement="bottom-start">
-					<div className="evcert-chip-popover">
-						<strong>{ chipInfo.label }</strong>
-						<p className="evcert-chip-sample">{ fieldValue( chipField, chip.el.dataset.format, sample, locale ) }</p>
-						{ chipInfo.formats && (
-							<SelectControl
-								__next40pxDefaultSize
-								label={ __( 'Format', 'events-certificate' ) }
-								value={ chip.el.dataset.format || chipInfo.formats[ 0 ].key }
-								options={ chipInfo.formats.map( ( f ) => ( { label: `${ f.label } — ${ fieldValue( chipField, f.key, sample, locale ) }`, value: f.key } ) ) }
-								onChange={ ( format ) => {
-									chip.el.dataset.format = format;
-									emit();
-									setChip( { ...chip } );
-								} }
-							/>
-						) }
-						<Button
-							variant="link"
-							isDestructive
-							onClick={ () => {
-								chip.el.remove();
-								setChip( null );
-								emit();
-							} }
-						>
-							{ __( 'Remove field', 'events-certificate' ) }
-						</Button>
-					</div>
-				</Popover>
-			) }
+			{ chipPopover }
 		</div>
 	);
 }

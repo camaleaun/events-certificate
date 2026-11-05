@@ -154,6 +154,7 @@ function enqueue() {
 		return;
 	}
 	$url = plugins_url( '', __DIR__ . '/../events-certificate.php' );
+	wp_enqueue_media();
 	wp_enqueue_style( 'evcert-editor-screen', $url . '/assets/editor-screen.css', array(), \EventsCertificate\VERSION );
 	wp_add_inline_style( 'evcert-editor-screen', fonts_css( $url . '/fonts' ) );
 
