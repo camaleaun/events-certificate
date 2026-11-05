@@ -34,6 +34,17 @@ function bootstrap() {
 }
 
 /**
+ * A short version of how certificates look now (the site design and the
+ * signer): part of the image's file name, so a design change makes the page
+ * draw a new image instead of showing the old one.
+ *
+ * @return string
+ */
+function look() {
+	return substr( md5( (string) wp_json_encode( array( \EventsCertificate\Designs\get( \EventsCertificate\Designs\site_design_id() ), \EventsCertificate\Signer\current() ) ) ), 0, 10 );
+}
+
+/**
  * The image file and URL of a certificate in a locale.
  *
  * @param string $code   Code.
@@ -42,7 +53,7 @@ function bootstrap() {
  */
 function location( $code, $locale ) {
 	$uploads = wp_get_upload_dir();
-	$name    = sanitize_file_name( strtolower( $code ) . '-' . $locale . '.png' );
+	$name    = sanitize_file_name( strtolower( $code ) . '-' . $locale . '-' . look() . '.png' );
 
 	return array(
 		'path' => $uploads['basedir'] . '/evcert-share/' . $name,
@@ -143,6 +154,12 @@ function save( WP_REST_Request $request ) {
 
 	$where = location( $cert['code'], $locale );
 	wp_mkdir_p( dirname( $where['path'] ) );
+	// Images of an earlier look of this certificate are no longer shown.
+	foreach ( (array) glob( dirname( $where['path'] ) . '/' . sanitize_file_name( strtolower( $cert['code'] ) . '-' . $locale ) . '-*.png' ) as $old ) {
+		if ( $old !== $where['path'] ) {
+			wp_delete_file( $old );
+		}
+	}
 	if ( false === file_put_contents( $where['path'], $png ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- a cache file in uploads.
 		return new WP_Error( 'evcert_write', 'Could not save.', array( 'status' => 500 ) );
 	}

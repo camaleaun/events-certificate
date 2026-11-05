@@ -188,6 +188,17 @@ export default function Inspector( { el, stored, design, mode, tab, locale, samp
 			) }
 
 			{ tab === 'art' && el.type === 'svg' && <SvgPanel el={ el } design={ design } mode={ mode } onChange={ ( patch ) => onChange( patch as Partial< Element > ) } /> }
+			{ tab === 'art' && el.type === 'svg' && ( ! el.slot || el.slot === 'signature' ) && (
+				<div className="evcert-inspector__section">
+					<ToggleControl
+						__nextHasNoMarginBottom
+						label={ __( "Signer's signature", 'events-certificate' ) }
+						help={ __( 'On certificates, draws the signature of the organizer who signs (Organizers > Certificate) in this box; this drawing shows when there is none.', 'events-certificate' ) }
+						checked={ el.slot === 'signature' }
+						onChange={ ( on ) => onChange( { slot: on ? 'signature' : undefined } as Partial< Element > ) }
+					/>
+				</div>
+			) }
 
 			{ tab === 'art' && el.type === 'text' && (
 				<ToolsPanel

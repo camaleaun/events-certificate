@@ -50,11 +50,12 @@ class ShareImageTest extends Test_Case {
 	}
 
 	/**
-	 * Images live in uploads/evcert-share/, one per code and locale.
+	 * Images live in uploads/evcert-share/, one per code, locale and look (design + signer).
 	 */
 	public function test_location() {
 		$where = ShareImage\location( '2611-04K7-M29Q-XAP3', 'pt_BR' );
-		$this->assertStringEndsWith( '/evcert-share/2611-04k7-m29q-xap3-pt_BR.png', $where['path'] );
+		$this->assertStringEndsWith( '/evcert-share/2611-04k7-m29q-xap3-pt_BR-' . ShareImage\look() . '.png', $where['path'] );
+		$this->assertMatchesRegularExpression( '/^[0-9a-f]{10}$/', ShareImage\look() );
 		$this->assertSame( '', ShareImage\url( '0000-0000-0000-0000', 'pt_BR' ) );
 	}
 }

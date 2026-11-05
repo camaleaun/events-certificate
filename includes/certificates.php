@@ -111,8 +111,11 @@ function store_design( array $design ) {
 }
 
 /**
- * The design version a certificate was issued with (falls back to the site
- * design when the snapshot is missing).
+ * The design a certificate is drawn with: the current site design, so a
+ * change to the design (a logo, a date format) shows on every certificate
+ * (docs/decisions/0001). What the certificate says (name, event, hours,
+ * signer, code) stays frozen in the row. The version it was issued with
+ * (design_hash) is kept as history, and drawn only if the site design is gone.
  *
  * @param array<string, mixed> $cert Certificate.
  * @return array<string, mixed>
@@ -120,10 +123,14 @@ function store_design( array $design ) {
 function design( array $cert ) {
 	global $wpdb;
 
+	$current = Designs\get( Designs\site_design_id() );
+	if ( is_array( $current ) && isset( $current['elements'], $current['page'] ) ) {
+		return $current;
+	}
 	$json   = $wpdb->get_var( $wpdb->prepare( 'SELECT design FROM %i WHERE hash = %s', Install\tables()['designs'], (string) ( $cert['design_hash'] ?? '' ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- the plugin's own table.
 	$design = $json ? json_decode( $json, true ) : null;
 
-	return is_array( $design ) && isset( $design['elements'], $design['page'] ) ? $design : Designs\get( Designs\site_design_id() );
+	return is_array( $design ) ? $design : (array) $current;
 }
 
 /**

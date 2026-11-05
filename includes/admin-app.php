@@ -217,7 +217,8 @@ function enqueue() {
 					'signer_name' => $signer ? $signer['name'] : 'Sam Taylor',
 					'signer_role' => $signer && $signer['roles'] ? \EventsCertificate\Signer\role_in( $signer['roles'], determine_locale() ) : __( 'Event Coordinator', 'events-certificate' ),
 					'signature'   => $signer && $signer['signature'] ? (string) wp_json_encode( $signer['signature'] ) : '',
-					'code'        => '2611-04K7-M29Q-XAP3',
+					// Clearly not a real code, like the QR placeholder; same length, so the layout is the real one.
+					'code'        => 'XXXX-XXXX-XXXX-XXXX',
 					'verify_url'  => untrailingslashit( preg_replace( '#^https?://#', '', home_url( \EventsCertificate\Settings\value( 'slug' ) ) ) ),
 				) + \EventsCertificate\Render\phrases(),
 			)

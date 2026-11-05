@@ -172,13 +172,15 @@ export default function DesignPanel( { design, mode, title, status, sample, defa
 								__next40pxDefaultSize
 								__nextHasNoMarginBottom
 								label={ label }
-								value={ sample[ key ] || '' }
-								onChange={ ( v ) => onChange( { ...design, sample: { ...( design.sample || {} ), [ key ]: v } } ) }
+								// Your value; empty means the default (the signer, the event…), shown as the placeholder.
+								value={ design.sample?.[ key ] || '' }
+								placeholder={ defaults[ key ] || '' }
+								onChange={ ( v ) => onChange( { ...design, sample: setSample( design.sample, key, v ) } ) }
 							/>
 						) }
 					</DropdownRow>
 				) ) }
-				{ design.sample && Object.keys( design.sample ).length > 0 && (
+				{ design.sample && Object.values( design.sample ).some( ( v ) => v !== '' ) && (
 					<Button variant="link" onClick={ () => onChange( { ...design, sample: undefined } ) }>
 						{ __( 'Reset preview data', 'events-certificate' ) }
 					</Button>

@@ -23,7 +23,7 @@ class CertificatesTest extends Test_Case {
 	}
 
 	/**
-	 * Issuing stores the frozen data with a code and the design version.
+	 * Issuing stores the frozen data with a code and the design version; the look follows the current design.
 	 */
 	public function test_issue_freezes_data_with_a_code() {
 		$cert = Certificates\issue(
@@ -44,6 +44,11 @@ class CertificatesTest extends Test_Case {
 		$this->assertSame( Certificates\fingerprint( $cert ), $cert['fingerprint'] );
 		$this->assertSame( $cert['id'], Certificates\get_by_code( strtolower( $cert['code'] ) )['id'] );
 		$this->assertSame( $cert['id'], Certificates\find_by_source( 'camptix', 123 )['id'] );
+
+		// The look follows the current site design, whatever version it was issued with (docs/decisions/0001).
+		$current = \EventsCertificate\Designs\get( \EventsCertificate\Designs\site_design_id() );
+		$this->assertSame( $current, Certificates\design( $cert ) );
+		$this->assertSame( $current, Certificates\design( array_merge( $cert, array( 'design_hash' => str_repeat( '0', 64 ) ) ) ) );
 	}
 
 	/**
