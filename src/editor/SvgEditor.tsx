@@ -27,7 +27,7 @@ export default function SvgEditor( { el, design, mode, onApply, onClose }: Props
 	const current = el.color || '$text';
 
 	return (
-		<Modal title={ sprintf( /* translators: %s: element name. */ __( 'Edit drawing: %s', 'events-certificate' ), el.name || 'SVG' ) } size="large" onRequestClose={ onClose } className="evcert-svg-editor">
+		<Modal title={ sprintf( /* translators: %s: element name. */ __( 'Edit SVG: %s', 'events-certificate' ), el.name || 'SVG' ) } size="large" onRequestClose={ onClose } className="evcert-svg-editor">
 			<div className="evcert-svg-editor__body">
 				<div className="evcert-svg-editor__preview">
 					<svg viewBox={ `0 0 ${ vw } ${ vh }` } role="img" aria-label={ __( 'Preview', 'events-certificate' ) }>

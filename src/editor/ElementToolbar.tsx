@@ -72,7 +72,7 @@ export default function ElementToolbar( { anchor, el, required, onSelectParent, 
 				) }
 				{ el.type === 'svg' && onEditDrawing && (
 					<ToolbarGroup>
-						<ToolbarButton onClick={ onEditDrawing }>{ __( 'Edit drawing', 'events-certificate' ) }</ToolbarButton>
+						<ToolbarButton onClick={ onEditDrawing } label={ __( 'Edit SVG', 'events-certificate' ) } showTooltip>{ __( 'Edit', 'events-certificate' ) }</ToolbarButton>
 					</ToolbarGroup>
 				) }
 				{ editing && (

@@ -43,7 +43,6 @@ type Props = {
 	onChange: ( patch: Partial< Element > ) => void;
 	onImage: ( picked: Picked ) => void;
 	onBox: ( b: Box ) => void;
-	onEditDrawing: () => void;
 };
 
 const FONT_SIZES = [ 8, 10, 12, 14, 16, 18, 24, 32, 42 ].map( ( size ) => ( { name: `${ size } pt`, slug: String( size ), size } ) );
@@ -88,7 +87,7 @@ export function ColorItem( { label, value, design, mode, onChange }: { label: st
 	);
 }
 
-export default function Inspector( { el, stored, design, mode, tab, locale, sample, onChange, onImage, onBox, onEditDrawing }: Props ) {
+export default function Inspector( { el, stored, design, mode, tab, locale, sample, onChange, onImage, onBox }: Props ) {
 	const [ linked, setLinked ] = useState( true );
 	const required = !! el.slot && REQUIRED_SLOTS.includes( el.slot );
 	const typeLabel = {
@@ -188,7 +187,7 @@ export default function Inspector( { el, stored, design, mode, tab, locale, samp
 				</ToolsPanel>
 			) }
 
-			{ tab === 'art' && el.type === 'svg' && <SvgPanel el={ el } design={ design } mode={ mode } onChange={ ( patch ) => onChange( patch as Partial< Element > ) } onOpen={ onEditDrawing } /> }
+			{ tab === 'art' && el.type === 'svg' && <SvgPanel el={ el } design={ design } mode={ mode } onChange={ ( patch ) => onChange( patch as Partial< Element > ) } /> }
 
 			{ tab === 'art' && el.type === 'text' && (
 				<ToolsPanel

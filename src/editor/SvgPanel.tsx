@@ -31,7 +31,6 @@ type Props = {
 	design: Design;
 	mode: Mode;
 	onChange: ( patch: Partial< SvgEl > ) => void;
-	onOpen: () => void;
 };
 
 const TRANSPARENT = '#ffffff00';
@@ -131,8 +130,8 @@ const short = ( d: string ) => ( d.length > 28 ? `${ d.slice( 0, 28 ).trim() }â€
 /**
  * The paths, one row each (as compact as the palette's colors): the fill
  * swatch, the path data as a link that opens a popover with the whole value,
- * the block mover and an Options menu. The + below the list adds a path,
- * like the block appender.
+ * the block mover and an Options menu. The + at the end of the Paths heading
+ * adds a path; it looks like the block appender.
  */
 export function PathList( { paths, current, design, mode, onPaths, onImport, onFocus, placement = 'left-start' }: PathListProps ) {
 	const [ version, setVersion ] = useState( 0 );
@@ -149,7 +148,10 @@ export function PathList( { paths, current, design, mode, onPaths, onImport, onF
 	};
 	return (
 		<>
-			<h2 className="evcert-section-heading evcert-svg-panel__header">{ __( 'Paths', 'events-certificate' ) }</h2>
+			<HStack className="evcert-svg-panel__header">
+				<h2 className="evcert-section-heading">{ __( 'Paths', 'events-certificate' ) }</h2>
+				<Button className="evcert-appender" icon={ plus } label={ __( 'Add path', 'events-certificate' ) } onClick={ () => replace( [ ...paths, { d: '' } ] ) } />
+			</HStack>
 			<ItemGroup isBordered isSeparated className="evcert-svg-paths">
 				{ paths.map( ( p, i ) => (
 					<Item key={ `${ version }-${ i }` } className="evcert-svg-path" onMouseEnter={ () => onFocus?.( i ) } onMouseLeave={ () => onFocus?.( null ) }>
@@ -192,12 +194,11 @@ export function PathList( { paths, current, design, mode, onPaths, onImport, onF
 					</Item>
 				) ) }
 			</ItemGroup>
-			<Button className="evcert-appender" icon={ plus } label={ __( 'Add path', 'events-certificate' ) } onClick={ () => replace( [ ...paths, { d: '' } ] ) } />
 		</>
 	);
 }
 
-export default function SvgPanel( { el, design, mode, onChange, onOpen }: Props ) {
+export default function SvgPanel( { el, design, mode, onChange }: Props ) {
 	const paths = svgPaths( el );
 	const current = el.color || '$text';
 	const setPaths = ( next: SvgPath[] ) => onChange( { paths: next, markup: undefined, fill: undefined } );
@@ -219,9 +220,6 @@ export default function SvgPanel( { el, design, mode, onChange, onOpen }: Props 
 			</div>
 			<div className="evcert-inspector__section">
 				<PathList paths={ paths } current={ current } design={ design } mode={ mode } onPaths={ setPaths } onImport={ ( svg ) => onChange( { ...svg, markup: undefined, fill: undefined } ) } />
-				<Button variant="secondary" __next40pxDefaultSize className="evcert-svg-panel__open" onClick={ onOpen }>
-					{ __( 'Edit drawing', 'events-certificate' ) }
-				</Button>
 				<p className="evcert-meta">{ __( 'Each path is the d value of an SVG <path>. Without a fill it uses the current color, set in Color. Pasting SVG code into a path fills in the viewBox and the paths; nothing else is kept.', 'events-certificate' ) }</p>
 			</div>
 		</div>
