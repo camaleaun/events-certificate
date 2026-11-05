@@ -183,9 +183,7 @@ function enqueue() {
 		$design = Designs\site_design_id();
 	}
 	$signer   = \EventsCertificate\Signer\current();
-	$camptix  = $GLOBALS['camptix'] ?? null;
-	$options  = is_object( $camptix ) && method_exists( $camptix, 'get_options' ) ? (array) $camptix->get_options() : array();
-	$event    = trim( (string) ( $options['event_name'] ?? '' ) );
+	$event    = function_exists( 'EventsCertificate\\Compat\\CampTix\\event_name' ) ? \EventsCertificate\Compat\CampTix\event_name() : '';
 	$location = function_exists( 'EventsCertificate\Compat\CampTix\event_location' ) ? \EventsCertificate\Compat\CampTix\event_location() : (string) \EventsCertificate\Settings\value( 'location' );
 	wp_register_script( 'evcert-editor-data', false, array( 'wp-i18n' ), \EventsCertificate\VERSION, false );
 	wp_enqueue_script( 'evcert-editor-data' );

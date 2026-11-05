@@ -125,6 +125,25 @@ function signer_data() {
 }
 
 /**
+ * The event's name: the WordCamp's on WordCamp.org (get_wordcamp_name()),
+ * else CampTix's event name (an option it has no field for), else the site title.
+ *
+ * @return string
+ */
+function event_name() {
+	if ( function_exists( 'get_wordcamp_name' ) ) {
+		$name = trim( (string) get_wordcamp_name() );
+		if ( '' !== $name ) {
+			return $name;
+		}
+	}
+	$options = camptix() ? (array) camptix()->get_options() : array();
+	$name    = trim( (string) ( $options['event_name'] ?? '' ) );
+
+	return '' !== $name ? $name : (string) get_bloginfo( 'name' );
+}
+
+/**
  * Where the event happens: the WordCamp's Location on WordCamp.org, else the
  * plugin setting.
  *
@@ -155,8 +174,6 @@ function attendee_data( $attendee ) {
 	if ( class_exists( 'CampTix_Require_Login' ) && \CampTix_Require_Login::UNCONFIRMED_USERNAME === $username ) {
 		$username = '';
 	}
-	$options = $tix ? (array) $tix->get_options() : array();
-
 	$data = array(
 		'context'        => 'site',
 		'event_id'       => 0,
@@ -165,7 +182,7 @@ function attendee_data( $attendee ) {
 		'wporg_username' => $username,
 		'role'           => 'attendee',
 		'attended'       => get_post_meta( $attendee->ID, 'tix_attended', true ) ? 1 : 0,
-		'event_title'    => (string) ( $options['event_name'] ?? get_bloginfo( 'name' ) ),
+		'event_title'    => event_name(),
 		'source'         => SOURCE,
 		'source_ref'     => (string) $attendee->ID,
 		'self_service'   => 'attendee',
