@@ -25,12 +25,13 @@ import {
 	__experimentalHStack as HStack,
 } from '@wordpress/components';
 import { useState } from '@wordpress/element';
-import { __, _x } from '@wordpress/i18n';
+import { __, _x, sprintf } from '@wordpress/i18n';
 import { justifyBottom, justifyCenter, justifyCenterVertical, justifyLeft, justifyRight, justifyStretch, justifyStretchVertical, justifyTop, alignCenter, alignLeft, alignRight, cornerBottomLeft, cornerBottomRight, cornerTopLeft, cornerTopRight, formatUppercase, Icon, link, linkOff, reset, settings } from '@wordpress/icons';
 import { elementIcon } from './icons';
 import { naturalSize, type Picked } from './media';
 import SvgPanel from './SvgPanel';
-import { box as boxOf, color, isLen, layoutFrom, parseLen, lockedRatio, lockedSide, refBox, REQUIRED_SLOTS, type Axis, type AxisMode, type Box, type Layout, type Design, type Element, type Mode } from './model';
+import { fields, tokenOnly } from './FieldText';
+import { box as boxOf, color, isLen, layoutFrom, parseLen, lockedRatio, lockedSide, refBox, REQUIRED_SLOTS, type Axis, type AxisMode, type Box, type Layout, type Design, type Element, type Mode, fieldValue, runsOf } from './model';
 
 type Props = {
 	el: Element;
@@ -199,6 +200,32 @@ export default function Inspector( { el, stored, design, mode, tab, locale, samp
 					/>
 				</div>
 			) }
+
+			{ tab === 'art' && el.type === 'text' && ( () => {
+				// A text that is only fields edits as a placeholder (no chips), so their formats are chosen here.
+				const runs = runsOf( el );
+				const only = tokenOnly( runs );
+				const info = fields();
+				const formatted = only ? runs.map( ( r, i ) => ( { r, i } ) ).filter( ( { r } ) => 'field' in r && info[ r.field ]?.formats ) : [];
+				return formatted.length ? (
+					<div className="evcert-inspector__section">
+						{ formatted.map( ( { r, i } ) => {
+							const field = ( r as { field: string; format?: string } ).field;
+							return (
+								<SelectControl
+									key={ i }
+									__next40pxDefaultSize
+									__nextHasNoMarginBottom
+									label={ sprintf( /* translators: %s: field name, e.g. Date of issue. */ __( 'Format: %s', 'events-certificate' ), info[ field ].label ) }
+									value={ ( r as { format?: string } ).format || info[ field ].formats![ 0 ].key }
+									options={ info[ field ].formats!.map( ( f ) => ( { label: `${ f.label } — ${ fieldValue( field, f.key, sample, locale ) }`, value: f.key } ) ) }
+									onChange={ ( format ) => onChange( { runs: runs.map( ( x, j ) => ( j === i ? { ...x, format } : x ) ), text: undefined } as Partial< Element > ) }
+								/>
+							);
+						} ) }
+					</div>
+				) : null;
+			} )() }
 
 			{ tab === 'art' && el.type === 'text' && (
 				<ToolsPanel

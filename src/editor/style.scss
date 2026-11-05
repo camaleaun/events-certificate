@@ -1233,6 +1233,7 @@
 .evcert-text--editing.is-placeholder {
 	&::before {
 		content: attr(data-placeholder);
+		white-space: pre-line;
 		opacity: 0.62;
 		pointer-events: none;
 	}

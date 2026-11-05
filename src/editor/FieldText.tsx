@@ -92,12 +92,14 @@ function toggleMark( chip: HTMLElement, root: HTMLElement | null, mark: 'b' | 'i
 const esc = ( v: string ) => v.replace( /&/g, '&amp;' ).replace( /</g, '&lt;' ).replace( />/g, '&gt;' );
 
 /**
- * A text that is only a standard text (a 'text' group field): it edits like
- * an empty paragraph, the translated words as its placeholder; typing
- * replaces them, emptying it brings the placeholder back.
+ * A text that is only fields (the code, the date, the verification address,
+ * a standard text…), with at most spaces or line breaks between them: it
+ * edits like an empty paragraph, the fields' preview values as its
+ * placeholder. Typing replaces it with your own text; emptying it brings the
+ * fields back. Fields show as chips only among text of your own.
  */
-function phraseOnly( runs: Run[], info: Record< string, FieldInfo > ): Run | null {
-	return runs.length === 1 && 'field' in runs[ 0 ] && info[ runs[ 0 ].field ]?.group === 'text' ? runs[ 0 ] : null;
+export function tokenOnly( runs: Run[] ): Run[] | null {
+	return runs.some( ( r ) => 'field' in r ) && runs.every( ( r ) => 'field' in r || ! r.text.trim() ) ? runs : null;
 }
 
 /** Whether the editable holds nothing (a lone <br> or spaces count as nothing). */
@@ -185,13 +187,14 @@ export default function FieldText( { label, runs, onChange, sample, locale, inli
 	const ref = useRef< HTMLDivElement >( null );
 	const last = useRef< string >( '' );
 	const [ chip, setChip ] = useState< { el: HTMLElement; index: number } | null >( null );
-	// The standard text this element stands for while it shows as a placeholder.
-	const phrase = useRef< Run | null >( phraseOnly( runs, info ) );
-	const placeholder = phraseOnly( runs, info );
+	// The fields this element stands for while it shows as a placeholder.
+	const placeholder = tokenOnly( runs );
+	const tokens = useRef< Run[] | null >( placeholder );
 	if ( placeholder ) {
-		phrase.current = placeholder;
+		tokens.current = placeholder;
 	}
-	const placeholderText = phrase.current && 'field' in phrase.current ? info[ phrase.current.field ]?.label || '' : '';
+	const placeholderText = tokens.current ? tokens.current.map( ( r ) => ( 'field' in r ? fieldValue( r.field, r.format, sample, locale ) : r.text ) ).join( '' ) : '';
+	const firstField = placeholder?.find( ( r ) => 'field' in r );
 
 	// Only rewrite the DOM when the value changed from outside (undo, another element).
 	useLayoutEffect( () => {
@@ -205,16 +208,16 @@ export default function FieldText( { label, runs, onChange, sample, locale, inli
 	const emit = () => {
 		if ( ref.current ) {
 			const next = fromDom( ref.current );
-			if ( isBlank( next ) && phrase.current ) {
+			if ( isBlank( next ) && tokens.current ) {
 				last.current = '';
-				onChange( [ phrase.current ] );
+				onChange( tokens.current );
 				return;
 			}
 			last.current = toHtml( next, info );
 			onChange( next );
 		}
 	};
-	const editableClass = ( base: string ) => [ base, placeholder && 'is-placeholder', placeholder?.b && 'is-placeholder-b', placeholder?.i && 'is-placeholder-i' ].filter( Boolean ).join( ' ' );
+	const editableClass = ( base: string ) => [ base, placeholder && 'is-placeholder', firstField?.b && 'is-placeholder-b', firstField?.i && 'is-placeholder-i' ].filter( Boolean ).join( ' ' );
 
 	const insertField = ( field: string ) => {
 		const root = ref.current;
