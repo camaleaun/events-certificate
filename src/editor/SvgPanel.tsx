@@ -10,6 +10,7 @@ import {
 	ColorIndicator,
 	ColorPalette,
 	Dropdown,
+	TextareaControl,
 	TextControl,
 	__experimentalHStack as HStack,
 	__experimentalItem as Item,
@@ -27,12 +28,13 @@ type Props = {
 	design: Design;
 	mode: Mode;
 	onChange: ( patch: Partial< SvgEl > ) => void;
+	onOpen: () => void;
 };
 
 const TRANSPARENT = '#ffffff00';
 
 /** The fill swatch: current color, a palette color or a custom one. */
-function FillSwatch( { value, current, design, mode, onChange }: { value?: string; current: string; design: Design; mode: Mode; onChange: ( fill?: string ) => void } ) {
+export function FillSwatch( { value, current, design, mode, onChange }: { value?: string; current: string; design: Design; mode: Mode; onChange: ( fill?: string ) => void } ) {
 	const variable = value?.startsWith( '$' ) ? design.colors[ value.slice( 1 ) ] : null;
 	const shown = value ? color( design, value, mode ) : color( design, current, mode );
 	const palette = Object.entries( design.colors ).map( ( [ slug, v ] ) => ( { slug, name: v.name, color: v[ mode ] === 'transparent' ? TRANSPARENT : v[ mode ] } ) );
@@ -74,38 +76,41 @@ function FillSwatch( { value, current, design, mode, onChange }: { value?: strin
 	);
 }
 
-/** The path data field: kept while typing, saved when it is valid. */
-function PathData( { index, value, onChange, onImport }: { index: number; value: string; onChange: ( d: string ) => void; onImport: ( svg: { vw: number; vh: number; paths: SvgPath[] } ) => void } ) {
+/** The path data field: kept while typing, saved when it is valid. Pasting SVG code imports it. */
+export function PathData( { index, value, multiline, onChange, onImport, onFocus }: { index: number; value: string; multiline?: boolean; onChange: ( d: string ) => void; onImport: ( svg: { vw: number; vh: number; paths: SvgPath[] } ) => void; onFocus?: () => void } ) {
 	const [ text, setText ] = useState( value );
-	const valid = isPathData( text );
-	return (
-		<TextControl
-			__next40pxDefaultSize
-			__nextHasNoMarginBottom
-			className={ `evcert-svg-path__d${ valid ? '' : ' is-invalid' }` }
-			label={ sprintf( /* translators: %d: path number. */ __( 'Path %d data (d)', 'events-certificate' ), index + 1 ) }
-			hideLabelFromVision
-			placeholder="M0 0h24v24H0z"
-			onPaste={ ( event: { clipboardData: DataTransfer; preventDefault: () => void } ) => {
-				const pasted = event.clipboardData.getData( 'text/plain' );
-				const svg = /^\s*</.test( pasted ) ? sanitizeSvg( pasted ) : null;
-				if ( svg ) {
-					event.preventDefault();
-					onImport( svg );
-				}
-			} }
-			value={ text }
-			onChange={ ( d ) => {
-				setText( d );
-				if ( isPathData( d ) ) {
-					onChange( d.trim() );
-				}
-			} }
-		/>
+	const valid = ! text || isPathData( text );
+	const props = {
+		__nextHasNoMarginBottom: true,
+		className: `evcert-svg-path__d${ valid ? '' : ' is-invalid' }`,
+		label: sprintf( /* translators: %d: path number. */ __( 'Path %d data (d)', 'events-certificate' ), index + 1 ),
+		hideLabelFromVision: ! multiline,
+		placeholder: 'M0 0h24v24H0z',
+		value: text,
+		onFocus,
+		onPaste: ( event: { clipboardData: DataTransfer; preventDefault: () => void } ) => {
+			const pasted = event.clipboardData.getData( 'text/plain' );
+			const svg = /^\s*</.test( pasted ) ? sanitizeSvg( pasted ) : null;
+			if ( svg ) {
+				event.preventDefault();
+				onImport( svg );
+			}
+		},
+		onChange: ( d: string ) => {
+			setText( d );
+			if ( isPathData( d ) ) {
+				onChange( d.trim() );
+			}
+		},
+	};
+	return multiline ? (
+		<TextareaControl { ...props } rows={ 3 } help={ valid ? undefined : __( 'Only path commands and numbers, starting with M.', 'events-certificate' ) } />
+	) : (
+		<TextControl __next40pxDefaultSize { ...props } />
 	);
 }
 
-export default function SvgPanel( { el, design, mode, onChange }: Props ) {
+export default function SvgPanel( { el, design, mode, onChange, onOpen }: Props ) {
 	const paths = svgPaths( el );
 	const current = el.color || '$text';
 	const setPaths = ( next: SvgPath[] ) => onChange( { paths: next, markup: undefined, fill: undefined } );
@@ -142,6 +147,9 @@ export default function SvgPanel( { el, design, mode, onChange }: Props ) {
 						</Item>
 					) ) }
 				</ItemGroup>
+				<Button variant="secondary" __next40pxDefaultSize className="evcert-svg-panel__open" onClick={ onOpen }>
+					{ __( 'Edit drawing', 'events-certificate' ) }
+				</Button>
 				<p className="evcert-meta">{ __( 'Each path is the d value of an SVG <path>. Without a fill it uses the current color, set in Color. Pasting SVG code into a path fills in the viewBox and the paths; nothing else is kept.', 'events-certificate' ) }</p>
 			</div>
 		</div>

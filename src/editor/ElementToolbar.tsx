@@ -28,9 +28,10 @@ type Props = {
 	onInsertField?: ( field: string ) => void;
 	onToggleEdit?: () => void;
 	onImage?: ( picked: Picked ) => void;
+	onEditDrawing?: () => void;
 };
 
-export default function ElementToolbar( { anchor, el, required, onSelectParent, onOrder, onToggle, onDuplicate, onRemove, editing, marks, onBold, onItalic, onInsertField, onToggleEdit, onImage }: Props ) {
+export default function ElementToolbar( { anchor, el, required, onSelectParent, onOrder, onToggle, onDuplicate, onRemove, editing, marks, onBold, onItalic, onInsertField, onToggleEdit, onImage, onEditDrawing }: Props ) {
 	const info = fields();
 	if ( ! anchor ) {
 		return null;
@@ -67,6 +68,11 @@ export default function ElementToolbar( { anchor, el, required, onSelectParent, 
 				{ el.type === 'image' && onImage && (
 					<ToolbarGroup>
 						<ToolbarItem>{ ( toggleProps ) => <ReplaceImage src={ el.src } attachment={ el.attachment } onPick={ onImage } toggleProps={ toggleProps as any } /> }</ToolbarItem>
+					</ToolbarGroup>
+				) }
+				{ el.type === 'svg' && onEditDrawing && (
+					<ToolbarGroup>
+						<ToolbarButton onClick={ onEditDrawing }>{ __( 'Edit drawing', 'events-certificate' ) }</ToolbarButton>
 					</ToolbarGroup>
 				) }
 				{ editing && (

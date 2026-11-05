@@ -35,6 +35,7 @@ import FieldText, { type FieldTextCommands } from './FieldText';
 import Inserter from './Inserter';
 import { ImagePlaceholder } from './ImageSource';
 import Inspector from './Inspector';
+import SvgEditor from './SvgEditor';
 import type { Picked } from './media';
 import ListView from './ListView';
 import base from '../../templates/base-design.json';
@@ -315,6 +316,7 @@ export default function Editor() {
 		const [ editing, setEditing ] = useState< { id: string; runs: Run[] } | null >( null );
 	const textCommands = useRef< FieldTextCommands | null >( null );
 	const [ marks, setMarks ] = useState( { b: false, i: false } );
+	const [ drawing, setDrawing ] = useState< string | null >( null );
 	const clickToEdit = useRef< Element | null >( null );
 	const [ editAnchor, setEditAnchor ] = useState< HTMLElement | null >( null );
 	useEffect( () => {
@@ -862,14 +864,14 @@ export default function Editor() {
 							</Button>
 						</div>
 						{ sidebarTab === 'element' && current && (
-							<Inspector el={ current } stored={ currentStored } design={ design } mode={ mode } tab={ tab } locale={ LOCALE } sample={ sample } onChange={ ( patch ) => update( current.id, patch ) } onBox={ ( b ) => setBox( current.id, b ) } onImage={ ( picked ) => pickImage( current.id, picked ) } />
+							<Inspector el={ current } stored={ currentStored } design={ design } mode={ mode } tab={ tab } locale={ LOCALE } sample={ sample } onChange={ ( patch ) => update( current.id, patch ) } onBox={ ( b ) => setBox( current.id, b ) } onEditDrawing={ () => setDrawing( current.id ) } onImage={ ( picked ) => pickImage( current.id, picked ) } />
 						) }
 						{ sidebarTab === 'design' && <DesignPanel design={ design } mode={ mode } title={ title } status={ statusLabel } sample={ sample } defaults={ config.sample } onTitle={ setTitle } onChange={ commit } /> }
 					</aside>
 				) }
 			</div>
 
-			{ current && ( tab === 'art' || editing ) && ! draft && (
+			{ current && ( tab === 'art' || editing ) && ! draft && ! drawing && (
 				<ElementToolbar
 					anchor={ editing ? editAnchor : anchor }
 					editing={ !! editing }
@@ -886,6 +888,7 @@ export default function Editor() {
 					onDuplicate={ () => duplicate( current.id ) }
 					onRemove={ () => remove( current.id ) }
 					onImage={ ( picked ) => pickImage( current.id, picked ) }
+					onEditDrawing={ () => setDrawing( current.id ) }
 				/>
 			) }
 			<footer className="evcert-footer">
@@ -902,6 +905,10 @@ export default function Editor() {
 				</nav>
 			</footer>
 
+			{ drawing && ( () => {
+				const el = design.elements.find( ( e ) => e.id === drawing );
+				return el && el.type === 'svg' ? <SvgEditor el={ el } design={ design } mode={ mode } onApply={ ( patch ) => update( el.id, patch as Partial< Element > ) } onClose={ () => setDrawing( null ) } /> : null;
+			} )() }
 			<input ref={ fileRef } type="file" accept="application/json,.json" hidden onChange={ ( event ) => event.target.files?.[ 0 ] && importJson( event.target.files[ 0 ] ) } />
 		</div>
 	);
