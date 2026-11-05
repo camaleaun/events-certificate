@@ -442,6 +442,7 @@ export default function Editor() {
 	const wrapRef = useRef< HTMLDivElement >( null );
 	const dragRef = useRef< Drag >( null );
 	const savedRef = useRef< Design | null >( null );
+	const savedTitleRef = useRef( '' );
 	const selRef = useRef< SVGRectElement >( null );
 	const [ anchor, setAnchor ] = useState< SVGRectElement | null >( null );
 	useEffect( () => setAnchor( selRef.current ), [ selected, tab, zoom ] );
@@ -460,17 +461,19 @@ export default function Editor() {
 				loaded = withRequired( migrate( loaded ) );
 				savedRef.current = loaded;
 				dispatch( { type: 'load', design: loaded } );
+				savedTitleRef.current = post.title.raw;
 				setTitle( post.title.raw );
 				setStatus( 'saved' );
 			} )
 			.catch( () => setStatus( 'error' ) );
 	}, [ config.design ] );
 
+	// Unsaved: the design or its name differ from what was saved.
 	useEffect( () => {
 		if ( status !== 'loading' && status !== 'saving' ) {
-			setStatus( stored === savedRef.current ? 'saved' : 'dirty' );
+			setStatus( stored === savedRef.current && title === savedTitleRef.current ? 'saved' : 'dirty' );
 		}
-	}, [ stored ] );
+	}, [ stored, title ] );
 
 	// Fit the page in the window (and keep fitting on resize until zoomed by hand).
 	const fittedRef = useRef( true );
@@ -688,6 +691,7 @@ export default function Editor() {
 		try {
 			await apiFetch( { path: `/wp/v2/evcert-designs/${ config.design }`, method: 'POST', data: { title, content: JSON.stringify( stored ) } } );
 			savedRef.current = stored;
+			savedTitleRef.current = title;
 			setStatus( 'saved' );
 		} catch ( e ) {
 			setStatus( 'error' );
