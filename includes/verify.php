@@ -2,7 +2,8 @@
 /**
  * The certificate page: /{slug}/{code}/ (slug from the settings, "certificate"
  * by default), with /certificate/{code}/ and /verify/{code}/ always working too. Anyone with the code sees the certificate,
- * whether it is authentic, replaced or revoked, in any of the site's
+ * as it is on record (to compare with the copy at hand), replaced or
+ * revoked, in any of the site's
  * languages, and downloads the PDF. Without a code it asks for one. It never
  * lists certificates (docs/decisions/0006) and asks search engines not to
  * index it.
@@ -204,12 +205,14 @@ function status( array $cert ) {
 		return array( 'is-revoked', __( 'Revoked', 'events-certificate' ), esc_html( (string) $cert['revoked_reason'] ) );
 	}
 
+	// "On record", not "authentic": a valid code proves the record exists, not that a printed copy wasn't
+	// altered (a real QR code on a copy with another name). Whoever checks compares the copy with this page.
 	return array(
 		'is-valid',
-		__( 'Authentic certificate', 'events-certificate' ),
+		__( 'Certificate on record', 'events-certificate' ),
 		sprintf(
 			/* translators: %s: site name. */
-			esc_html__( 'Issued by %s and kept in its records. The data below is what was issued.', 'events-certificate' ),
+			esc_html__( 'Issued by %s. Compare it with the copy you received: the name, event, dates and code must be exactly the ones shown here. Any difference means the copy was altered.', 'events-certificate' ),
 			'<strong>' . esc_html( get_bloginfo( 'name' ) ) . '</strong>'
 		),
 	);
@@ -317,7 +320,7 @@ function render_page( $cert, $code, $locale, $invalid ) {
 	if ( $cert ) {
 		list( $class, $heading, $detail ) = status( $cert );
 		$short                            = array(
-			'is-valid'    => __( 'Authentic', 'events-certificate' ),
+			'is-valid'    => __( 'On record', 'events-certificate' ),
 			'is-replaced' => __( 'Replaced', 'events-certificate' ),
 			'is-revoked'  => __( 'Revoked', 'events-certificate' ),
 		)[ $class ];
@@ -353,7 +356,7 @@ function render_page( $cert, $code, $locale, $invalid ) {
 			<div class="evcert-dock__bar">
 				<div class="evcert-dock__row">
 					<button type="button" class="evcert-dock__status <?php echo esc_attr( $class ); ?>" data-evcert-pop="details" aria-expanded="false" title="<?php echo esc_attr( $heading ); ?>">
-						<?php echo icon( 'is-valid' === $class ? 'check' : 'shield' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?>
+						<?php echo icon( 'shield' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?>
 						<span><?php echo esc_html( $short ); ?></span>
 					</button>
 					<code class="evcert-dock__code"><?php echo esc_html( $cert['code'] ); ?></code>

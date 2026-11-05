@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-05T11:17:58+00:00\n"
+"POT-Creation-Date: 2026-11-05T11:21:02+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: events-certificate\n"
@@ -204,8 +204,8 @@ msgid "Issued"
 msgstr ""
 
 #: includes/admin.php:318
-#: includes/verify.php:204
-#: includes/verify.php:317
+#: includes/verify.php:205
+#: includes/verify.php:325
 msgid "Revoked"
 msgstr ""
 
@@ -280,20 +280,20 @@ msgid "Certificate"
 msgstr ""
 
 #: includes/compat/camptix-front.php:275
-#: includes/verify.php:384
+#: includes/verify.php:392
 #: build/routes/editor/content.js:819
 #: build/routes/editor/content.js:2932
 msgid "Name"
 msgstr ""
 
 #: includes/compat/camptix-front.php:276
-#: includes/verify.php:390
+#: includes/verify.php:398
 #: build/routes/editor/content.js:2928
 msgid "Code"
 msgstr ""
 
 #: includes/compat/camptix-front.php:277
-#: includes/verify.php:389
+#: includes/verify.php:397
 msgid "Issued on"
 msgstr ""
 
@@ -314,7 +314,7 @@ msgid "As it should appear: check accents and capital letters."
 msgstr ""
 
 #: includes/compat/camptix-front.php:303
-#: includes/verify.php:278
+#: includes/verify.php:286
 msgid "E-mail"
 msgstr ""
 
@@ -350,142 +350,142 @@ msgstr ""
 msgid "Sponsor"
 msgstr ""
 
-#: includes/verify.php:195
+#: includes/verify.php:196
 msgid "Replaced by a corrected certificate"
 msgstr ""
 
 #. translators: %s: link to the new certificate.
-#: includes/verify.php:198
+#: includes/verify.php:199
 #, php-format
 msgid "This code was valid, but the certificate was corrected. See the current one: %s"
 msgstr ""
 
-#: includes/verify.php:209
-msgid "Authentic certificate"
+#: includes/verify.php:212
+msgid "Certificate on record"
 msgstr ""
 
 #. translators: %s: site name.
-#: includes/verify.php:212
+#: includes/verify.php:215
 #, php-format
-msgid "Issued by %s and kept in its records. The data below is what was issued."
+msgid "Issued by %s. Compare it with the copy you received: the name, event, dates and code must be exactly the ones shown here. Any difference means the copy was altered."
 msgstr ""
 
 #. translators: %s: event name.
-#: includes/verify.php:247
+#: includes/verify.php:255
 #, php-format
 msgid "Certificate of participation: %s"
 msgstr ""
 
 #. translators: %s: event name.
-#: includes/verify.php:252
+#: includes/verify.php:260
 #, php-format
 msgid "My certificate from %s"
 msgstr ""
 
-#: includes/verify.php:258
+#: includes/verify.php:266
 msgid "Add to LinkedIn profile"
 msgstr ""
 
 #. translators: %s: person's name.
-#: includes/verify.php:311
+#: includes/verify.php:319
 #, php-format
 msgid "Certificate: %s"
 msgstr ""
 
 #. translators: %s: person's name.
-#: includes/verify.php:311
-#: includes/verify.php:412
+#: includes/verify.php:319
+#: includes/verify.php:420
 msgid "Check a certificate"
 msgstr ""
 
-#: includes/verify.php:315
-msgid "Authentic"
+#: includes/verify.php:323
+msgid "On record"
 msgstr ""
 
-#: includes/verify.php:316
+#: includes/verify.php:324
 msgid "Replaced"
 msgstr ""
 
-#: includes/verify.php:346
+#: includes/verify.php:354
 msgid "Certificate tools"
 msgstr ""
 
-#: includes/verify.php:347
+#: includes/verify.php:355
 msgid "Show tools"
 msgstr ""
 
-#: includes/verify.php:356
+#: includes/verify.php:364
 msgid "Dock to the left corner"
 msgstr ""
 
-#: includes/verify.php:357
+#: includes/verify.php:365
 msgid "Dock to the right corner"
 msgstr ""
 
-#: includes/verify.php:363
+#: includes/verify.php:371
 msgid "Share"
 msgstr ""
 
-#: includes/verify.php:371
+#: includes/verify.php:379
 msgid "Language"
 msgstr ""
 
-#: includes/verify.php:373
+#: includes/verify.php:381
 #: build/routes/editor/content.js:897
 msgid "Light"
 msgstr ""
 
-#: includes/verify.php:373
+#: includes/verify.php:381
 #: build/routes/editor/content.js:898
 msgid "Dark"
 msgstr ""
 
-#: includes/verify.php:374
+#: includes/verify.php:382
 #: build/routes/editor/content.js:779
 msgid "Details"
 msgstr ""
 
-#: includes/verify.php:385
+#: includes/verify.php:393
 #: build/routes/editor/content.js:775
 #: build/routes/editor/content.js:945
 msgid "Event"
 msgstr ""
 
-#: includes/verify.php:387
+#: includes/verify.php:395
 #: build/routes/editor/content.js:950
 msgid "Workload"
 msgstr ""
 
-#: includes/verify.php:395
+#: includes/verify.php:403
 msgid "Share…"
 msgstr ""
 
-#: includes/verify.php:399
+#: includes/verify.php:407
 msgid "Link copied"
 msgstr ""
 
-#: includes/verify.php:399
+#: includes/verify.php:407
 msgid "Copy link"
 msgstr ""
 
-#: includes/verify.php:412
+#: includes/verify.php:420
 msgid "Certificate not found"
 msgstr ""
 
-#: includes/verify.php:413
+#: includes/verify.php:421
 msgid "No certificate has this code. Check it and try again: it has 16 letters and numbers, like 2611-04K7-M29Q-XAP3."
 msgstr ""
 
-#: includes/verify.php:413
+#: includes/verify.php:421
 msgid "Type the code printed on the certificate, below its QR code."
 msgstr ""
 
-#: includes/verify.php:415
+#: includes/verify.php:423
 #: build/routes/editor/content.js:960
 msgid "Certificate code"
 msgstr ""
 
-#: includes/verify.php:417
+#: includes/verify.php:425
 msgid "Check"
 msgstr ""
 

@@ -17,6 +17,7 @@ measurements are in [`../spikes/`](../spikes/).
 | [0008](0008-editor-translations.md) | The editor's translations are handed to wp.i18n by the plugin | Accepted |
 | [0009](0009-screen-views.md) | Print page plus screen views (desktop, tablet, mobile) with per-screen overrides | Accepted |
 | [0010](0010-non-public-sites.md) | Sites that are not public show a QR placeholder instead of authenticity | Accepted |
+| [0011](0011-on-record-not-authentic.md) | The certificate page says "on record" and asks to compare, never "authentic" | Accepted |
 
 New decisions get the next number. A decision that is replaced keeps its file,
 with its status changed to "Replaced by NNNN".
