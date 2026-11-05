@@ -234,7 +234,8 @@ export default function Editor() {
 	const shown = draft || design;
 	const [ selected, setSelected ] = useState< string | null >( null );
 	const [ mode, setMode ] = useState< Mode >( 'light' );
-	const [ tab, setTab ] = useState< 'content' | 'art' >( 'art' );
+	// One mode, like the block editor: click selects and drags, double-click edits text.
+	const tab = 'art' as 'content' | 'art';
 	const [ panel, setPanel ] = useState< 'insert' | 'layers' | null >( null );
 	const [ sidebar, setSidebar ] = useState< 'design' | 'element' | null >( 'design' );
 	const [ svgModal, setSvgModal ] = useState< string | null >( null );
@@ -245,7 +246,7 @@ export default function Editor() {
 		setEditAnchor( editing ? ( document.querySelector( '.evcert-text--editing' ) as HTMLElement | null ) : null );
 	}, [ editing?.id ] );
 	const startEditing = ( el: Element ) => {
-		if ( el.type === 'text' && ! el.locked ) {
+		if ( el.type === 'text' ) {
 			setSelected( el.id );
 			setSidebar( 'element' );
 			setEditing( { id: el.id, runs: runsOf( el ) } );
@@ -521,14 +522,6 @@ export default function Editor() {
 					<Button size="compact" icon={ undoIcon } onClick={ () => dispatch( { type: 'undo' } ) } disabled={ ! history.past.length } accessibleWhenDisabled label={ __( 'Undo', 'events-certificate' ) } />
 					<Button size="compact" icon={ redoIcon } onClick={ () => dispatch( { type: 'redo' } ) } disabled={ ! history.future.length } accessibleWhenDisabled label={ __( 'Redo', 'events-certificate' ) } />
 					<Button size="compact" icon={ listView } isPressed={ panel === 'layers' } onClick={ () => setPanel( panel === 'layers' ? null : 'layers' ) } label={ __( 'Layers', 'events-certificate' ) } />
-					<div className="evcert-mode-switch" role="group" aria-label={ __( 'Editing mode', 'events-certificate' ) }>
-						<Button size="compact" isPressed={ tab === 'content' } onClick={ () => { setTab( 'content' ); setPanel( null ); } }>
-							{ __( 'Content', 'events-certificate' ) }
-						</Button>
-						<Button size="compact" isPressed={ tab === 'art' } onClick={ () => setTab( 'art' ) }>
-							{ __( 'Art', 'events-certificate' ) }
-						</Button>
-					</div>
 				</div>
 				<div className="evcert-header-center">
 					<button type="button" className="evcert-document-bar" onClick={ () => { setSelected( null ); setSidebar( 'design' ); } }>
