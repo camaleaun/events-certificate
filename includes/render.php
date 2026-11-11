@@ -600,6 +600,41 @@ function first_page_options( array $cert, array $design ) {
 }
 
 /**
+ * The signature as an image: the signer's (Signer\current(), as on the first
+ * page), else the drawing of the template's signature element.
+ *
+ * @param array<string, mixed>  $design Design.
+ * @param array<string, string> $values values().
+ * @param string                $color  Color of paths without their own.
+ * @return string Image source, or '' when there is none.
+ */
+function signature_src( array $design, array $values, $color ) {
+	$signature = json_decode( $values['signature'] ?? 'null', true );
+	if ( ! is_array( $signature ) || empty( $signature['paths'] ) ) {
+		$signature = null;
+		foreach ( (array) $design['elements'] as $el ) {
+			if ( 'svg' === ( $el['type'] ?? '' ) && ( 'signature' === ( $el['slot'] ?? '' ) || 'signature' === ( $el['id'] ?? '' ) ) && ! empty( $el['paths'] ) ) {
+				$signature = $el;
+				break;
+			}
+		}
+	}
+	if ( ! $signature ) {
+		return '';
+	}
+	$paths = '';
+	foreach ( (array) $signature['paths'] as $path ) {
+		if ( ! is_path_data( $path['d'] ?? '' ) ) {
+			continue;
+		}
+		$fill   = isset( $path['fill'] ) && '$' !== substr( (string) $path['fill'], 0, 1 ) ? (string) $path['fill'] : $color;
+		$paths .= sprintf( '<path d="%s" fill="%s"%s/>', esc_attr( without_arcs( $path['d'] ) ), esc_attr( $fill ), 'evenodd' === ( $path['rule'] ?? '' ) ? ' fill-rule="evenodd"' : '' );
+	}
+
+	return '' === $paths ? '' : svg_src( sprintf( '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %s %s">%s</svg>', (float) $signature['vw'], (float) $signature['vh'], $paths ) );
+}
+
+/**
  * Whether a certificate has the declaration page.
  *
  * @param array<string, mixed> $cert Certificate.
@@ -674,9 +709,12 @@ function declaration( array $cert, array $design, array $values, array $options 
 		$list .= '' !== $items ? '<ul style="margin:0;padding-left:14pt">' . $items . '</ul>' : '';
 	}
 
-	$footer = sprintf(
-		'<p style="margin:24pt 0 0">%s</p><p style="margin:18pt 0 0"><strong>%s</strong><br><span style="color:%s">%s</span></p>',
+	$signature = signature_src( $design, $values, $text );
+	$footer    = sprintf(
+		'<p style="margin:24pt 0 0">%s</p>%s<p style="margin:%s 0 0"><strong>%s</strong><br><span style="color:%s">%s</span></p>',
 		esc_html( $values['location'] . ', ' . format_date( (int) $values['issued_ts'], 'long' ) ),
+		'' !== $signature ? sprintf( '<img alt="" src="%s" style="display:block;height:40pt;max-width:160pt;margin:14pt 0 0">', esc_attr( $signature ) ) : '',
+		'' !== $signature ? '2pt' : '18pt',
 		esc_html( $values['signer_name'] ),
 		esc_attr( $muted ),
 		esc_html( $values['signer_role'] )
@@ -686,7 +724,7 @@ function declaration( array $cert, array $design, array $values, array $options 
 	if ( verifiable() || ! empty( $options['preview'] ) ) {
 		$qr_back      = 'none' === $bg ? ( 'dark' === $mode ? '#000000' : '#ffffff' ) : $bg;
 		$verification = sprintf(
-			'<div style="position:absolute;right:%1$.2Fpt;bottom:%1$.2Fpt;width:150pt;text-align:center;font-size:7pt;line-height:1.35;color:%2$s"><img alt="" src="%3$s" style="width:64pt;height:64pt;display:block;margin:0 auto 4pt"><div style="font-family:\'Inter\';font-weight:500;font-size:8pt;color:%4$s">%5$s</div><div>%6$s<br>%7$s</div></div>',
+			'<div style="position:absolute;right:%1$.2Fpt;bottom:%1$.2Fpt;width:180pt;text-align:right;font-size:7pt;line-height:1.35;color:%2$s"><img alt="" src="%3$s" style="width:64pt;height:64pt;display:block;margin:0 0 4pt auto"><div style="font-family:\'Inter\';font-weight:500;font-size:8pt;color:%4$s">%5$s</div><div>%6$s<br>%7$s</div></div>',
 			$pad,
 			esc_attr( $muted ),
 			esc_attr( qr_src( \EventsCertificate\Certificates\url( $values['code'] ), $text, $qr_back, ! empty( $options['preview'] ) ) ),
