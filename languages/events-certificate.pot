@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-05T19:03:06+00:00\n"
+"POT-Creation-Date: 2026-11-11T01:48:17+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: events-certificate\n"
@@ -41,7 +41,7 @@ msgstr ""
 
 #: includes/admin-app.php:116
 #: includes/designs.php:46
-#: build/routes/editor/content.js:4014
+#: build/routes/editor/content.js:4017
 msgid "Certificate design"
 msgstr ""
 
@@ -50,7 +50,7 @@ msgid "Edit certificate"
 msgstr ""
 
 #: includes/admin-app.php:207
-#: includes/admin.php:322
+#: includes/admin.php:370
 msgid "City, Country"
 msgstr ""
 
@@ -87,7 +87,7 @@ msgid "Edit"
 msgstr ""
 
 #: includes/admin.php:81
-#: includes/admin.php:394
+#: includes/admin.php:442
 #: includes/compat/camptix.php:109
 msgid "Certificates"
 msgstr ""
@@ -100,129 +100,147 @@ msgstr ""
 msgid "Sorry, you are not allowed to revoke certificates."
 msgstr ""
 
-#: includes/admin.php:197
+#: includes/admin.php:207
 #: build/routes/editor/content.js:2008
 #: build/routes/editor/content.js:3249
 msgid "Authenticity"
 msgstr ""
 
-#: includes/admin.php:203
+#: includes/admin.php:213
 msgid "Public site"
 msgstr ""
 
-#: includes/admin.php:211
+#: includes/admin.php:221
+msgid "Check page"
+msgstr ""
+
+#: includes/admin.php:229
 msgid "Certificate address"
 msgstr ""
 
-#: includes/admin.php:220
+#: includes/admin.php:238
 msgid "Issuing"
 msgstr ""
 
-#: includes/admin.php:226
+#: includes/admin.php:244
 msgid "Event location"
 msgstr ""
 
-#: includes/admin.php:234
+#: includes/admin.php:252
 msgid "Attendees get their own"
 msgstr ""
 
-#: includes/admin.php:243
+#: includes/admin.php:261
 msgid "Data"
 msgstr ""
 
-#: includes/admin.php:249
+#: includes/admin.php:267
 msgid "Uninstall"
 msgstr ""
 
-#: includes/admin.php:262
+#: includes/admin.php:280
 msgid "Certificates issued on this site carry a QR code and a code anyone can check on its verification page."
 msgstr ""
 
-#: includes/admin.php:267
+#: includes/admin.php:285
 msgid "it runs on WordPress Playground"
 msgstr ""
 
-#: includes/admin.php:268
+#: includes/admin.php:286
 msgid "its environment type is “local”"
 msgstr ""
 
-#: includes/admin.php:269
+#: includes/admin.php:287
 msgid "its address only works on this computer or network"
 msgstr ""
 
-#: includes/admin.php:270
+#: includes/admin.php:288
 msgid "its address is a private IP"
 msgstr ""
 
 #. translators: %s: reasons, e.g. "its address only works on this computer or network".
-#: includes/admin.php:280
+#: includes/admin.php:298
 #, php-format
 msgid "This site doesn’t look public (%s), so certificates show a placeholder where the QR code and the verification address go: nobody else could open them."
 msgstr ""
 
-#: includes/admin.php:294
+#: includes/admin.php:312
 msgid "Treat this site as public"
 msgstr ""
 
-#: includes/admin.php:295
+#: includes/admin.php:313
 msgid "For a staging site with a public address. Only turn it on when anyone can open this site’s pages."
 msgstr ""
 
-#: includes/admin.php:308
-msgid "The address printed on certificates and in their QR code. Change it before issuing: printed certificates keep the old one."
+#: includes/admin.php:327
+msgid "— None (the plugin’s own page) —"
+msgstr ""
+
+#: includes/admin.php:332
+msgid "The page with the Check a certificate block. Certificates live under its address."
 msgstr ""
 
 #. translators: Stands for a certificate code in an example address, as in https://example.com/certificate/<code>/.
-#: includes/admin.php:310
+#: includes/admin.php:346
+#: includes/admin.php:358
 msgctxt "certificate code placeholder"
 msgid "code"
 msgstr ""
 
-#: includes/admin.php:323
+#: includes/admin.php:347
+msgid "Set by the check page’s address (change it in the page)."
+msgstr ""
+
+#: includes/admin.php:356
+msgid "The address printed on certificates and in their QR code. Change it before issuing: printed certificates keep the old one."
+msgstr ""
+
+#: includes/admin.php:371
 msgid "Shown where the design uses the Location field. On WordCamp.org it comes from the WordCamp’s location."
 msgstr ""
 
-#: includes/admin.php:332
+#: includes/admin.php:380
 msgid "When marked as present at the event"
 msgstr ""
 
-#: includes/admin.php:333
+#: includes/admin.php:381
 msgid "With any confirmed ticket"
 msgstr ""
 
-#: includes/admin.php:334
+#: includes/admin.php:382
 msgid "No: only organizers issue certificates"
 msgstr ""
 
-#: includes/admin.php:341
+#: includes/admin.php:389
 msgid "From the link in their ticket e-mail, attendees check how their name goes on the certificate and get it with its code."
 msgstr ""
 
-#: includes/admin.php:352
+#: includes/admin.php:400
 msgid "Delete all certificates when the plugin is deleted"
 msgstr ""
 
-#: includes/admin.php:353
+#: includes/admin.php:401
 msgid "Printed certificates would no longer be verifiable. Leave it off unless you are sure."
 msgstr ""
 
 #. translators: %s: number of certificates.
-#: includes/admin.php:406
+#: includes/admin.php:454
 #, php-format
 msgid "%s certificate revoked."
 msgid_plural "%s certificates revoked."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/admin.php:423
+#: includes/admin.php:471
 msgid "Search certificates"
 msgstr ""
 
-#: includes/admin.php:445
+#: includes/admin.php:493
 #: includes/compat/camptix.php:138
+#: blocks/verify/edit.js:28
 #: build/routes/editor/content.js:2022
-#: build/routes/editor/content.js:4024
-#: build/routes/editor/content.js:4246
+#: build/routes/editor/content.js:4027
+#: build/routes/editor/content.js:4249
 msgid "Settings"
 msgstr ""
 
@@ -266,7 +284,7 @@ msgstr ""
 
 #: includes/class-list-table.php:80
 #: includes/compat/camptix-front.php:307
-#: includes/verify.php:493
+#: includes/verify.php:488
 #: build/routes/editor/content.js:896
 #: build/routes/editor/content.js:2560
 #: build/routes/editor/content.js:3254
@@ -275,20 +293,20 @@ msgstr ""
 
 #: includes/class-list-table.php:81
 #: includes/compat/camptix-front.php:308
-#: includes/verify.php:500
+#: includes/verify.php:495
 #: build/routes/editor/content.js:3250
 msgid "Code"
 msgstr ""
 
 #: includes/class-list-table.php:82
-#: includes/verify.php:494
+#: includes/verify.php:489
 #: build/routes/editor/content.js:851
 #: build/routes/editor/content.js:1030
 msgid "Event"
 msgstr ""
 
 #: includes/class-list-table.php:83
-#: includes/verify.php:496
+#: includes/verify.php:491
 #: build/routes/editor/content.js:1035
 msgid "Workload"
 msgstr ""
@@ -303,7 +321,7 @@ msgstr ""
 
 #: includes/class-list-table.php:86
 #: includes/compat/camptix-front.php:309
-#: includes/verify.php:498
+#: includes/verify.php:493
 msgid "Issued on"
 msgstr ""
 
@@ -323,7 +341,7 @@ msgstr ""
 
 #: includes/class-list-table.php:229
 #: build/routes/editor/content.js:2450
-#: build/routes/editor/content.js:4055
+#: build/routes/editor/content.js:4058
 msgid "View"
 msgstr ""
 
@@ -393,12 +411,13 @@ msgstr ""
 #: includes/compat/camptix-front.php:298
 #: includes/compat/camptix-front.php:381
 #: includes/designs.php:97
+#: includes/verify-page.php:207
 #: build-signer/index.js:441
 #: build/routes/editor/content.js:891
 #: build/routes/editor/content.js:896
-#: build/routes/editor/content.js:4011
-#: build/routes/editor/content.js:4248
-#: build/routes/editor/content.js:4290
+#: build/routes/editor/content.js:4014
+#: build/routes/editor/content.js:4251
+#: build/routes/editor/content.js:4293
 msgid "Certificate"
 msgstr ""
 
@@ -419,7 +438,7 @@ msgid "As it should appear: check accents and capital letters."
 msgstr ""
 
 #: includes/compat/camptix-front.php:335
-#: includes/verify.php:333
+#: includes/verify.php:328
 msgid "E-mail"
 msgstr ""
 
@@ -435,29 +454,29 @@ msgstr ""
 msgid "Certificate designs"
 msgstr ""
 
-#: includes/preview.php:147
+#: includes/preview.php:191
 msgid "Certificate preview"
 msgstr ""
 
-#: includes/preview.php:167
-#: includes/verify.php:451
+#: includes/preview.php:211
+#: includes/verify.php:446
 msgid "Certificate tools"
 msgstr ""
 
-#: includes/preview.php:170
+#: includes/preview.php:214
 #: build-signer/index.js:347
 #: build/routes/editor/content.js:2507
 msgid "Preview"
 msgstr ""
 
-#: includes/preview.php:171
-#: includes/verify.php:480
+#: includes/preview.php:224
+#: includes/verify.php:475
 #: build/routes/editor/content.js:983
 msgid "Light"
 msgstr ""
 
-#: includes/preview.php:171
-#: includes/verify.php:480
+#: includes/preview.php:224
+#: includes/verify.php:475
 #: build/routes/editor/content.js:984
 msgid "Dark"
 msgstr ""
@@ -500,120 +519,145 @@ msgstr ""
 msgid "Use the code above to verify at:"
 msgstr ""
 
-#: includes/verify.php:247
+#. translators: %s: person's name.
+#: includes/verify-page.php:142
+#: includes/verify.php:361
+#: includes/verify.php:518
+#: blocks/verify/edit.js:33
+msgid "Check a certificate"
+msgstr ""
+
+#: includes/verify-page.php:151
+msgid "No certificate has this code. Check it and try again."
+msgstr ""
+
+#: includes/verify-page.php:160
+#: includes/verify.php:521
+#: build/routes/editor/content.js:1045
+msgid "Certificate code"
+msgstr ""
+
+#: includes/verify-page.php:172
+msgid "The code printed on the certificate, below its QR code: 16 letters and numbers."
+msgstr ""
+
+#: includes/verify-page.php:179
+#: includes/verify.php:523
+msgid "Check"
+msgstr ""
+
+#: includes/verify.php:242
 msgid "Replaced by a corrected certificate"
 msgstr ""
 
 #. translators: %s: link to the new certificate.
-#: includes/verify.php:250
+#: includes/verify.php:245
 #, php-format
 msgid "This code was valid, but the certificate was corrected. See the current one: %s"
 msgstr ""
 
-#: includes/verify.php:256
-#: includes/verify.php:372
+#: includes/verify.php:251
+#: includes/verify.php:367
 msgid "Revoked"
 msgstr ""
 
-#: includes/verify.php:263
+#: includes/verify.php:258
 msgid "Certificate on record"
 msgstr ""
 
 #. translators: %s: event name.
-#: includes/verify.php:302
+#: includes/verify.php:297
 #, php-format
 msgid "Certificate of participation: %s"
 msgstr ""
 
 #. translators: %s: event name.
-#: includes/verify.php:307
+#: includes/verify.php:302
 #, php-format
 msgid "My certificate from %s"
 msgstr ""
 
-#: includes/verify.php:313
+#: includes/verify.php:308
 msgid "Add to LinkedIn profile"
 msgstr ""
 
 #. translators: %s: person's name.
-#: includes/verify.php:366
+#: includes/verify.php:361
 #, php-format
 msgid "Certificate: %s"
 msgstr ""
 
-#. translators: %s: person's name.
-#: includes/verify.php:366
-#: includes/verify.php:523
-msgid "Check a certificate"
-msgstr ""
-
-#: includes/verify.php:370
+#: includes/verify.php:365
 msgid "On record"
 msgstr ""
 
-#: includes/verify.php:371
+#: includes/verify.php:366
 msgid "Replaced"
 msgstr ""
 
-#: includes/verify.php:452
+#: includes/verify.php:447
 msgid "Show tools"
 msgstr ""
 
-#: includes/verify.php:462
-#: includes/verify.php:481
+#: includes/verify.php:457
+#: includes/verify.php:476
 #: build/routes/editor/content.js:855
 msgid "Details"
 msgstr ""
 
-#: includes/verify.php:463
+#: includes/verify.php:458
 msgid "Dock to the left corner"
 msgstr ""
 
-#: includes/verify.php:464
+#: includes/verify.php:459
 msgid "Dock to the right corner"
 msgstr ""
 
-#: includes/verify.php:470
+#: includes/verify.php:465
 msgid "Share"
 msgstr ""
 
-#: includes/verify.php:476
-#: includes/verify.php:478
+#: includes/verify.php:471
+#: includes/verify.php:473
 #: build-signer/index.js:406
 msgid "Language"
 msgstr ""
 
-#: includes/verify.php:506
+#: includes/verify.php:501
 msgid "Share…"
 msgstr ""
 
-#: includes/verify.php:510
+#: includes/verify.php:505
 msgid "Link copied"
 msgstr ""
 
-#: includes/verify.php:510
+#: includes/verify.php:505
 msgid "Copy link"
 msgstr ""
 
-#: includes/verify.php:523
+#: includes/verify.php:518
 msgid "Certificate not found"
 msgstr ""
 
-#: includes/verify.php:524
+#: includes/verify.php:519
 msgid "No certificate has this code. Check it and try again: it has 16 letters and numbers, like 2611-04K7-M29Q-XAP3."
 msgstr ""
 
-#: includes/verify.php:524
+#: includes/verify.php:519
 msgid "Type the code printed on the certificate, below its QR code."
 msgstr ""
 
-#: includes/verify.php:526
-#: build/routes/editor/content.js:1045
-msgid "Certificate code"
+#: blocks/verify/edit.js:32
+#: build-signer/index.js:351
+#: build-signer/index.js:356
+#: build/routes/editor/content.js:2511
+#: build/routes/editor/content.js:2516
+#: build/routes/editor/content.js:3260
+msgid "Title"
 msgstr ""
 
-#: includes/verify.php:528
-msgid "Check"
+#: blocks/verify/edit.js:41
+msgid "Show help"
 msgstr ""
 
 #. translators: %s: color name.
@@ -726,14 +770,6 @@ msgid "Edit SVG"
 msgstr ""
 
 #: build-signer/index.js:351
-#: build-signer/index.js:356
-#: build/routes/editor/content.js:2511
-#: build/routes/editor/content.js:2516
-#: build/routes/editor/content.js:3260
-msgid "Title"
-msgstr ""
-
-#: build-signer/index.js:351
 #: build/routes/editor/content.js:1973
 #: build/routes/editor/content.js:2144
 #: build/routes/editor/content.js:2511
@@ -787,7 +823,7 @@ msgstr ""
 #: build/routes/editor/content.js:2001
 #: build/routes/editor/content.js:2153
 #: build/routes/editor/content.js:3259
-#: build/routes/editor/content.js:4141
+#: build/routes/editor/content.js:4144
 msgid "Text"
 msgstr ""
 
@@ -850,14 +886,14 @@ msgstr ""
 #: build/routes/editor/content.js:897
 #: build/routes/editor/content.js:913
 #: build/routes/editor/content.js:2442
-#: build/routes/editor/content.js:4300
+#: build/routes/editor/content.js:4303
 msgid "Landscape"
 msgstr ""
 
 #: build/routes/editor/content.js:897
 #: build/routes/editor/content.js:914
 #: build/routes/editor/content.js:2443
-#: build/routes/editor/content.js:4300
+#: build/routes/editor/content.js:4303
 msgid "Portrait"
 msgstr ""
 
@@ -1103,7 +1139,7 @@ msgstr ""
 
 #: build/routes/editor/content.js:1661
 #: build/routes/editor/content.js:2654
-#: build/routes/editor/content.js:4040
+#: build/routes/editor/content.js:4043
 msgid "Options"
 msgstr ""
 
@@ -1160,7 +1196,7 @@ msgstr ""
 
 #: build/routes/editor/content.js:1721
 #: build/routes/editor/content.js:2585
-#: build/routes/editor/content.js:4000
+#: build/routes/editor/content.js:4003
 msgid "Close"
 msgstr ""
 
@@ -1557,17 +1593,17 @@ msgid "Page (print)"
 msgstr ""
 
 #: build/routes/editor/content.js:2434
-#: build/routes/editor/content.js:4299
+#: build/routes/editor/content.js:4302
 msgid "Desktop"
 msgstr ""
 
 #: build/routes/editor/content.js:2435
-#: build/routes/editor/content.js:4299
+#: build/routes/editor/content.js:4302
 msgid "Tablet"
 msgstr ""
 
 #: build/routes/editor/content.js:2436
-#: build/routes/editor/content.js:4299
+#: build/routes/editor/content.js:4302
 msgid "Mobile"
 msgstr ""
 
@@ -1581,7 +1617,7 @@ msgstr ""
 
 #: build/routes/editor/content.js:2584
 #: build/routes/editor/content.js:2587
-#: build/routes/editor/content.js:4005
+#: build/routes/editor/content.js:4008
 msgid "Layers"
 msgstr ""
 
@@ -1657,105 +1693,130 @@ msgstr ""
 msgid "Zoom in"
 msgstr ""
 
-#: build/routes/editor/content.js:3884
+#: build/routes/editor/content.js:3887
 msgid "Design imported. Save to keep it."
 msgstr ""
 
-#: build/routes/editor/content.js:3966
+#: build/routes/editor/content.js:3969
 msgid "Loading…"
 msgstr ""
 
-#: build/routes/editor/content.js:3967
+#: build/routes/editor/content.js:3970
 msgid "Saved"
 msgstr ""
 
-#: build/routes/editor/content.js:3968
+#: build/routes/editor/content.js:3971
 msgid "Unsaved changes"
 msgstr ""
 
-#: build/routes/editor/content.js:3969
-#: build/routes/editor/content.js:4037
+#: build/routes/editor/content.js:3972
+#: build/routes/editor/content.js:4040
 msgid "Saving…"
 msgstr ""
 
-#: build/routes/editor/content.js:3970
+#: build/routes/editor/content.js:3973
 msgid "Couldn’t save"
 msgstr ""
 
-#: build/routes/editor/content.js:3982
+#: build/routes/editor/content.js:3985
 msgid "Couldn’t open the preview."
 msgstr ""
 
-#: build/routes/editor/content.js:3990
+#: build/routes/editor/content.js:3993
 msgid "Back to Certificates"
 msgstr ""
 
-#: build/routes/editor/content.js:4000
+#: build/routes/editor/content.js:4003
 msgid "Add element"
 msgstr ""
 
-#: build/routes/editor/content.js:4003
+#: build/routes/editor/content.js:4006
 msgid "Undo"
 msgstr ""
 
-#: build/routes/editor/content.js:4004
+#: build/routes/editor/content.js:4007
 msgid "Redo"
 msgstr ""
 
-#: build/routes/editor/content.js:4022
+#: build/routes/editor/content.js:4025
 msgid "Preview in new tab"
 msgstr ""
 
-#: build/routes/editor/content.js:4023
+#: build/routes/editor/content.js:4026
 msgid "Preview in dark mode"
 msgstr ""
 
-#: build/routes/editor/content.js:4023
+#: build/routes/editor/content.js:4026
 msgid "Preview in light mode"
 msgstr ""
 
-#: build/routes/editor/content.js:4035
+#: build/routes/editor/content.js:4038
 msgid "Couldn’t save. Try again."
 msgstr ""
 
-#: build/routes/editor/content.js:4037
+#: build/routes/editor/content.js:4040
 msgid "Save"
 msgstr ""
 
-#: build/routes/editor/content.js:4041
+#: build/routes/editor/content.js:4044
 msgid "Design"
 msgstr ""
 
-#: build/routes/editor/content.js:4045
+#: build/routes/editor/content.js:4048
 msgid "Export (JSON)"
 msgstr ""
 
-#: build/routes/editor/content.js:4049
+#: build/routes/editor/content.js:4052
 msgid "Import…"
 msgstr ""
 
-#: build/routes/editor/content.js:4053
+#: build/routes/editor/content.js:4056
 msgid "Restore the Base design"
 msgstr ""
 
-#: build/routes/editor/content.js:4058
+#: build/routes/editor/content.js:4061
 msgid "Fit to screen"
 msgstr ""
 
-#: build/routes/editor/content.js:4258
+#: build/routes/editor/content.js:4261
 msgid "Element"
 msgstr ""
 
-#: build/routes/editor/content.js:4261
+#: build/routes/editor/content.js:4264
 msgid "Close settings"
 msgstr ""
 
-#: build/routes/editor/content.js:4289
+#: build/routes/editor/content.js:4292
 msgid "Selection"
 msgstr ""
 
 #. translators: 1: screen (Desktop, Tablet, Mobile), 2: orientation, 3: width, 4: height.
-#: build/routes/editor/content.js:4298
+#: build/routes/editor/content.js:4301
 #, js-format
 msgid "%1$s · %2$s · %3$s × %4$s"
+msgstr ""
+
+#: blocks/verify/block.json
+msgctxt "block title"
+msgid "Check a certificate"
+msgstr ""
+
+#: blocks/verify/block.json
+msgctxt "block description"
+msgid "A form to open a certificate by its code."
+msgstr ""
+
+#: blocks/verify/block.json
+msgctxt "block keyword"
+msgid "certificate"
+msgstr ""
+
+#: blocks/verify/block.json
+msgctxt "block keyword"
+msgid "code"
+msgstr ""
+
+#: blocks/verify/block.json
+msgctxt "block keyword"
+msgid "verify"
 msgstr ""

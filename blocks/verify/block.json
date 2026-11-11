@@ -1,0 +1,33 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "events-certificate/verify",
+	"title": "Check a certificate",
+	"category": "widgets",
+	"icon": "awards",
+	"description": "A form to open a certificate by its code.",
+	"keywords": [ "certificate", "code", "verify" ],
+	"textdomain": "events-certificate",
+	"attributes": {
+		"title": {
+			"type": "string",
+			"default": ""
+		},
+		"showHelp": {
+			"type": "boolean",
+			"default": true
+		}
+	},
+	"supports": {
+		"html": false,
+		"align": [ "wide" ],
+		"spacing": {
+			"margin": true,
+			"padding": true
+		}
+	},
+	"editorScript": "file:./edit.js",
+	"style": "file:./style.css",
+	"viewScriptModule": "file:./view.js",
+	"render": "file:./render.php"
+}

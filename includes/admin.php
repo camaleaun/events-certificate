@@ -182,6 +182,16 @@ function sanitize_posted( $value ) {
 	if ( null === $value ) {
 		return Settings\get();
 	}
+	// The page with the "Check a certificate" form is its own option; its slug becomes the certificates' slug.
+	if ( is_array( $value ) && array_key_exists( 'verify_page', $value ) ) {
+		$page = absint( $value['verify_page'] );
+		$page = $page && 'page' === get_post_type( $page ) ? $page : 0;
+		update_option( \EventsCertificate\VerifyPage\OPTION, $page, false );
+		if ( $page && 'publish' === get_post_status( $page ) ) {
+			$value['slug'] = (string) get_post_field( 'post_name', $page );
+		}
+		unset( $value['verify_page'] );
+	}
 
 	return Settings\sanitize( $value );
 }
@@ -205,6 +215,14 @@ function add_settings_fields( $page ) {
 		$page,
 		'evcert_authenticity',
 		array( 'label_for' => 'evcert_force_public' )
+	);
+	add_settings_field(
+		'evcert_verify_page',
+		__( 'Check page', 'events-certificate' ),
+		__NAMESPACE__ . '\render_verify_page_field',
+		$page,
+		'evcert_authenticity',
+		array( 'label_for' => 'evcert_verify_page' )
 	);
 	add_settings_field(
 		'evcert_slug',
@@ -297,9 +315,39 @@ function render_force_public_field() {
 }
 
 /**
- * Field: certificate URL base.
+ * Field: the page with the "Check a certificate" form.
+ */
+function render_verify_page_field() {
+	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- wp_dropdown_pages() escapes.
+	echo wp_dropdown_pages(
+		array(
+			'name'              => esc_attr( Settings\OPTION ) . '[verify_page]',
+			'id'                => 'evcert_verify_page',
+			'selected'          => (int) get_option( \EventsCertificate\VerifyPage\OPTION, 0 ),
+			'show_option_none'  => esc_html__( '— None (the plugin’s own page) —', 'events-certificate' ),
+			'option_none_value' => '0',
+			'echo'              => 0,
+		)
+	);
+	printf( '<p class="description">%s</p>', esc_html__( 'The page with the Check a certificate block. Certificates live under its address.', 'events-certificate' ) );
+}
+
+/**
+ * Field: certificate address (the page's when there is one).
  */
 function render_slug_field() {
+	$page = \EventsCertificate\VerifyPage\page_id();
+	if ( $page ) {
+		printf(
+			'<input type="hidden" name="%1$s[slug]" value="%2$s"><code>%3$s%2$s/&lt;%4$s&gt;/</code><p class="description">%5$s</p>',
+			esc_attr( Settings\OPTION ),
+			esc_attr( Settings\value( 'slug' ) ),
+			esc_html( trailingslashit( home_url() ) ),
+			esc_html_x( 'code', 'certificate code placeholder', 'events-certificate' ),
+			esc_html__( 'Set by the check page’s address (change it in the page).', 'events-certificate' )
+		);
+		return;
+	}
 	printf(
 		'<input type="text" id="evcert_slug" name="%2$s[slug]" value="%3$s" class="regular-text code"><p class="description">%4$s<br><code>%1$s%3$s/&lt;%5$s&gt;/</code></p>',
 		esc_html( trailingslashit( home_url() ) ),

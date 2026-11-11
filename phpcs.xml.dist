@@ -54,4 +54,8 @@
 	<rule ref="Squiz.Commenting.FunctionComment.Missing">
 		<exclude-pattern>/tests/php/*Test.php</exclude-pattern>
 	</rule>
+	<!-- block.json asset files keep WordPress's name (<script>.asset.php). -->
+	<rule ref="WordPress.Files.FileName.NotHyphenatedLowercase">
+		<exclude-pattern>/blocks/*/*.asset.php</exclude-pattern>
+	</rule>
 </ruleset>

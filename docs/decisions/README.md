@@ -18,6 +18,7 @@ measurements are in [`../spikes/`](../spikes/).
 | [0009](0009-screen-views.md) | Print page plus screen views (desktop, tablet, mobile) with per-screen overrides | Accepted |
 | [0010](0010-non-public-sites.md) | Sites that are not public print no QR code, code, verification hint or address | Accepted |
 | [0011](0011-on-record-not-authentic.md) | The certificate page says "on record" and asks to compare, never "authentic" | Accepted |
+| [0012](0012-check-page-in-the-site.md) | "Check a certificate" is a block in a page of the site; only a certificate is full-screen | Accepted |
 
 New decisions get the next number. A decision that is replaced keeps its file,
 with its status changed to "Replaced by NNNN".

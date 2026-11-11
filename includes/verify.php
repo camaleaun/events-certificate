@@ -14,7 +14,6 @@
 namespace EventsCertificate\Verify;
 
 use EventsCertificate\Certificates;
-use EventsCertificate\Code;
 use EventsCertificate\Render;
 use EventsCertificate\Settings;
 use EventsCertificate\ShareImage;
@@ -92,8 +91,12 @@ function slugs() {
  * Rewrite rules for every slug.
  */
 function add_rules() {
+	// With the form in a page (includes/verify-page.php), the bare slug is that page.
+	$page_slug = \EventsCertificate\VerifyPage\page_id() ? (string) get_post_field( 'post_name', \EventsCertificate\VerifyPage\page_id() ) : '';
 	foreach ( slugs() as $slug ) {
-		add_rewrite_rule( '^' . preg_quote( $slug, '#' ) . '/?$', 'index.php?' . QUERY_VAR . '=1', 'top' );
+		if ( $slug !== $page_slug ) {
+			add_rewrite_rule( '^' . preg_quote( $slug, '#' ) . '/?$', 'index.php?' . QUERY_VAR . '=1', 'top' );
+		}
 		add_rewrite_rule( '^' . preg_quote( $slug, '#' ) . '/([0-9A-Za-z-]+)/?$', 'index.php?' . QUERY_VAR . '=1&' . CODE_VAR . '=$matches[1]', 'top' );
 	}
 }
@@ -102,7 +105,7 @@ function add_rules() {
  * Rebuilds the rewrite rules once when the slug changed.
  */
 function maybe_flush() {
-	$key = implode( ',', slugs() );
+	$key = implode( ',', slugs() ) . '|' . \EventsCertificate\VerifyPage\page_id();
 	if ( get_option( RULES_OPTION ) !== $key ) {
 		flush_rewrite_rules( false );
 		update_option( RULES_OPTION, $key, false );
@@ -185,20 +188,21 @@ function template_redirect() {
 		return;
 	}
 	// phpcs:disable WordPress.Security.NonceVerification.Recommended -- public, read-only page.
-	if ( isset( $_GET['code'] ) ) {
-		$typed = Code\normalize( sanitize_text_field( wp_unslash( $_GET['code'] ) ) );
-		wp_safe_redirect( $typed ? Certificates\url( $typed ) : home_url( user_trailingslashit( Settings\value( 'slug' ) ) . '?invalid=1' ) );
-		exit;
-	}
 	$lang   = isset( $_GET['evcert_lang'] ) ? sanitize_text_field( wp_unslash( $_GET['evcert_lang'] ) ) : '';
 	$format = isset( $_GET['format'] ) ? sanitize_key( wp_unslash( $_GET['format'] ) ) : '';
-	$typed  = isset( $_GET['invalid'] );
+	$typed  = isset( $_GET[ \EventsCertificate\VerifyPage\CODE_ARG ] ) ? sanitize_text_field( wp_unslash( $_GET[ \EventsCertificate\VerifyPage\CODE_ARG ] ) ) : '';
 	// phpcs:enable
 	$locale = in_array( $lang, locales(), true ) ? $lang : get_locale();
 	$code   = (string) get_query_var( CODE_VAR );
 	$cert   = '' !== $code ? Certificates\get_by_code( $code ) : null;
 	if ( $cert && 'draft' === $cert['status'] ) {
 		$cert = null;
+	}
+
+	// With the form in a page: an address without a certificate goes to it (an unknown code shown back).
+	if ( ! $cert && \EventsCertificate\VerifyPage\page_id() ) {
+		wp_safe_redirect( \EventsCertificate\VerifyPage\url( '' !== $code ? $code : $typed ) );
+		exit;
 	}
 
 	$switched = switch_to_locale( $locale );
@@ -217,7 +221,7 @@ function template_redirect() {
 	if ( '' !== $code && ! $cert ) {
 		status_header( 404 );
 	}
-	render_page( $cert, $code, $locale, $typed );
+	render_page( $cert, '' !== $code ? $code : $typed, $locale, '' !== $typed );
 	if ( $switched ) {
 		restore_previous_locale();
 	}
@@ -515,7 +519,7 @@ function render_page( $cert, $code, $locale, $invalid ) {
 			<p><?php echo esc_html( '' !== $code || $invalid ? __( 'No certificate has this code. Check it and try again: it has 16 letters and numbers, like 2611-04K7-M29Q-XAP3.', 'events-certificate' ) : __( 'Type the code printed on the certificate, below its QR code.', 'events-certificate' ) ); ?></p>
 			<form class="evcert-verify__form" method="get" action="<?php echo esc_url( home_url( user_trailingslashit( Settings\value( 'slug' ) ) ) ); ?>">
 				<label class="screen-reader-text" for="evcert-code"><?php esc_html_e( 'Certificate code', 'events-certificate' ); ?></label>
-				<input id="evcert-code" name="code" type="text" required autocomplete="off" spellcheck="false" placeholder="2611-04K7-M29Q-XAP3" value="<?php echo esc_attr( $code ); ?>">
+				<input id="evcert-code" name="<?php echo esc_attr( \EventsCertificate\VerifyPage\CODE_ARG ); ?>" type="text" required autocomplete="off" spellcheck="false" autocapitalize="characters" placeholder="2611-04K7-M29Q-XAP3" value="<?php echo esc_attr( $code ); ?>">
 				<button type="submit" class="evcert-verify__button"><?php esc_html_e( 'Check', 'events-certificate' ); ?></button>
 			</form>
 		</main>
