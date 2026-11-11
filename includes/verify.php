@@ -88,6 +88,21 @@ function slugs() {
 }
 
 /**
+ * The answer of "Check the document" on this request.
+ *
+ * @param bool|string|null $set True/false, 'locked', or null to read.
+ * @return bool|string|null
+ */
+function doc_check_result( $set = null ) {
+	static $result = null;
+	if ( null !== $set ) {
+		$result = $set;
+	}
+
+	return $result;
+}
+
+/**
  * Rewrite rules for every slug.
  */
 function add_rules() {
@@ -197,6 +212,12 @@ function template_redirect() {
 	$cert   = '' !== $code ? Certificates\get_by_code( $code ) : null;
 	if ( $cert && 'draft' === $cert['status'] ) {
 		$cert = null;
+	}
+
+	// "Check the document" (decision 0006): compares a typed number with the stored hash.
+	if ( $cert && isset( $_POST['evcert_doc_check'], $_POST['evcert_doc_nonce'] ) && wp_verify_nonce( sanitize_key( wp_unslash( $_POST['evcert_doc_nonce'] ) ), 'evcert_doc_check_' . $cert['code'] ) ) {
+		$checked = \EventsCertificate\Documents\check( $cert, sanitize_text_field( wp_unslash( $_POST['evcert_doc_check'] ) ) );
+		doc_check_result( null === $checked ? 'locked' : $checked );
 	}
 
 	// With the form in a page: an address without a certificate goes to it (an unknown code shown back).
@@ -405,7 +426,7 @@ function render_page( $cert, $code, $locale, $invalid ) {
 	<?php endif; ?>
 	<?php wp_print_styles( array( 'evcert-verify' ) ); ?>
 </head>
-<body class="evcert-verify<?php echo $cert ? ' has-certificate' : ''; ?>">
+<body class="evcert-verify<?php echo $cert ? ' has-certificate' : ''; ?><?php echo $cert && Render\has_declaration( $cert ) ? ' has-declaration' : ''; ?>">
 	<?php if ( $cert ) : ?>
 		<h1 class="screen-reader-text"><?php echo esc_html( $title ); ?></h1>
 		<main class="evcert-verify__stage">
@@ -413,6 +434,13 @@ function render_page( $cert, $code, $locale, $invalid ) {
 				<div class="evcert-verify__mode is-light"><?php echo Render\artwork( $design, $values, array( 'mode' => 'light' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from escaped parts in Render\element_html(). ?></div>
 				<div class="evcert-verify__mode is-dark"><?php echo Render\artwork( $design, $values, array( 'mode' => 'dark' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- as above. ?></div>
 			</div>
+			<?php if ( Render\has_declaration( $cert ) ) : ?>
+				<?php // The declaration page (decision 0014): the document masked here; full only in the PDF downloaded when issuing. ?>
+				<div class="evcert-verify__art" style="<?php echo esc_attr( sprintf( '--evcert-w:%.2F;--evcert-h:%.2F', $design['page']['w'], $design['page']['h'] ) ); ?>">
+					<div class="evcert-verify__mode is-light"><?php echo Render\declaration( $cert, $design, $values, array( 'mode' => 'light' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from escaped parts. ?></div>
+					<div class="evcert-verify__mode is-dark"><?php echo Render\declaration( $cert, $design, $values, array( 'mode' => 'dark' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- as above. ?></div>
+				</div>
+			<?php endif; ?>
 		</main>
 
 		<?php
@@ -495,6 +523,26 @@ function render_page( $cert, $code, $locale, $invalid ) {
 						<div><dt><?php esc_html_e( 'Code', 'events-certificate' ); ?></dt><dd><code><?php echo esc_html( $cert['code'] ); ?></code></dd></div>
 					<?php endif; ?>
 				</dl>
+					<?php if ( ! empty( $cert['doc_hash'] ) ) : ?>
+						<?php $doc_result = doc_check_result(); ?>
+						<form class="evcert-dock__doc" method="post" action="<?php echo esc_url( page_url( $cert['code'], $locale ) ); ?>">
+							<?php wp_nonce_field( 'evcert_doc_check_' . $cert['code'], 'evcert_doc_nonce' ); ?>
+							<label for="evcert-doc-check">
+								<?php
+								/* translators: %s: document type, e.g. CPF. */
+								echo esc_html( sprintf( __( 'Check the %s', 'events-certificate' ), (string) $cert['doc_label'] ) );
+								?>
+							</label>
+							<span><input id="evcert-doc-check" name="evcert_doc_check" type="text" autocomplete="off" required placeholder="<?php echo esc_attr( (string) $cert['doc_masked'] ); ?>"><button type="submit"><?php esc_html_e( 'Check', 'events-certificate' ); ?></button></span>
+							<?php if ( true === $doc_result ) : ?>
+								<p class="evcert-dock__note is-valid" data-evcert-open="details"><?php esc_html_e( 'It matches the document on this certificate.', 'events-certificate' ); ?></p>
+							<?php elseif ( false === $doc_result ) : ?>
+								<p class="evcert-dock__note is-revoked" data-evcert-open="details"><?php esc_html_e( 'It doesn’t match the document on this certificate.', 'events-certificate' ); ?></p>
+							<?php elseif ( 'locked' === $doc_result ) : ?>
+								<p class="evcert-dock__note" data-evcert-open="details"><?php esc_html_e( 'Too many tries: this certificate no longer checks documents.', 'events-certificate' ); ?></p>
+							<?php endif; ?>
+						</form>
+					<?php endif; ?>
 			</div>
 			<?php $share_url = page_url( $cert['code'], $locale ); ?>
 			<div class="evcert-dock__pop is-menu" data-evcert-popover="share" hidden>

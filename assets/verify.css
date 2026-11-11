@@ -306,3 +306,14 @@ body.evcert-verify {
 
 /* Preview (includes/preview.php): one row, the label and the light/dark switch. */
 .evcert-dock__preview { align-self: center; margin: 0 4px 0 8px; font-weight: 600; }
+
+/* Two pages (with the declaration): one under the other, the stage scrolls. */
+.has-declaration .evcert-verify__stage { flex-direction: column; justify-content: flex-start; gap: 24px; overflow-y: auto; padding-bottom: 120px; }
+
+/* "Check the document" in Details. */
+.evcert-dock__doc { display: grid; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--dock-field); }
+.evcert-dock__doc span { display: flex; gap: 6px; }
+.evcert-dock__doc input { flex: 1; min-width: 0; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--dock-field); background: transparent; color: inherit; font: inherit; }
+.evcert-dock__doc button { padding: 6px 10px; border-radius: 6px; border: 0; background: var(--dock-field); color: inherit; font: inherit; cursor: pointer; }
+.evcert-dock__note.is-valid { color: var(--ok); }
+.evcert-dock__note.is-revoked { color: var(--bad); }

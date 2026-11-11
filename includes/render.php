@@ -552,7 +552,132 @@ function values( array $cert ) {
 		'code'        => (string) ( $cert['code'] ?? '' ),
 		'verify_url'  => untrailingslashit( (string) preg_replace( '#^https?://#', '', home_url( Settings\value( 'slug' ) ) ) ),
 		'document'    => (string) ( $cert['doc_masked'] ?? '' ),
-	) + phrases();
+	) + declared( $data ) + phrases();
+}
+
+/**
+ * What the attendee declared (includes/compat/camptix-choices.php), as fields:
+ * the days, the tables, the talks.
+ *
+ * @param array<string, mixed> $data The certificate's data_json.
+ * @return array<string, string>
+ */
+function declared( array $data ) {
+	$days = array();
+	foreach ( (array) ( $data['days'] ?? array() ) as $id ) {
+		$day    = \EventsCertificate\Days\get( (string) $id );
+		$days[] = $day ? \EventsCertificate\Days\name( $day ) : (string) $id;
+	}
+
+	return array(
+		'day'      => implode( ', ', $days ),
+		'table'    => implode( ', ', array_map( 'strval', (array) ( $data['table'] ?? array() ) ) ),
+		'sessions' => implode( '; ', array_map( 'strval', wp_list_pluck( (array) ( $data['sessions'] ?? array() ), 'title' ) ) ),
+	);
+}
+
+/**
+ * Whether a certificate has the declaration page.
+ *
+ * @param array<string, mixed> $cert Certificate.
+ * @return bool
+ */
+function has_declaration( array $cert ) {
+	$data = json_decode( (string) ( $cert['data_json'] ?? '' ), true );
+
+	return is_array( $data ) && ! empty( $data['page2'] );
+}
+
+/**
+ * The declaration page (decision 0014): a standard text, not a design — who,
+ * which document, which event, which days, the workload they declared and
+ * the activities — in the design's fonts and colors, the size of its page.
+ *
+ * @param array<string, mixed>  $cert    Certificate.
+ * @param array<string, mixed>  $design  Design.
+ * @param array<string, string> $values  values().
+ * @param array<string, mixed>  $options mode; document (the full number, only right after issuing).
+ * @return string HTML.
+ */
+function declaration( array $cert, array $design, array $values, array $options = array() ) {
+	$mode  = (string) ( $options['mode'] ?? 'light' );
+	$page  = (array) $design['page'];
+	$data  = (array) json_decode( (string) ( $cert['data_json'] ?? '' ), true );
+	$text  = color( $design, '$text', $mode );
+	$muted = isset( $design['colors']['muted'] ) ? color( $design, '$muted', $mode ) : $text;
+	$bg    = color( $design, page_bg( $page, $mode ), $mode );
+	$pad   = max( 36.0, (float) ( $page['safe'] ?? 0 ) + 24 );
+	$doc   = '' !== (string) ( $options['document'] ?? '' ) ? (string) $options['document'] : (string) ( $cert['doc_masked'] ?? '' );
+	$hours = field_value( 'hours', '', $values );
+
+	$who = '<strong>' . esc_html( $values['name'] ) . '</strong>';
+	if ( '' !== $doc ) {
+		/* translators: 1: person's name, 2: document type (CPF), 3: document number. */
+		$who = sprintf( __( '%1$s, %2$s %3$s,', 'events-certificate' ), $who, esc_html( (string) ( $cert['doc_label'] ?? '' ) ), '<strong>' . esc_html( $doc ) . '</strong>' );
+	}
+	$country  = ! empty( $data['country'] ) ? \EventsCertificate\Countries\name( (string) $data['country'] ) : '';
+	$sentence = sprintf(
+		/* translators: 1: person (name and document), 2: event, 3: place, 4: days, 5: workload. */
+		__( 'We declare that %1$s took part in %2$s, held in %3$s, on %4$s, with a self-declared workload of %5$s, in the activities below.', 'events-certificate' ),
+		$who,
+		'<strong>' . esc_html( $values['event'] ) . '</strong>',
+		esc_html( $values['location'] . ( '' !== $country && false === stripos( $values['location'], $country ) ? ', ' . $country : '' ) ),
+		esc_html( '' !== $values['day'] ? $values['day'] : format_date( (int) $values['event_ts'], 'long' ) ),
+		'<strong>' . esc_html( '' !== $hours ? $hours : '—' ) . '</strong>'
+	);
+
+	$list = '';
+	foreach ( (array) ( $data['days'] ?? array() ) as $id ) {
+		$day   = \EventsCertificate\Days\get( (string) $id );
+		$list .= sprintf( '<h2 style="font-family:\'Inter\';font-weight:600;font-size:11pt;margin:14pt 0 4pt;color:%s">%s</h2>', esc_attr( $text ), esc_html( $day ? \EventsCertificate\Days\short_date( $day ) . ' — ' . \EventsCertificate\Days\name( $day ) : (string) $id ) );
+		if ( isset( $data['table'][ $id ] ) ) {
+			/* translators: %s: table name (Contributor Day). */
+			$list .= '<p style="margin:0 0 2pt">' . esc_html( sprintf( __( 'Table: %s', 'events-certificate' ), (string) $data['table'][ $id ] ) ) . '</p>';
+		}
+		$items = '';
+		foreach ( (array) ( $data['sessions'] ?? array() ) as $session ) {
+			if ( ( $session['day'] ?? '' ) !== $id ) {
+				continue;
+			}
+			$items .= sprintf(
+				'<li style="margin:0 0 3pt">%s · %s%s</li>',
+				esc_html( wp_date( (string) get_option( 'time_format' ), (int) $session['start'] ) . '–' . wp_date( (string) get_option( 'time_format' ), (int) $session['end'] ) ),
+				esc_html( (string) $session['title'] ),
+				! empty( $session['speakers'] ) ? sprintf( ' <span style="color:%s">— %s</span>', esc_attr( $muted ), esc_html( implode( ', ', (array) $session['speakers'] ) ) ) : ''
+			);
+		}
+		$list .= '' !== $items ? '<ul style="margin:0;padding-left:14pt">' . $items . '</ul>' : '';
+	}
+
+	$footer = sprintf(
+		'<p style="margin:24pt 0 0">%s</p><p style="margin:18pt 0 0"><strong>%s</strong><br><span style="color:%s">%s</span></p>',
+		esc_html( $values['location'] . ', ' . format_date( (int) $values['issued_ts'], 'long' ) ),
+		esc_html( $values['signer_name'] ),
+		esc_attr( $muted ),
+		esc_html( $values['signer_role'] )
+	);
+	if ( verifiable() || ! empty( $options['preview'] ) ) {
+		/* translators: 1: certificate code, 2: verification address. */
+		$footer .= sprintf( '<p style="margin:18pt 0 0;font-size:8pt;color:%s">%s</p>', esc_attr( $muted ), esc_html( sprintf( __( 'Code %1$s — check it at %2$s', 'events-certificate' ), $values['code'], $values['verify_url'] ) ) );
+	}
+
+	return sprintf(
+		// An inner box with its own width: dompdf ignores box-sizing with padding (the text wouldn't wrap).
+		'<div class="evcert-page evcert-page--declaration" style="%10$sposition:relative;overflow:hidden;width:%1$.2Fpt;height:%2$.2Fpt;background:%4$s;color:%5$s;font-family:\'Inter\';font-size:10pt;line-height:1.45">'
+		. '<div style="position:absolute;left:%3$.2Fpt;top:%3$.2Fpt;width:%11$.2Fpt">'
+		. '<h1 style="font-family:\'Lora\';font-weight:500;font-size:18pt;margin:0 0 12pt">%6$s</h1><p style="margin:0">%7$s</p>%8$s%9$s</div></div>',
+		(float) $page['w'],
+		(float) $page['h'],
+		$pad,
+		esc_attr( 'none' === $bg ? '#ffffff' : $bg ),
+		esc_attr( $text ),
+		esc_html__( 'Declaration of participation', 'events-certificate' ),
+		$sentence,
+		$list,
+		$footer,
+		! empty( $options['for_pdf'] ) ? 'page-break-before:always;' : '',
+		max( 100.0, (float) $page['w'] - 2 * $pad )
+	);
 }
 
 /**
@@ -1019,11 +1144,12 @@ function artwork( array $design, array $values, array $options = array() ) {
 /**
  * The certificate as a PDF (always in the light mode).
  *
- * @param array<string, mixed> $cert   Certificate.
- * @param array<string, mixed> $design Design.
+ * @param array<string, mixed> $cert    Certificate.
+ * @param array<string, mixed> $design  Design.
+ * @param array<string, mixed> $extra   document: the full number, only in the PDF downloaded when issuing.
  * @return string PDF bytes.
  */
-function pdf( array $cert, array $design ) {
+function pdf( array $cert, array $design, array $extra = array() ) {
 	$cache = wp_get_upload_dir()['basedir'] . '/evcert-fonts';
 	wp_mkdir_p( $cache );
 
@@ -1064,6 +1190,16 @@ function pdf( array $cert, array $design ) {
 				'measure' => $measure,
 			)
 		)
+		// The declaration page, when chosen (decision 0014).
+		. ( has_declaration( $cert ) ? declaration(
+			$cert,
+			$design,
+			values( $cert ),
+			array(
+				'document' => (string) ( $extra['document'] ?? '' ),
+				'for_pdf'  => true,
+			)
+		) : '' )
 		. '</body></html>';
 	$dompdf->loadHtml( $doc, 'UTF-8' );
 	$dompdf->setPaper( array( 0, 0, (float) $page['w'], (float) $page['h'] ) );

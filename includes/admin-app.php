@@ -217,6 +217,9 @@ function enqueue() {
 					'role'        => __( 'Speaker', 'events-certificate' ),
 					'details'     => __( 'Building accessible blocks', 'events-certificate' ),
 					'document'    => 'CPF •••.•••.789-••',
+					'day'         => __( 'Conference', 'events-certificate' ),
+					'table'       => 'Core',
+					'sessions'    => __( 'Building accessible blocks', 'events-certificate' ),
 					// The organizer who signs, when there is one (Signer\current()); else sample values.
 					'signer_name' => $signer ? $signer['name'] : 'Sam Taylor',
 					'signer_role' => $signer && $signer['roles'] ? \EventsCertificate\Signer\role_in( $signer['roles'], determine_locale() ) : __( 'Event Coordinator', 'events-certificate' ),

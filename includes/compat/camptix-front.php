@@ -210,19 +210,44 @@ function handle_post( $attendee ) {
 	}
 	$name    = isset( $_POST['evcert_name'] ) ? sanitize_text_field( wp_unslash( $_POST['evcert_name'] ) ) : '';
 	$current = Certificates\find_by_source( SOURCE, $attendee->ID );
+	// Days, table, talks, the second page and its document (includes/compat/camptix-choices.php).
+	$choices = Choices\read( $attendee, $current );
+	if ( is_wp_error( $choices ) ) {
+		return $choices->get_error_message();
+	}
+	$changes = array( 'name' => $name );
+	if ( $choices ) {
+		$changes['hours'] = $choices['hours'];
+		$changes         += $choices['columns'];
+	}
 
 	if ( $current ) {
-		if ( $name === $current['name'] ) {
+		$kept = (array) json_decode( (string) $current['data_json'], true );
+		$same = $name === $current['name'] && ( ! $choices || ( array_intersect_key( $kept, $choices['data'] ) == $choices['data'] && ! $choices['columns'] && (float) $current['hours'] === (float) $choices['hours'] ) ); // phpcs:ignore Universal.Operators.StrictComparisons.LooseEqual -- arrays compared by value.
+		if ( $same && ( ! $choices || '' === $choices['full'] ) ) {
 			return '';
 		}
-		$result = Certificates\reissue( $current, array( 'name' => $name ) );
-		$done   = 'corrected';
+		$result = $same ? $current : Certificates\reissue( $current, $choices ? $changes + array( 'data' => array_merge( $kept, $choices['data'] ) ) : $changes );
+		$done   = $same ? '' : 'corrected';
 	} else {
-		$result = Certificates\issue( array_merge( attendee_data( $attendee ), array( 'name' => $name ) ) );
+		$base   = attendee_data( $attendee );
+		$data   = $choices ? array_merge( (array) $base['data'], $choices['data'] ) : (array) $base['data'];
+		$result = Certificates\issue( array_merge( $base, $changes, array( 'data' => $data ) ) );
 		$done   = 'issued';
 	}
 	if ( is_wp_error( $result ) ) {
 		return $result->get_error_message();
+	}
+
+	// The full document number goes only in this download, never stored (decision 0014).
+	if ( $choices && '' !== $choices['full'] ) {
+		$bytes = \EventsCertificate\Render\pdf( $result, Certificates\design( $result ), array( 'document' => $choices['full'] ) );
+		nocache_headers();
+		header( 'Content-Type: application/pdf' );
+		header( 'Content-Disposition: attachment; filename="certificate-' . $result['code'] . '.pdf"' );
+		header( 'Content-Length: ' . strlen( $bytes ) );
+		echo $bytes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- PDF bytes.
+		exit;
 	}
 
 	wp_safe_redirect( add_query_arg( 'evcert_done', $done, certificate_link( $attendee->ID ) ) );
@@ -303,7 +328,7 @@ function render_step( $attendee, $error = '' ) {
 			<?php if ( $current ) : ?>
 				<table class="tix_tickets_table tix-attendee-form evcert-certificate-summary">
 					<tbody>
-						<tr><th colspan="2"><?php echo esc_html( $current['event_title'] ); ?></th></tr>
+						<tr><th colspan="2"><?php echo esc_html( \EventsCertificate\Render\event_title( $current ) ); ?></th></tr>
 						<tr><td class="tix-left"><?php esc_html_e( 'Name', 'events-certificate' ); ?></td><td class="tix-right"><strong><?php echo esc_html( $current['name'] ); ?></strong></td></tr>
 						<tr><td class="tix-left"><?php esc_html_e( 'Code', 'events-certificate' ); ?></td><td class="tix-right"><code><?php echo esc_html( $current['code'] ); ?></code></td></tr>
 						<tr><td class="tix-left"><?php esc_html_e( 'Issued on', 'events-certificate' ); ?></td><td class="tix-right"><?php echo esc_html( wp_date( get_option( 'date_format' ), strtotime( $current['issued_at'] . ' UTC' ) ) ); ?></td></tr>
@@ -318,7 +343,7 @@ function render_step( $attendee, $error = '' ) {
 					<?php wp_nonce_field( 'evcert_certificate_' . $attendee->ID, 'evcert_certificate_nonce' ); ?>
 					<table class="tix_tickets_table tix-attendee-form">
 						<tbody>
-							<tr><th colspan="2"><?php echo esc_html( $current ? __( 'Correct the name', 'events-certificate' ) : trim( $data['event_title'] . ( $ticket ? ' — ' . $ticket : '' ) ) ); ?></th></tr>
+							<tr><th colspan="2"><?php echo esc_html( $current ? __( 'Correct the certificate', 'events-certificate' ) : trim( $data['event_title'] . ( $ticket ? ' — ' . $ticket : '' ) ) ); ?></th></tr>
 							<tr>
 								<td class="tix-required tix-left">
 									<label for="evcert_name">
@@ -334,6 +359,7 @@ function render_step( $attendee, $error = '' ) {
 							<?php if ( ! $current ) : ?>
 								<tr><td class="tix-left"><?php esc_html_e( 'E-mail', 'events-certificate' ); ?></td><td class="tix-right"><?php echo esc_html( $data['email'] ); ?></td></tr>
 							<?php endif; ?>
+							<?php echo Choices\rows( $attendee, $current ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in Choices\rows(). ?>
 						</tbody>
 					</table>
 					<p>

@@ -22,7 +22,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Fields a caller may set when issuing.
  */
-const FIELDS = array( 'context', 'event_id', 'group_id', 'name', 'email', 'wporg_username', 'role', 'details', 'attended', 'locale', 'event_title', 'event_start', 'event_end', 'event_tz', 'hours', 'source', 'source_ref', 'self_service' );
+const FIELDS = array( 'context', 'event_id', 'group_id', 'name', 'email', 'wporg_username', 'role', 'details', 'attended', 'locale', 'event_title', 'event_start', 'event_end', 'event_tz', 'hours', 'source', 'source_ref', 'self_service', 'doc_type', 'doc_label', 'doc_masked', 'doc_hash' );
 
 /**
  * Fields that make a certificate what it is (part of its fingerprint).

@@ -32,6 +32,9 @@ require_once __DIR__ . '/includes/environment.php';
 require_once __DIR__ . '/includes/code.php';
 require_once __DIR__ . '/includes/designs.php';
 require_once __DIR__ . '/includes/days.php';
+require_once __DIR__ . '/includes/sessions.php';
+require_once __DIR__ . '/includes/countries.php';
+require_once __DIR__ . '/includes/documents.php';
 require_once __DIR__ . '/includes/admin.php';
 require_once __DIR__ . '/includes/class-list-table.php';
 require_once __DIR__ . '/includes/admin-app.php';
@@ -47,6 +50,7 @@ require_once __DIR__ . '/includes/signer.php';
 require_once __DIR__ . '/includes/compat/camptix.php';
 require_once __DIR__ . '/includes/compat/camptix-front.php';
 require_once __DIR__ . '/includes/compat/camptix-days.php';
+require_once __DIR__ . '/includes/compat/camptix-choices.php';
 
 Install\bootstrap();
 Designs\bootstrap();

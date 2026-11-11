@@ -20,6 +20,7 @@ measurements are in [`../spikes/`](../spikes/).
 | [0011](0011-on-record-not-authentic.md) | The certificate page says "on record" and asks to compare, never "authentic" | Accepted |
 | [0012](0012-check-page-in-the-site.md) | "Check a certificate" is a block in a page of the site; only a certificate is full-screen | Accepted |
 | [0013](0013-templates-by-condition.md) | Certificate templates chosen by role, a default for everyone else | Accepted |
+| [0014](0014-declaration-page.md) | Declaration page with declared activities; the document in full only in the PDF when issuing | Accepted |
 
 New decisions get the next number. A decision that is replaced keeps its file,
 with its status changed to "Replaced by NNNN".

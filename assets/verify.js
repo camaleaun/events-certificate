@@ -20,11 +20,17 @@
 
 	// Fit: the certificate as large as the stage allows.
 	function layout() {
-		var art = document.querySelector( '.evcert-verify__art' );
 		var stage = document.querySelector( '.evcert-verify__stage' );
-		if ( ! art || ! stage ) {
+		if ( ! stage ) {
 			return;
 		}
+		// Every page (the certificate, and the declaration when there is one) fits the stage.
+		document.querySelectorAll( '.evcert-verify__art' ).forEach( function ( art ) {
+			fitArt( art, stage );
+		} );
+	}
+
+	function fitArt( art, stage ) {
 		var cs = getComputedStyle( art );
 		var w = parseFloat( cs.getPropertyValue( '--evcert-w' ) ) * PX_PER_PT;
 		var h = parseFloat( cs.getPropertyValue( '--evcert-h' ) ) * PX_PER_PT;
@@ -287,4 +293,13 @@
 			makeShareImage( JSON.parse( share.getAttribute( 'data-evcert-share-image' ) ) );
 		}
 	} );
+} )();
+
+// "Check the document": after a check, open Details to show the answer.
+( function () {
+	var answer = document.querySelector( '[data-evcert-open="details"]' );
+	var button = answer && document.querySelector( '[data-evcert-pop="details"]' );
+	if ( button ) {
+		button.click();
+	}
 } )();
