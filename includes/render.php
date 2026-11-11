@@ -739,7 +739,9 @@ function declaration( array $cert, array $design, array $values, array $options 
 		// An inner box with its own width: dompdf ignores box-sizing with padding (the text wouldn't wrap).
 		'<div class="evcert-page evcert-page--declaration" style="%10$sposition:relative;overflow:hidden;width:%1$.2Fpt;height:%2$.2Fpt;background:%4$s;color:%5$s;font-family:\'Inter\';font-size:10pt;line-height:1.45">'
 		. '<div style="position:absolute;left:%3$.2Fpt;top:%3$.2Fpt;width:%11$.2Fpt">'
-		. '<h1 style="font-family:\'Lora\';font-weight:500;font-size:18pt;margin:0 0 12pt">%6$s</h1><p style="margin:0">%7$s</p>%8$s%9$s</div>%12$s</div>',
+		. '<h1 style="font-family:\'Lora\';font-weight:500;font-size:18pt;margin:0 0 12pt">%6$s</h1><p style="margin:0">%7$s</p>%8$s%9$s</div>%12$s'
+		// Footnote: the activities are self-declared; the event only confirms presence per day (decision 0014).
+		. '<p style="position:absolute;left:%3$.2Fpt;bottom:%3$.2Fpt;width:%13$.2Fpt;margin:0;font-size:7pt;line-height:1.4;color:%14$s">%15$s</p></div>',
 		(float) $page['w'],
 		(float) $page['h'],
 		$pad,
@@ -751,7 +753,10 @@ function declaration( array $cert, array $design, array $values, array $options 
 		$footer,
 		! empty( $options['for_pdf'] ) ? 'page-break-before:always;' : '',
 		max( 100.0, (float) $page['w'] - 2 * $pad ),
-		$verification
+		$verification,
+		max( 100.0, (float) $page['w'] - 2 * $pad - ( '' !== $verification ? 200 : 0 ) ),
+		esc_attr( $muted ),
+		esc_html__( 'Activities and workload declared by the participant. The event confirms only their presence on each day; sessions are chosen freely and are not checked one by one.', 'events-certificate' )
 	);
 }
 

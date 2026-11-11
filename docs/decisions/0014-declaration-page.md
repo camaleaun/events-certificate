@@ -28,7 +28,10 @@ The declaration page **always** carries the QR code, the code and the hint
 (on sites others can reach, decision 0010). On the first page they become
 optional: a template can leave them to the declaration page when there is
 one ("Verification: on the declaration page when there is one").
-A table is shown with its time (the day's first to last item).
+A table is shown with its time (the day's first to last item). A footnote says
+the activities and workload were declared by the participant and that the
+event confirms only their presence on each day, sessions being chosen freely
+without a session-by-session check.
 
 ## Why
 
