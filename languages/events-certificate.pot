@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-11T03:19:56+00:00\n"
+"POT-Creation-Date: 2026-11-11T03:21:41+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: events-certificate\n"
@@ -49,60 +49,60 @@ msgstr ""
 msgid "Edit certificate"
 msgstr ""
 
-#: includes/admin-app.php:209
-#: includes/admin-app.php:230
-#: includes/admin.php:440
+#: includes/admin-app.php:210
+#: includes/admin-app.php:232
+#: includes/admin.php:448
 msgid "City, Country"
 msgstr ""
 
 #. translators: %s: number of hours (workload), e.g. "1 hour".
 #. translators: %s: number of hours (workload), e.g. "8 hours".
 #. translators: %s: number of hours.
-#: includes/admin-app.php:214
 #: includes/admin-app.php:216
-#: includes/admin-app.php:233
-#: includes/render.php:914
+#: includes/admin-app.php:218
+#: includes/admin-app.php:235
+#: includes/render.php:936
 #, php-format
 msgid "%s hour"
 msgid_plural "%s hours"
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/admin-app.php:217
+#: includes/admin-app.php:219
 #: includes/designs.php:53
 msgid "Speaker"
 msgstr ""
 
-#: includes/admin-app.php:218
-#: includes/admin-app.php:222
-#: includes/admin-app.php:223
+#: includes/admin-app.php:220
+#: includes/admin-app.php:224
+#: includes/admin-app.php:225
 #: includes/preview.php:180
 msgid "Building accessible blocks"
 msgstr ""
 
-#: includes/admin-app.php:220
-#: includes/admin-app.php:223
-#: includes/admin-app.php:231
+#: includes/admin-app.php:222
+#: includes/admin-app.php:225
+#: includes/admin-app.php:233
 #: includes/preview.php:179
 #: includes/preview.php:180
 msgid "Conference"
 msgstr ""
 
 #. translators: 1: person (name and document), 2: event, 3: place, 4: days, 5: workload.
-#: includes/admin-app.php:227
-#: includes/render.php:583
-#: includes/render.php:756
+#: includes/admin-app.php:229
+#: includes/render.php:605
+#: includes/render.php:778
 #, php-format
 msgid "We declare that %1$s took part in %2$s, held in %3$s, on %4$s, with a self-declared workload of %5$s, in the activities below."
 msgstr ""
 
-#: includes/admin-app.php:237
+#: includes/admin-app.php:239
 #: build-signer/index.js:456
 msgid "Event Coordinator"
 msgstr ""
 
 #: includes/admin.php:81
-#: includes/admin.php:512
+#: includes/admin.php:535
 #: includes/class-templates-list-table.php:55
 #: includes/compat/camptix.php:110
 #: includes/templates.php:174
@@ -148,61 +148,68 @@ msgstr ""
 msgid "Attendees get their own"
 msgstr ""
 
-#: includes/admin.php:266
+#: includes/admin.php:265
+#: includes/render.php:880
+#: build/routes/editor/content.js:1099
+#: build/routes/editor/content.js:1123
+msgid "Date of issue"
+msgstr ""
+
+#: includes/admin.php:274
 msgid "Event days"
 msgstr ""
 
-#: includes/admin.php:273
+#: includes/admin.php:281
 msgid "Data"
 msgstr ""
 
-#: includes/admin.php:279
+#: includes/admin.php:287
 msgid "Uninstall"
 msgstr ""
 
-#: includes/admin.php:292
+#: includes/admin.php:300
 msgid "Certificates issued on this site carry a QR code and a code anyone can check on its verification page."
 msgstr ""
 
-#: includes/admin.php:297
+#: includes/admin.php:305
 msgid "it runs on WordPress Playground"
 msgstr ""
 
-#: includes/admin.php:298
+#: includes/admin.php:306
 msgid "its environment type is “local”"
 msgstr ""
 
-#: includes/admin.php:299
+#: includes/admin.php:307
 msgid "its address only works on this computer or network"
 msgstr ""
 
-#: includes/admin.php:300
+#: includes/admin.php:308
 msgid "its address is a private IP"
 msgstr ""
 
 #. translators: %s: reasons, e.g. "its address only works on this computer or network".
-#: includes/admin.php:310
+#: includes/admin.php:318
 #, php-format
 msgid "This site doesn’t look public (%s), so certificates show a placeholder where the QR code and the verification address go: nobody else could open them."
 msgstr ""
 
-#: includes/admin.php:324
+#: includes/admin.php:332
 msgid "Treat this site as public"
 msgstr ""
 
-#: includes/admin.php:325
+#: includes/admin.php:333
 msgid "For a staging site with a public address. Only turn it on when anyone can open this site’s pages."
 msgstr ""
 
-#: includes/admin.php:337
+#: includes/admin.php:345
 msgid "No days yet: they come from the schedule (Sessions) once it has dates."
 msgstr ""
 
-#: includes/admin.php:342
+#: includes/admin.php:350
 msgid "Date"
 msgstr ""
 
-#: includes/admin.php:343
+#: includes/admin.php:351
 #: includes/class-list-table.php:80
 #: includes/class-templates-list-table.php:53
 #: includes/compat/camptix-front.php:332
@@ -213,86 +220,94 @@ msgstr ""
 msgid "Name"
 msgstr ""
 
-#: includes/admin.php:344
+#: includes/admin.php:352
 msgid "Kind"
 msgstr ""
 
-#: includes/admin.php:345
+#: includes/admin.php:353
 msgid "Tables (one per line)"
 msgstr ""
 
-#: includes/admin.php:365
+#: includes/admin.php:373
 msgid "Talks"
 msgstr ""
 
-#: includes/admin.php:366
+#: includes/admin.php:374
 msgid "Tables"
 msgstr ""
 
-#: includes/admin.php:397
+#: includes/admin.php:405
 msgid "— None (the plugin’s own page) —"
 msgstr ""
 
-#: includes/admin.php:402
+#: includes/admin.php:410
 msgid "The page with the Check a certificate block. Certificates live under its address."
 msgstr ""
 
 #. translators: Stands for a certificate code in an example address, as in https://example.com/certificate/<code>/.
-#: includes/admin.php:416
-#: includes/admin.php:428
+#: includes/admin.php:424
+#: includes/admin.php:436
 msgctxt "certificate code placeholder"
 msgid "code"
 msgstr ""
 
-#: includes/admin.php:417
+#: includes/admin.php:425
 msgid "Set by the check page’s address (change it in the page)."
 msgstr ""
 
-#: includes/admin.php:426
+#: includes/admin.php:434
 msgid "The address printed on certificates and in their QR code. Change it before issuing: printed certificates keep the old one."
 msgstr ""
 
-#: includes/admin.php:441
+#: includes/admin.php:449
 msgid "Shown where the design uses the Location field. On WordCamp.org it comes from the WordCamp’s location."
 msgstr ""
 
-#: includes/admin.php:450
+#: includes/admin.php:458
 msgid "When marked as present at the event"
 msgstr ""
 
-#: includes/admin.php:451
+#: includes/admin.php:459
 msgid "With any confirmed ticket"
 msgstr ""
 
-#: includes/admin.php:452
+#: includes/admin.php:460
 msgid "No: only organizers issue certificates"
 msgstr ""
 
-#: includes/admin.php:459
+#: includes/admin.php:467
 msgid "From the link in their ticket e-mail, attendees check how their name goes on the certificate and get it with its code."
 msgstr ""
 
-#: includes/admin.php:470
+#: includes/admin.php:475
+msgid "The day each certificate was issued"
+msgstr ""
+
+#: includes/admin.php:476
+msgid "The event’s last day"
+msgstr ""
+
+#: includes/admin.php:493
 msgid "Delete all certificates when the plugin is deleted"
 msgstr ""
 
-#: includes/admin.php:471
+#: includes/admin.php:494
 msgid "Printed certificates would no longer be verifiable. Leave it off unless you are sure."
 msgstr ""
 
 #. translators: %s: number of certificates.
-#: includes/admin.php:524
+#: includes/admin.php:547
 #, php-format
 msgid "%s certificate revoked."
 msgid_plural "%s certificates revoked."
 msgstr[0] ""
 msgstr[1] ""
 
-#: includes/admin.php:541
+#: includes/admin.php:564
 msgid "Search certificates"
 msgstr ""
 
-#: includes/admin.php:563
+#: includes/admin.php:586
 #: includes/compat/camptix.php:139
 #: blocks/verify/edit.js:28
 #: build/routes/editor/content.js:2095
@@ -1774,54 +1789,48 @@ msgid "Dark"
 msgstr ""
 
 #. translators: 1: person's name, 2: document type (CPF), 3: document number.
-#: includes/render.php:576
-#: includes/render.php:751
+#: includes/render.php:598
+#: includes/render.php:773
 #, php-format
 msgid "%1$s, %2$s %3$s,"
 msgstr ""
 
 #. translators: %s: table name (Contributor Day).
-#: includes/render.php:613
-#: includes/render.php:772
+#: includes/render.php:635
+#: includes/render.php:794
 #, php-format
 msgid "Table: %s"
 msgstr ""
 
-#: includes/render.php:834
-#: includes/render.php:861
+#: includes/render.php:856
+#: includes/render.php:883
 #: build/routes/editor/content.js:1119
 msgid "Declaration of participation"
 msgstr ""
 
-#: includes/render.php:843
-#: includes/render.php:862
+#: includes/render.php:865
+#: includes/render.php:884
 #: build/routes/editor/content.js:1120
 msgid "Activities and workload declared by the participant. The event confirms only their presence on each day; sessions are chosen freely and are not checked one by one."
 msgstr ""
 
-#: includes/render.php:856
+#: includes/render.php:878
 #: build/routes/editor/content.js:1121
 msgid "Certificate of participation"
 msgstr ""
 
-#: includes/render.php:857
+#: includes/render.php:879
 #: build/routes/editor/content.js:1122
 msgid "This is to certify that"
 msgstr ""
 
-#: includes/render.php:858
-#: build/routes/editor/content.js:1099
-#: build/routes/editor/content.js:1123
-msgid "Date of issue"
-msgstr ""
-
-#: includes/render.php:859
+#: includes/render.php:881
 #: build/routes/editor/content.js:402
 #: build/routes/editor/content.js:1124
 msgid "Place and date"
 msgstr ""
 
-#: includes/render.php:860
+#: includes/render.php:882
 #: build/routes/editor/content.js:1125
 msgid "Use the code above to verify at:"
 msgstr ""

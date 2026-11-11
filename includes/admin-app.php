@@ -182,6 +182,7 @@ function enqueue() {
 		$design = Designs\site_design_id();
 	}
 	$signer   = \EventsCertificate\Signer\current();
+	$issued   = \EventsCertificate\Render\issued_ts( array( 'issued_at' => gmdate( 'Y-m-d H:i:s' ) ) );
 	$event    = function_exists( 'EventsCertificate\\Compat\\CampTix\\event_name' ) ? \EventsCertificate\Compat\CampTix\event_name() : '';
 	$location = function_exists( 'EventsCertificate\Compat\CampTix\event_location' ) ? \EventsCertificate\Compat\CampTix\event_location() : (string) \EventsCertificate\Settings\value( 'location' );
 	wp_register_script( 'evcert-editor-data', false, array( 'wp-i18n' ), \EventsCertificate\VERSION, false );
@@ -207,8 +208,9 @@ function enqueue() {
 					// Real values where the site has them (an emptied preview value falls back to these).
 					'event'                 => '' !== $event ? $event : get_bloginfo( 'name' ),
 					'location'              => '' !== $location ? $location : __( 'City, Country', 'events-certificate' ),
-					'date_iso'              => gmdate( 'Y-m-d\TH:i:s\Z' ),
-					'date_site'             => wp_date( (string) get_option( 'date_format' ) ),
+					// The date of issue as certificates show it (today, or the event's last day: Settings).
+					'date_iso'              => gmdate( 'Y-m-d\TH:i:s\Z', $issued ),
+					'date_site'             => wp_date( (string) get_option( 'date_format' ), $issued ),
 					'hours'                 => '8',
 					/* translators: %s: number of hours (workload), e.g. "1 hour". */
 					'hours_one'             => _n( '%s hour', '%s hours', 1, 'events-certificate' ),

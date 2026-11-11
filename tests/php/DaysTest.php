@@ -83,6 +83,22 @@ class DaysTest extends TestCase {
 	}
 
 	/**
+	 * The date of issue can be the event's last day (Settings).
+	 */
+	public function test_issued_date_event_end() {
+		$cert  = array(
+			'code'      => '2611-04K7-M29Q-XAP3',
+			'issued_at' => '2026-11-20 15:00:00',
+		);
+		$saved = get_option( \EventsCertificate\Settings\OPTION );
+		update_option( \EventsCertificate\Settings\OPTION, array( 'issued_date' => 'event_end' ) + (array) $saved );
+		$this->assertSame( '2026-10-31', wp_date( 'Y-m-d', \EventsCertificate\Render\issued_ts( $cert ) ) );
+		update_option( \EventsCertificate\Settings\OPTION, array( 'issued_date' => 'issued' ) + (array) $saved );
+		$this->assertSame( '2026-11-20', wp_date( 'Y-m-d', \EventsCertificate\Render\issued_ts( $cert ) ) );
+		update_option( \EventsCertificate\Settings\OPTION, $saved );
+	}
+
+	/**
 	 * Presence per day drives CampTix's "attended", and back.
 	 */
 	public function test_presence_follows_attended() {

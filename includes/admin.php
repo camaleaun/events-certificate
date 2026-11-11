@@ -260,6 +260,14 @@ function add_settings_fields( $page ) {
 		'evcert_issuing',
 		array( 'label_for' => 'evcert_self_issue' )
 	);
+	add_settings_field(
+		'evcert_issued_date',
+		__( 'Date of issue', 'events-certificate' ),
+		__NAMESPACE__ . '\render_issued_date_field',
+		$page,
+		'evcert_issuing',
+		array( 'label_for' => 'evcert_issued_date' )
+	);
 
 	add_settings_section(
 		'evcert_days',
@@ -457,6 +465,21 @@ function render_self_issue_field() {
 	}
 	echo '</select>';
 	printf( '<p class="description">%s</p>', esc_html__( 'From the link in their ticket e-mail, attendees check how their name goes on the certificate and get it with its code.', 'events-certificate' ) );
+}
+
+/**
+ * Field: the date certificates show as their date of issue.
+ */
+function render_issued_date_field() {
+	$options = array(
+		'issued'    => __( 'The day each certificate was issued', 'events-certificate' ),
+		'event_end' => __( 'The event’s last day', 'events-certificate' ),
+	);
+	printf( '<select id="evcert_issued_date" name="%s[issued_date]">', esc_attr( Settings\OPTION ) );
+	foreach ( $options as $value => $label ) {
+		printf( '<option value="%1$s" %2$s>%3$s</option>', esc_attr( $value ), selected( Settings\value( 'issued_date' ), $value, false ), esc_html( $label ) );
+	}
+	echo '</select>';
 }
 
 /**

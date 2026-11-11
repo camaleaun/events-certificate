@@ -20,6 +20,8 @@ const OPTION = 'evcert_settings';
  *
  * - force_public: treat this site as public even when it looks local
  *   (a staging site behind a public URL), so certificates get a real QR code.
+ * - issued_date: the date certificates show as their date of issue: when each
+ *   was issued (issued), or the event's last day (event_end).
  * - slug: the URL base of certificate pages (/certificate/CODE/), where
  *   anyone sees a certificate and checks it is authentic.
  * - delete_data: drop the tables on uninstall. Off by default: printed
@@ -40,6 +42,7 @@ function defaults() {
 		'delete_data'  => false,
 		'self_issue'   => 'attended',
 		'location'     => '',
+		'issued_date'  => 'issued',
 	);
 }
 
@@ -62,6 +65,9 @@ function sanitize( $value ) {
 	$clean['slug'] = '' !== $slug ? $slug : $defaults['slug'];
 
 	$clean['location'] = array_key_exists( 'location', $value ) ? sanitize_text_field( (string) $value['location'] ) : $defaults['location'];
+
+	$date                 = array_key_exists( 'issued_date', $value ) ? (string) $value['issued_date'] : '';
+	$clean['issued_date'] = in_array( $date, array( 'issued', 'event_end' ), true ) ? $date : $defaults['issued_date'];
 
 	$who                 = array_key_exists( 'self_issue', $value ) ? (string) $value['self_issue'] : '';
 	$clean['self_issue'] = in_array( $who, array( 'attended', 'confirmed', 'off' ), true ) ? $who : $defaults['self_issue'];

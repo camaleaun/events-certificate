@@ -530,7 +530,7 @@ function arc_to_cubics( $x1, $y1, $rx, $ry, $angle, $large, $sweep, $x2, $y2 ) {
 function values( array $cert ) {
 	$data   = json_decode( (string) ( $cert['data_json'] ?? '' ), true );
 	$data   = is_array( $data ) ? $data : array();
-	$issued = strtotime( ( $cert['issued_at'] ?? 'now' ) . ' UTC' );
+	$issued = issued_ts( $cert );
 	$start  = ! empty( $cert['event_start'] ) ? strtotime( $cert['event_start'] . ' UTC' ) : $issued;
 	$roles  = \EventsCertificate\Designs\role_labels();
 	$hours  = isset( $cert['hours'] ) && '' !== (string) $cert['hours'] ? (float) $cert['hours'] : null;
@@ -558,6 +558,28 @@ function values( array $cert ) {
 	$values['declaration_statement'] = statement_text( $cert, $values, $data );
 
 	return $values;
+}
+
+/**
+ * The date a certificate shows as its date of issue: when it was issued, or,
+ * when Settings say so, the event's last day (its days, else the date the
+ * certificate recorded), like the event's name and place, the current one.
+ *
+ * @param array<string, mixed> $cert Certificate.
+ * @return int Unix time.
+ */
+function issued_ts( array $cert ) {
+	$issued = strtotime( ( $cert['issued_at'] ?? 'now' ) . ' UTC' );
+	if ( 'event_end' !== Settings\value( 'issued_date' ) ) {
+		return (int) $issued;
+	}
+	$days = \EventsCertificate\Days\all();
+	if ( $days ) {
+		$last = end( $days );
+		return (int) strtotime( $last['date'] . ' 12:00:00 ' . wp_timezone_string() );
+	}
+
+	return ! empty( $cert['event_end'] ) ? (int) strtotime( $cert['event_end'] . ' UTC' ) : (int) $issued;
 }
 
 /**
