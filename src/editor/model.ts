@@ -81,6 +81,8 @@ export type Design = {
 	elements: Element[];
 	// Preview values for the fields, only for the editor (certificates use real data).
 	sample?: Record< string, string >;
+	// The QR code, code and hint on the first page: always, or only without the declaration page (which then carries them).
+	verifyFirstPage?: 'always' | 'without-declaration';
 };
 
 export type Box = { x: number; y: number; w: number; h: number };

@@ -16,7 +16,7 @@ import {
 	__experimentalItemGroup as ItemGroup,
 	__experimentalNumberControl as NumberControl,
 	__experimentalToggleGroupControl as ToggleGroupControl,
-	__experimentalToggleGroupControlOption as ToggleGroupControlOption, CheckboxControl, __experimentalVStack as VStack } from '@wordpress/components';
+	__experimentalToggleGroupControlOption as ToggleGroupControlOption, CheckboxControl, __experimentalVStack as VStack, RadioControl } from '@wordpress/components';
 import { useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import { Icon, page as pageIcon } from '@wordpress/icons';
@@ -107,6 +107,22 @@ export default function DesignPanel( { design, mode, title, status, roles, roleL
 			<div className="evcert-inspector__section">
 				<DropdownRow label={ __( 'Name', 'events-certificate' ) } value={ title || __( 'Certificate', 'events-certificate' ) }>
 					{ () => <TextControl __next40pxDefaultSize __nextHasNoMarginBottom label={ __( 'Name', 'events-certificate' ) } value={ title } onChange={ onTitle } /> }
+				</DropdownRow>
+				<DropdownRow
+					label={ __( 'Verification', 'events-certificate' ) }
+					value={ design.verifyFirstPage === 'without-declaration' ? __( 'On the declaration page', 'events-certificate' ) : __( 'On the first page', 'events-certificate' ) }
+				>
+					{ () => (
+						<RadioControl
+							label={ __( 'QR code, code and hint', 'events-certificate' ) }
+							selected={ design.verifyFirstPage === 'without-declaration' ? 'without-declaration' : 'always' }
+							options={ [
+								{ label: __( 'Always on the first page', 'events-certificate' ), value: 'always' },
+								{ label: __( 'On the declaration page when there is one', 'events-certificate' ), value: 'without-declaration' },
+							] }
+							onChange={ ( v ) => onChange( { ...design, verifyFirstPage: v === 'without-declaration' ? 'without-declaration' : undefined } ) }
+						/>
+					) }
 				</DropdownRow>
 				<DropdownRow
 					label={ __( 'Applies to', 'events-certificate' ) }

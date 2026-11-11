@@ -88,7 +88,11 @@ function rows( $attendee, $current ) {
 			</td>
 			<td class="tix-right" data-evcert-day-body>
 				<?php if ( 'table' === $day['mode'] ) : ?>
+					<?php $span = Sessions\day_span( $day ); ?>
 					<label for="evcert-table-<?php echo esc_attr( $day['id'] ); ?>"><?php esc_html_e( 'Your table', 'events-certificate' ); ?> <span aria-hidden="true" class="tix-required-star">*</span></label>
+					<?php if ( $span ) : ?>
+						<span class="tix-description"><?php echo esc_html( time_of( $span[0] ) . '–' . time_of( $span[1] ) ); ?></span>
+					<?php endif; ?>
 					<select id="evcert-table-<?php echo esc_attr( $day['id'] ); ?>" name="evcert_table[<?php echo esc_attr( $day['id'] ); ?>]">
 						<option value=""><?php esc_html_e( 'Choose…', 'events-certificate' ); ?></option>
 						<?php foreach ( Days\tables( $day ) as $table ) : ?>
@@ -183,8 +187,9 @@ function read( $attendee, $current ) {
 				/* translators: %s: day of the event. */
 				return new WP_Error( 'evcert_table', sprintf( __( 'Choose your table on %s.', 'events-certificate' ), Days\name( $day ) ) );
 			}
-			$data['table'][ $day['id'] ] = $table;
-			$minutes                    += Sessions\day_minutes( $day );
+			$data['table'][ $day['id'] ]      = $table;
+			$data['table_time'][ $day['id'] ] = Sessions\day_span( $day );
+			$minutes                         += Sessions\day_minutes( $day );
 		} else {
 			$chosen = Sessions\pick( $day, array_map( 'intval', (array) ( $sessions[ $day['id'] ] ?? array() ) ) );
 			if ( is_wp_error( $chosen ) ) {

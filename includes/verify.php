@@ -431,8 +431,8 @@ function render_page( $cert, $code, $locale, $invalid ) {
 		<h1 class="screen-reader-text"><?php echo esc_html( $title ); ?></h1>
 		<main class="evcert-verify__stage">
 			<div class="evcert-verify__art" style="<?php echo esc_attr( sprintf( '--evcert-w:%.2F;--evcert-h:%.2F', $design['page']['w'], $design['page']['h'] ) ); ?>">
-				<div class="evcert-verify__mode is-light"><?php echo Render\artwork( $design, $values, array( 'mode' => 'light' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from escaped parts in Render\element_html(). ?></div>
-				<div class="evcert-verify__mode is-dark"><?php echo Render\artwork( $design, $values, array( 'mode' => 'dark' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- as above. ?></div>
+				<div class="evcert-verify__mode is-light"><?php echo Render\artwork( $design, $values, array( 'mode' => 'light' ) + Render\first_page_options( $cert, $design ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from escaped parts in Render\element_html(). ?></div>
+				<div class="evcert-verify__mode is-dark"><?php echo Render\artwork( $design, $values, array( 'mode' => 'dark' ) + Render\first_page_options( $cert, $design ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- as above. ?></div>
 			</div>
 			<?php if ( Render\has_declaration( $cert ) ) : ?>
 				<?php // The declaration page (decision 0014): the document masked here; full only in the PDF downloaded when issuing. ?>

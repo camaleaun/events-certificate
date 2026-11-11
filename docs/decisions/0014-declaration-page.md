@@ -24,6 +24,12 @@ later PDF show the mask. Anyone holding the document can type it on the
 certificate page (Details) to confirm it matches; wrong tries are counted and
 stop after 20.
 
+The declaration page **always** carries the QR code, the code and the hint
+(on sites others can reach, decision 0010). On the first page they become
+optional: a template can leave them to the declaration page when there is
+one ("Verification: on the declaration page when there is one").
+A table is shown with its time (the day's first to last item).
+
 ## Why
 
 - Brazilian course certificates are expected to carry the document and the

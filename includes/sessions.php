@@ -151,12 +151,21 @@ function minutes( array $sessions ) {
  * @return int
  */
 function day_minutes( array $day ) {
-	$all = of_day( $day );
-	if ( ! $all ) {
-		return 0;
-	}
+	$span = day_span( $day );
 
-	return (int) round( ( max( array_column( $all, 'end' ) ) - min( array_column( $all, 'start' ) ) ) / 60 );
+	return $span ? (int) round( ( $span[1] - $span[0] ) / 60 ) : 0;
+}
+
+/**
+ * A day's span: its first item's start and last item's end (a tables day's time).
+ *
+ * @param array<string, mixed> $day Day.
+ * @return int[] [start, end], or [] without a schedule.
+ */
+function day_span( array $day ) {
+	$all = of_day( $day );
+
+	return $all ? array( (int) min( array_column( $all, 'start' ) ), (int) max( array_column( $all, 'end' ) ) ) : array();
 }
 
 /**

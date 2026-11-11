@@ -577,6 +577,29 @@ function declared( array $data ) {
 }
 
 /**
+ * How a template shows verification on the first page: 'always', or
+ * 'without-declaration' (left to the declaration page when there is one).
+ *
+ * @param array<string, mixed> $design Design.
+ * @return string
+ */
+function verify_first_page( array $design ) {
+	return 'without-declaration' === ( $design['verifyFirstPage'] ?? '' ) ? 'without-declaration' : 'always';
+}
+
+/**
+ * Options for drawing a certificate's first page: without the QR code, code
+ * and hint when its declaration page carries them and the template says so.
+ *
+ * @param array<string, mixed> $cert   Certificate.
+ * @param array<string, mixed> $design Design.
+ * @return array<string, bool>
+ */
+function first_page_options( array $cert, array $design ) {
+	return array( 'no_verification' => has_declaration( $cert ) && 'without-declaration' === verify_first_page( $design ) );
+}
+
+/**
  * Whether a certificate has the declaration page.
  *
  * @param array<string, mixed> $cert Certificate.
@@ -631,8 +654,10 @@ function declaration( array $cert, array $design, array $values, array $options 
 		$day   = \EventsCertificate\Days\get( (string) $id );
 		$list .= sprintf( '<h2 style="font-family:\'Inter\';font-weight:600;font-size:11pt;margin:14pt 0 4pt;color:%s">%s</h2>', esc_attr( $text ), esc_html( $day ? \EventsCertificate\Days\short_date( $day ) . ' — ' . \EventsCertificate\Days\name( $day ) : (string) $id ) );
 		if ( isset( $data['table'][ $id ] ) ) {
+			$span = (array) ( $data['table_time'][ $id ] ?? array() );
+			$time = 2 === count( $span ) ? ' · ' . wp_date( (string) get_option( 'time_format' ), (int) $span[0] ) . '–' . wp_date( (string) get_option( 'time_format' ), (int) $span[1] ) : '';
 			/* translators: %s: table name (Contributor Day). */
-			$list .= '<p style="margin:0 0 2pt">' . esc_html( sprintf( __( 'Table: %s', 'events-certificate' ), (string) $data['table'][ $id ] ) ) . '</p>';
+			$list .= '<p style="margin:0 0 2pt">' . esc_html( sprintf( __( 'Table: %s', 'events-certificate' ), (string) $data['table'][ $id ] ) . $time ) . '</p>';
 		}
 		$items = '';
 		foreach ( (array) ( $data['sessions'] ?? array() ) as $session ) {
@@ -656,16 +681,27 @@ function declaration( array $cert, array $design, array $values, array $options 
 		esc_attr( $muted ),
 		esc_html( $values['signer_role'] )
 	);
+	// Always on the declaration: the QR code, the code and the hint (on sites others can reach, decision 0010).
+	$verification = '';
 	if ( verifiable() || ! empty( $options['preview'] ) ) {
-		/* translators: 1: certificate code, 2: verification address. */
-		$footer .= sprintf( '<p style="margin:18pt 0 0;font-size:8pt;color:%s">%s</p>', esc_attr( $muted ), esc_html( sprintf( __( 'Code %1$s — check it at %2$s', 'events-certificate' ), $values['code'], $values['verify_url'] ) ) );
+		$qr_back      = 'none' === $bg ? ( 'dark' === $mode ? '#000000' : '#ffffff' ) : $bg;
+		$verification = sprintf(
+			'<div style="position:absolute;right:%1$.2Fpt;bottom:%1$.2Fpt;width:150pt;text-align:center;font-size:7pt;line-height:1.35;color:%2$s"><img alt="" src="%3$s" style="width:64pt;height:64pt;display:block;margin:0 auto 4pt"><div style="font-family:\'Inter\';font-weight:500;font-size:8pt;color:%4$s">%5$s</div><div>%6$s<br>%7$s</div></div>',
+			$pad,
+			esc_attr( $muted ),
+			esc_attr( qr_src( \EventsCertificate\Certificates\url( $values['code'] ), $text, $qr_back, ! empty( $options['preview'] ) ) ),
+			esc_attr( $text ),
+			esc_html( $values['code'] ),
+			esc_html( $values['verify_hint'] ),
+			esc_html( $values['verify_url'] )
+		);
 	}
 
 	return sprintf(
 		// An inner box with its own width: dompdf ignores box-sizing with padding (the text wouldn't wrap).
 		'<div class="evcert-page evcert-page--declaration" style="%10$sposition:relative;overflow:hidden;width:%1$.2Fpt;height:%2$.2Fpt;background:%4$s;color:%5$s;font-family:\'Inter\';font-size:10pt;line-height:1.45">'
 		. '<div style="position:absolute;left:%3$.2Fpt;top:%3$.2Fpt;width:%11$.2Fpt">'
-		. '<h1 style="font-family:\'Lora\';font-weight:500;font-size:18pt;margin:0 0 12pt">%6$s</h1><p style="margin:0">%7$s</p>%8$s%9$s</div></div>',
+		. '<h1 style="font-family:\'Lora\';font-weight:500;font-size:18pt;margin:0 0 12pt">%6$s</h1><p style="margin:0">%7$s</p>%8$s%9$s</div>%12$s</div>',
 		(float) $page['w'],
 		(float) $page['h'],
 		$pad,
@@ -676,7 +712,8 @@ function declaration( array $cert, array $design, array $values, array $options 
 		$list,
 		$footer,
 		! empty( $options['for_pdf'] ) ? 'page-break-before:always;' : '',
-		max( 100.0, (float) $page['w'] - 2 * $pad )
+		max( 100.0, (float) $page['w'] - 2 * $pad ),
+		$verification
 	);
 }
 
@@ -920,7 +957,8 @@ function element_html( array $el, array $design, array $values, array $options )
 	};
 
 	// A preview (includes/preview.php) shows the verification parts with placeholders, on any site.
-	if ( ! verifiable() && empty( $options['preview'] ) && is_verification( $el ) ) {
+	// The declaration page carries it when the template says so (first_page_options()).
+	if ( is_verification( $el ) && ( ! empty( $options['no_verification'] ) || ( ! verifiable() && empty( $options['preview'] ) ) ) ) {
 		return '';
 	}
 
@@ -1188,7 +1226,7 @@ function pdf( array $cert, array $design, array $extra = array() ) {
 				'mode'    => 'light',
 				'for_pdf' => true,
 				'measure' => $measure,
-			)
+			) + first_page_options( $cert, $design )
 		)
 		// The declaration page, when chosen (decision 0014).
 		. ( has_declaration( $cert ) ? declaration(
