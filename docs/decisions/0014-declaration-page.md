@@ -33,6 +33,15 @@ the activities and workload were declared by the participant and that the
 event confirms only their presence on each day, sessions being chosen freely
 without a session-by-session check.
 
+The declaration page can be **part of the template**: a second sheet
+("Certificate | Declaration" in the editor), designed like the first, so
+organizers arrange its texts to fit one page. It starts from a standard sheet
+made of fields: the title, the statement (who, document, event, place, days,
+self-declared workload), the activities (each day, its table with the time or
+its talks with times and speakers), the place and date, the signature, the
+signer, the QR code, code and hint (required, like on the first page) and the
+self-declaration note. Templates without a sheet use the standard page.
+
 ## Why
 
 - Brazilian course certificates are expected to carry the document and the

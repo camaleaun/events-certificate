@@ -29,7 +29,7 @@ import {
 	type Mode,
 	type Run,
 	type TextEl,
-	type View, lockedRatio, isRequired, type SvgPath, pageBg } from './model';
+	type View, lockedRatio, isRequired, type SvgPath, pageBg, baseBack, fromSide, toSide, type Side } from './model';
 import DesignPanel, { setSample } from './DesignPanel';
 import ElementToolbar from './ElementToolbar';
 import FieldText, { type FieldTextCommands } from './FieldText';
@@ -394,7 +394,9 @@ export default function Editor() {
 	// The stored design, and the design as the current view shows it (the print page or a screen).
 	const stored = history.present;
 	const [ view, setView ] = useState< View >( { device: 'page', orientation: 'landscape' } );
-	const design = useMemo( () => toView( stored, view ), [ stored, view ] );
+	// The sheet being designed: the certificate (front) or the declaration page (back).
+	const [ side, setSide ] = useState< Side >( 'front' );
+	const design = useMemo( () => toView( toSide( stored, side ), view ), [ stored, view, side ] );
 	const [ draft, setDraft ] = useState< Design | null >( null );
 	const shown = draft || design;
 	// Preview values: the design's own, where set (an empty one means not set), over the defaults.
@@ -580,7 +582,16 @@ export default function Editor() {
 		return () => window.removeEventListener( 'resize', fit );
 	}, [ fit ] );
 
-	const commit = ( next: Design ) => dispatch( { type: 'commit', design: fromView( stored, next, view ) } );
+	const commit = ( next: Design ) => dispatch( { type: 'commit', design: fromSide( stored, fromView( toSide( stored, side ), next, view ), side ) } );
+	/** Shows a sheet; the declaration page starts from the standard one the first time. */
+	const showSide = ( next: Side ) => {
+		if ( next === 'back' && ! stored.back ) {
+			dispatch( { type: 'commit', design: { ...stored, back: { elements: baseBack( stored ) } } } );
+		}
+		setSelected( null );
+		setDraft( null );
+		setSide( next );
+	};
 	const replaceDesign = ( next: Design ) => dispatch( { type: 'commit', design: next } );
 	const shift = ( e: Element, dx: number, dy: number ): Element => ( e.layout ? placed( e, box( moved( resolve( e, design.page ), dx, dy ) ), design.page ) : moved( e, dx, dy ) );
 	const update = ( id: string, patch: Partial< Element > ) =>
@@ -865,6 +876,14 @@ export default function Editor() {
 					<Button size="compact" icon={ listView } isPressed={ panel === 'layers' } onClick={ () => setPanel( panel === 'layers' ? null : 'layers' ) } label={ __( 'Layers', 'events-certificate' ) } />
 				</div>
 				<div className="evcert-header-center">
+					<div className="evcert-sides" role="group" aria-label={ __( 'Sheet', 'events-certificate' ) }>
+						<Button size="compact" isPressed={ side === 'front' } onClick={ () => showSide( 'front' ) }>
+							{ __( 'Certificate', 'events-certificate' ) }
+						</Button>
+						<Button size="compact" isPressed={ side === 'back' } onClick={ () => showSide( 'back' ) }>
+							{ __( 'Declaration', 'events-certificate' ) }
+						</Button>
+					</div>
 					<button type="button" className="evcert-document-bar" onClick={ () => { setSelected( null ); setSidebar( 'design' ); } }>
 						<span className="evcert-document-title">{ title || __( 'Certificate', 'events-certificate' ) }</span>
 						<span className="evcert-document-type">· { __( 'Certificate design', 'events-certificate' ) }</span>

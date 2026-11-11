@@ -143,6 +143,55 @@ class DeclarationTest extends TestCase {
 	}
 
 	/**
+	 * A template's own declaration sheet is drawn with its fields (statement, activities).
+	 */
+	public function test_template_sheet() {
+		$cert   = array(
+			'name'       => 'Ana Lima',
+			'code'       => '2611-04K7-M29Q-XAP3',
+			'doc_label'  => 'CPF',
+			'doc_masked' => '•••.•••.247-••',
+			'data_json'  => wp_json_encode( array( 'page2' => true ) ),
+		);
+		$design = array(
+			'page'     => array(
+				'w'  => 400,
+				'h'  => 300,
+				'bg' => '#fff',
+			),
+			'colors'   => array(
+				'text' => array(
+					'light' => '#000',
+					'dark'  => '#fff',
+				),
+			),
+			'elements' => array(),
+			'back'     => array(
+				'elements' => array(
+					array(
+						'id'    => 'statement',
+						'type'  => 'text',
+						'x'     => 10,
+						'y'     => 10,
+						'w'     => 380,
+						'h'     => 40,
+						'font'  => 'Inter',
+						'size'  => 9,
+						'color' => '$text',
+						'align' => 'left',
+						'runs'  => array( array( 'field' => 'declaration_statement' ) ),
+					),
+				),
+			),
+		);
+		$values = \EventsCertificate\Render\values( $cert );
+		$html   = \EventsCertificate\Render\declaration( $cert, $design, $values, array( 'document' => '529.982.247-25' ) );
+		$this->assertStringContainsString( 'Ana Lima', $html );
+		$this->assertStringContainsString( '529.982.247-25', $html );
+		$this->assertStringNotContainsString( 'evcert-page--declaration', $html ); // Not the standard page.
+	}
+
+	/**
 	 * A WP_Error.
 	 *
 	 * @param mixed $value Value.

@@ -174,6 +174,11 @@ function values( array $design ) {
 			$values[ $key ] = $value;
 		}
 	}
+	// The declaration sheet's sample: a document, a day and a talk.
+	$values['document']              = '•••.•••.789-••';
+	$values['day']                   = '' !== $values['day'] ? $values['day'] : __( 'Conference', 'events-certificate' );
+	$values['activities']            = '' !== $values['activities'] ? $values['activities'] : wp_date( 'd/m' ) . ' — ' . __( 'Conference', 'events-certificate' ) . "\n" . wp_date( (string) get_option( 'time_format' ), strtotime( '09:30' ) ) . ' · ' . __( 'Building accessible blocks', 'events-certificate' ) . ' — ' . $values['signer_name'];
+	$values['declaration_statement'] = Render\statement_text( array( 'doc_label' => 'CPF' ), $values, array() );
 
 	return $values;
 }
@@ -207,13 +212,20 @@ function render( $locale ) {
 	<title><?php echo esc_html( $title . ' – ' . get_bloginfo( 'name' ) ); ?></title>
 	<?php wp_print_styles( array( 'evcert-verify' ) ); ?>
 </head>
-<body class="evcert-verify has-certificate is-preview">
+<body class="evcert-verify has-certificate is-preview<?php echo ! empty( $design['back']['elements'] ) ? ' has-declaration' : ''; ?>">
 	<h1 class="screen-reader-text"><?php echo esc_html( $title ); ?></h1>
 	<main class="evcert-verify__stage">
 		<div class="evcert-verify__art" style="<?php echo esc_attr( sprintf( '--evcert-w:%.2F;--evcert-h:%.2F', $design['page']['w'], $design['page']['h'] ) ); ?>">
 			<div class="evcert-verify__mode is-light"><?php echo Render\artwork( $design, $values, $opts + array( 'mode' => 'light' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from escaped parts in Render\element_html(). ?></div>
 			<div class="evcert-verify__mode is-dark"><?php echo Render\artwork( $design, $values, $opts + array( 'mode' => 'dark' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- as above. ?></div>
 		</div>
+		<?php if ( ! empty( $design['back']['elements'] ) ) : ?>
+			<?php $sheet = array( 'elements' => $design['back']['elements'] ) + $design; ?>
+			<div class="evcert-verify__art" style="<?php echo esc_attr( sprintf( '--evcert-w:%.2F;--evcert-h:%.2F', $design['page']['w'], $design['page']['h'] ) ); ?>">
+				<div class="evcert-verify__mode is-light"><?php echo Render\artwork( $sheet, $values, $opts + array( 'mode' => 'light' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- as above. ?></div>
+				<div class="evcert-verify__mode is-dark"><?php echo Render\artwork( $sheet, $values, $opts + array( 'mode' => 'dark' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- as above. ?></div>
+			</div>
+		<?php endif; ?>
 	</main>
 	<nav class="evcert-dock" data-evcert-dock aria-label="<?php esc_attr_e( 'Certificate tools', 'events-certificate' ); ?>">
 		<div class="evcert-dock__bar">

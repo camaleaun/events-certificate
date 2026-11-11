@@ -1280,3 +1280,18 @@
 		margin: 0;
 	}
 }
+
+// Sheet switch (Certificate | Declaration), before the document bar.
+.evcert-sides {
+	display: flex;
+	gap: 2px;
+	margin-right: 8px;
+	padding: 2px;
+	border-radius: 4px;
+	background: #f0f0f0;
+}
+.evcert-header-center {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}

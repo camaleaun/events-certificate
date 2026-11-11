@@ -537,7 +537,7 @@ function values( array $cert ) {
 	// The signer is part of the look, like the design: the current one; what was recorded at issue only when none is set.
 	$signer = \EventsCertificate\Signer\current();
 
-	return array(
+	$values = array(
 		'name'        => (string) ( $cert['name'] ?? '' ),
 		'event'       => event_title( $cert ),
 		'location'    => event_location( $cert ),
@@ -553,6 +553,73 @@ function values( array $cert ) {
 		'verify_url'  => untrailingslashit( (string) preg_replace( '#^https?://#', '', home_url( Settings\value( 'slug' ) ) ) ),
 		'document'    => (string) ( $cert['doc_masked'] ?? '' ),
 	) + declared( $data ) + phrases();
+	// The declaration page's fields (a template's declaration sheet uses them).
+	$values['activities']            = activities_text( $data );
+	$values['declaration_statement'] = statement_text( $cert, $values, $data );
+
+	return $values;
+}
+
+/**
+ * The declaration's statement as plain text (who, which document, event,
+ * place, days, self-declared workload).
+ *
+ * @param array<string, mixed>  $cert   Certificate.
+ * @param array<string, string> $values values() (document: the masked number, or the full one when issuing).
+ * @param array<string, mixed>  $data   The certificate's data_json.
+ * @return string
+ */
+function statement_text( array $cert, array $values, array $data ) {
+	$who = $values['name'];
+	if ( '' !== (string) $values['document'] ) {
+		/* translators: 1: person's name, 2: document type (CPF), 3: document number. */
+		$who = sprintf( __( '%1$s, %2$s %3$s,', 'events-certificate' ), $who, (string) ( $cert['doc_label'] ?? '' ), $values['document'] );
+	}
+	$country = ! empty( $data['country'] ) ? \EventsCertificate\Countries\name( (string) $data['country'] ) : '';
+	$hours   = field_value( 'hours', '', $values );
+
+	return sprintf(
+		/* translators: 1: person (name and document), 2: event, 3: place, 4: days, 5: workload. */
+		__( 'We declare that %1$s took part in %2$s, held in %3$s, on %4$s, with a self-declared workload of %5$s, in the activities below.', 'events-certificate' ),
+		$who,
+		$values['event'],
+		$values['location'] . ( '' !== $country && false === stripos( $values['location'], $country ) ? ', ' . $country : '' ),
+		'' !== $values['day'] ? $values['day'] : format_date( (int) $values['event_ts'], 'long' ),
+		'' !== $hours ? $hours : '—'
+	);
+}
+
+/**
+ * The declared activities as lines: each day, its table (with its time) or
+ * its talks (time · title — speakers).
+ *
+ * @param array<string, mixed> $data The certificate's data_json.
+ * @return string
+ */
+function activities_text( array $data ) {
+	$time  = static function ( $ts ) {
+		return wp_date( (string) get_option( 'time_format' ), (int) $ts );
+	};
+	$lines = array();
+	foreach ( (array) ( $data['days'] ?? array() ) as $id ) {
+		$day = \EventsCertificate\Days\get( (string) $id );
+		if ( $lines ) {
+			$lines[] = '';
+		}
+		$lines[] = $day ? \EventsCertificate\Days\short_date( $day ) . ' — ' . \EventsCertificate\Days\name( $day ) : (string) $id;
+		if ( isset( $data['table'][ $id ] ) ) {
+			$span = (array) ( $data['table_time'][ $id ] ?? array() );
+			/* translators: %s: table name (Contributor Day). */
+			$lines[] = sprintf( __( 'Table: %s', 'events-certificate' ), (string) $data['table'][ $id ] ) . ( 2 === count( $span ) ? ' · ' . $time( $span[0] ) . '–' . $time( $span[1] ) : '' );
+		}
+		foreach ( (array) ( $data['sessions'] ?? array() ) as $session ) {
+			if ( ( $session['day'] ?? '' ) === $id ) {
+				$lines[] = $time( $session['start'] ) . '–' . $time( $session['end'] ) . ' · ' . $session['title'] . ( ! empty( $session['speakers'] ) ? ' — ' . implode( ', ', (array) $session['speakers'] ) : '' );
+			}
+		}
+	}
+
+	return implode( "\n", $lines );
 }
 
 /**
@@ -658,6 +725,16 @@ function has_declaration( array $cert ) {
  * @return string HTML.
  */
 function declaration( array $cert, array $design, array $values, array $options = array() ) {
+	// The template's own declaration sheet (designed in the editor), else the standard page below.
+	if ( ! empty( $design['back']['elements'] ) && is_array( $design['back']['elements'] ) ) {
+		$sheet             = $design;
+		$sheet['elements'] = $design['back']['elements'];
+		if ( '' !== (string) ( $options['document'] ?? '' ) ) {
+			$values['document']              = (string) $options['document'];
+			$values['declaration_statement'] = statement_text( $cert, $values, (array) json_decode( (string) ( $cert['data_json'] ?? '' ), true ) );
+		}
+		return artwork( $sheet, $values, $options + array( 'page_break' => ! empty( $options['for_pdf'] ) ) );
+	}
 	$mode  = (string) ( $options['mode'] ?? 'light' );
 	$page  = (array) $design['page'];
 	$data  = (array) json_decode( (string) ( $cert['data_json'] ?? '' ), true );
@@ -776,11 +853,13 @@ function declaration( array $cert, array $design, array $values, array $options 
  */
 function phrases() {
 	return array(
-		'title_text'       => __( 'Certificate of participation', 'events-certificate' ),
-		'intro_text'       => __( 'This is to certify that', 'events-certificate' ),
-		'issued_label'     => __( 'Date of issue', 'events-certificate' ),
-		'place_date_label' => __( 'Place and date', 'events-certificate' ),
-		'verify_hint'      => __( 'Use the code above to verify at:', 'events-certificate' ),
+		'title_text'        => __( 'Certificate of participation', 'events-certificate' ),
+		'intro_text'        => __( 'This is to certify that', 'events-certificate' ),
+		'issued_label'      => __( 'Date of issue', 'events-certificate' ),
+		'place_date_label'  => __( 'Place and date', 'events-certificate' ),
+		'verify_hint'       => __( 'Use the code above to verify at:', 'events-certificate' ),
+		'declaration_title' => __( 'Declaration of participation', 'events-certificate' ),
+		'declaration_note'  => __( 'Activities and workload declared by the participant. The event confirms only their presence on each day; sessions are chosen freely and are not checked one by one.', 'events-certificate' ),
 	);
 }
 
@@ -1221,7 +1300,8 @@ function artwork( array $design, array $values, array $options = array() ) {
 	}
 
 	return sprintf(
-		'<div class="evcert-page" style="position:relative;overflow:hidden;width:%.2Fpt;height:%.2Fpt;background:%s;">%s</div>',
+		'<div class="evcert-page" style="%s position:relative;overflow:hidden;width:%.2Fpt;height:%.2Fpt;background:%s;">%s</div>',
+		! empty( $options['page_break'] ) ? 'page-break-before:always;' : '',
 		$page['w'],
 		$page['h'],
 		esc_attr( in_array( $bg, array( 'none', 'transparent' ), true ) ? 'transparent' : $bg ),
@@ -1286,6 +1366,8 @@ function pdf( array $cert, array $design, array $extra = array() ) {
 			array(
 				'document' => (string) ( $extra['document'] ?? '' ),
 				'for_pdf'  => true,
+				'mode'     => 'light',
+				'measure'  => $measure,
 			)
 		) : '' )
 		. '</body></html>';

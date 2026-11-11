@@ -83,7 +83,54 @@ export type Design = {
 	sample?: Record< string, string >;
 	// The QR code, code and hint on the first page: always, or only without the declaration page (which then carries them).
 	verifyFirstPage?: 'always' | 'without-declaration';
+	// The declaration page (the second sheet), designed like the first: same page size, colors and fonts.
+	back?: { elements: Element[] };
 };
+
+/** Which sheet of the template is being designed. */
+export type Side = 'front' | 'back';
+
+/** The design as the editor shows one sheet: the back's elements in place of the front's. */
+export function toSide( design: Design, side: Side ): Design {
+	return side === 'back' ? { ...design, elements: design.back?.elements || [] } : design;
+}
+
+/** Edits made on a sheet, back into the design. */
+export function fromSide( stored: Design, edited: Design, side: Side ): Design {
+	return side === 'back' ? { ...edited, elements: stored.elements, back: { elements: edited.elements } } : edited;
+}
+
+/**
+ * The declaration sheet a template starts with: its title, the statement,
+ * the activities, the place and date, the signature and signer, the QR code,
+ * code and hint (always there), and the self-declaration note; all fields,
+ * so the words come from the translation and the data from the certificate.
+ */
+export function baseBack( design: Design ): Element[] {
+	const { w, h } = design.page;
+	const pad = Math.max( 36, ( design.page.safe || 0 ) + 24 );
+	const muted = design.colors.muted ? '$muted' : '$text';
+	const inner = w - 2 * pad;
+	const text = ( id: string, name: string, y: number, height: number, runs: Run[], more: Record< string, unknown > = {} ): Element =>
+		( { id, name, type: 'text', x: pad, y, w: inner, h: height, runs, font: 'Inter', weight: 400, size: 9.5, color: '$text', align: 'left', lh: 1.38, ...more } as unknown as Element );
+	const qr = 52;
+	const bottom = h - pad;
+	const signature = design.elements.find( ( el ) => el.type === 'svg' && ( el.slot === 'signature' || el.id === 'signature' ) ) as SvgEl | undefined;
+	return [
+		text( 'back-title', __( 'Declaration title', 'events-certificate' ), pad, 24, [ { field: 'declaration_title' } ], { font: 'Lora', weight: 500, size: 17, lh: 1.2 } ),
+		text( 'back-statement', __( 'Statement', 'events-certificate' ), pad + 34, 40, [ { field: 'declaration_statement' } ] ),
+		text( 'back-activities', __( 'Activities', 'events-certificate' ), pad + 84, bottom - 150 - ( pad + 84 ), [ { field: 'activities' } ], { size: 9, lh: 1.4 } ),
+		text( 'back-place', __( 'Place and date', 'events-certificate' ), bottom - 132, 14, [ { field: 'location' }, { text: ', ' }, { field: 'issued_date', format: 'long' } ] ),
+		// Always a signature box: it draws the signer's signature (Signer's signature on), else this drawing.
+		{ ...( signature || { type: 'svg', vw: 120, vh: 40, paths: [], color: '$text' } ), id: 'back-signature', name: __( 'Signature', 'events-certificate' ), slot: 'signature', x: pad, y: bottom - 124, w: 120, h: 40, rotation: 0, layout: undefined, views: undefined } as Element,
+		text( 'back-signer', __( 'Signer name', 'events-certificate' ), bottom - 68, 13, [ { field: 'signer_name', b: true } ] ),
+		text( 'back-signer-role', __( 'Signer role', 'events-certificate' ), bottom - 55, 13, [ { field: 'signer_role' } ], { color: muted } ),
+		{ id: 'back-qr', name: __( 'Authenticity', 'events-certificate' ), type: 'qr', slot: 'authenticity', x: w - pad - qr, y: bottom - 30 - qr, w: qr, h: qr } as unknown as Element,
+		text( 'back-code', __( 'Code', 'events-certificate' ), bottom - 30 - qr + 8, 12, [ { field: 'code', b: true } ], { x: w - pad - qr - 8 - 200, w: 200, align: 'right', size: 8 } ),
+		text( 'back-verify', __( 'Verification hint', 'events-certificate' ), bottom - 30 - qr + 22, 22, [ { field: 'verify_hint' }, { text: '\n' }, { field: 'verify_url' } ], { x: w - pad - qr - 8 - 200, w: 200, align: 'right', size: 7, color: muted, lh: 1.35 } ),
+		text( 'back-note', __( 'Self-declaration note', 'events-certificate' ), bottom - 18, 18, [ { field: 'declaration_note' } ], { size: 6.5, color: muted, lh: 1.35 } ),
+	];
+}
 
 export type Box = { x: number; y: number; w: number; h: number };
 

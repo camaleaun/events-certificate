@@ -203,30 +203,42 @@ function enqueue() {
 				'fonts'       => $url . '/fonts',
 				'sample'      => array(
 					// The organizer who signs previews the participant too, when there is one.
-					'name'        => $signer ? $signer['name'] : 'Alex Rivera',
+					'name'                  => $signer ? $signer['name'] : 'Alex Rivera',
 					// Real values where the site has them (an emptied preview value falls back to these).
-					'event'       => '' !== $event ? $event : get_bloginfo( 'name' ),
-					'location'    => '' !== $location ? $location : __( 'City, Country', 'events-certificate' ),
-					'date_iso'    => gmdate( 'Y-m-d\TH:i:s\Z' ),
-					'date_site'   => wp_date( (string) get_option( 'date_format' ) ),
-					'hours'       => '8',
+					'event'                 => '' !== $event ? $event : get_bloginfo( 'name' ),
+					'location'              => '' !== $location ? $location : __( 'City, Country', 'events-certificate' ),
+					'date_iso'              => gmdate( 'Y-m-d\TH:i:s\Z' ),
+					'date_site'             => wp_date( (string) get_option( 'date_format' ) ),
+					'hours'                 => '8',
 					/* translators: %s: number of hours (workload), e.g. "1 hour". */
-					'hours_one'   => _n( '%s hour', '%s hours', 1, 'events-certificate' ),
+					'hours_one'             => _n( '%s hour', '%s hours', 1, 'events-certificate' ),
 					/* translators: %s: number of hours (workload), e.g. "8 hours". */
-					'hours_other' => _n( '%s hour', '%s hours', 8, 'events-certificate' ),
-					'role'        => __( 'Speaker', 'events-certificate' ),
-					'details'     => __( 'Building accessible blocks', 'events-certificate' ),
-					'document'    => 'CPF •••.•••.789-••',
-					'day'         => __( 'Conference', 'events-certificate' ),
-					'table'       => 'Core',
-					'sessions'    => __( 'Building accessible blocks', 'events-certificate' ),
+					'hours_other'           => _n( '%s hour', '%s hours', 8, 'events-certificate' ),
+					'role'                  => __( 'Speaker', 'events-certificate' ),
+					'details'               => __( 'Building accessible blocks', 'events-certificate' ),
+					'document'              => 'CPF •••.•••.789-••',
+					'day'                   => __( 'Conference', 'events-certificate' ),
+					'table'                 => 'Core',
+					'sessions'              => __( 'Building accessible blocks', 'events-certificate' ),
+					'activities'            => '31/10 — ' . __( 'Conference', 'events-certificate' ) . "\n09:30–10:30 · " . __( 'Building accessible blocks', 'events-certificate' ) . ' — Sam Taylor',
+					// The statement as a certificate words it, with sample values.
+					'declaration_statement' => sprintf(
+						/* translators: 1: person (name and document), 2: event, 3: place, 4: days, 5: workload. */
+						__( 'We declare that %1$s took part in %2$s, held in %3$s, on %4$s, with a self-declared workload of %5$s, in the activities below.', 'events-certificate' ),
+						( $signer ? $signer['name'] : 'Alex Rivera' ) . ', CPF •••.•••.789-••,',
+						'' !== $event ? $event : get_bloginfo( 'name' ),
+						'' !== $location ? $location : __( 'City, Country', 'events-certificate' ),
+						__( 'Conference', 'events-certificate' ),
+						/* translators: %s: number of hours (workload), e.g. "8 hours". */
+						sprintf( _n( '%s hour', '%s hours', 8, 'events-certificate' ), '8' )
+					),
 					// The organizer who signs, when there is one (Signer\current()); else sample values.
-					'signer_name' => $signer ? $signer['name'] : 'Sam Taylor',
-					'signer_role' => $signer && $signer['roles'] ? \EventsCertificate\Signer\role_in( $signer['roles'], determine_locale() ) : __( 'Event Coordinator', 'events-certificate' ),
-					'signature'   => $signer && $signer['signature'] ? (string) wp_json_encode( $signer['signature'] ) : '',
+					'signer_name'           => $signer ? $signer['name'] : 'Sam Taylor',
+					'signer_role'           => $signer && $signer['roles'] ? \EventsCertificate\Signer\role_in( $signer['roles'], determine_locale() ) : __( 'Event Coordinator', 'events-certificate' ),
+					'signature'             => $signer && $signer['signature'] ? (string) wp_json_encode( $signer['signature'] ) : '',
 					// Clearly not a real code, like the QR placeholder; same length, so the layout is the real one.
-					'code'        => 'XXXX-XXXX-XXXX-XXXX',
-					'verify_url'  => untrailingslashit( preg_replace( '#^https?://#', '', home_url( \EventsCertificate\Settings\value( 'slug' ) ) ) ),
+					'code'                  => 'XXXX-XXXX-XXXX-XXXX',
+					'verify_url'            => untrailingslashit( preg_replace( '#^https?://#', '', home_url( \EventsCertificate\Settings\value( 'slug' ) ) ) ),
 				) + \EventsCertificate\Render\phrases(),
 			)
 		) . ';',
