@@ -687,7 +687,7 @@ function declaration( array $cert, array $design, array $values, array $options 
 	$list = '';
 	foreach ( (array) ( $data['days'] ?? array() ) as $id ) {
 		$day   = \EventsCertificate\Days\get( (string) $id );
-		$list .= sprintf( '<h2 style="font-family:\'Inter\';font-weight:600;font-size:11pt;margin:14pt 0 4pt;color:%s">%s</h2>', esc_attr( $text ), esc_html( $day ? \EventsCertificate\Days\short_date( $day ) . ' — ' . \EventsCertificate\Days\name( $day ) : (string) $id ) );
+		$list .= sprintf( '<h2 style="font-family:\'Inter\';font-weight:600;font-size:10.5pt;margin:10pt 0 3pt;color:%s">%s</h2>', esc_attr( $text ), esc_html( $day ? \EventsCertificate\Days\short_date( $day ) . ' — ' . \EventsCertificate\Days\name( $day ) : (string) $id ) );
 		if ( isset( $data['table'][ $id ] ) ) {
 			$span = (array) ( $data['table_time'][ $id ] ?? array() );
 			$time = 2 === count( $span ) ? ' · ' . wp_date( (string) get_option( 'time_format' ), (int) $span[0] ) . '–' . wp_date( (string) get_option( 'time_format' ), (int) $span[1] ) : '';
@@ -700,7 +700,7 @@ function declaration( array $cert, array $design, array $values, array $options 
 				continue;
 			}
 			$items .= sprintf(
-				'<li style="margin:0 0 3pt">%s · %s%s</li>',
+				'<li style="margin:0 0 1pt">%s · %s%s</li>',
 				esc_html( wp_date( (string) get_option( 'time_format' ), (int) $session['start'] ) . '–' . wp_date( (string) get_option( 'time_format' ), (int) $session['end'] ) ),
 				esc_html( (string) $session['title'] ),
 				! empty( $session['speakers'] ) ? sprintf( ' <span style="color:%s">— %s</span>', esc_attr( $muted ), esc_html( implode( ', ', (array) $session['speakers'] ) ) ) : ''
@@ -711,10 +711,10 @@ function declaration( array $cert, array $design, array $values, array $options 
 
 	$signature = signature_src( $design, $values, $text );
 	$footer    = sprintf(
-		'<p style="margin:24pt 0 0">%s</p>%s<p style="margin:%s 0 0"><strong>%s</strong><br><span style="color:%s">%s</span></p>',
+		'<p style="margin:0">%s</p>%s<p style="margin:%s 0 0;line-height:1.3"><strong>%s</strong><br><span style="color:%s">%s</span></p>',
 		esc_html( $values['location'] . ', ' . format_date( (int) $values['issued_ts'], 'long' ) ),
-		'' !== $signature ? sprintf( '<img alt="" src="%s" style="display:block;height:40pt;max-width:160pt;margin:14pt 0 0">', esc_attr( $signature ) ) : '',
-		'' !== $signature ? '2pt' : '18pt',
+		'' !== $signature ? sprintf( '<img alt="" src="%s" style="display:block;height:34pt;max-width:150pt;margin:6pt 0 0">', esc_attr( $signature ) ) : '',
+		'' !== $signature ? '1pt' : '10pt',
 		esc_html( $values['signer_name'] ),
 		esc_attr( $muted ),
 		esc_html( $values['signer_role'] )
@@ -724,8 +724,12 @@ function declaration( array $cert, array $design, array $values, array $options 
 	if ( verifiable() || ! empty( $options['preview'] ) ) {
 		$qr_back      = 'none' === $bg ? ( 'dark' === $mode ? '#000000' : '#ffffff' ) : $bg;
 		$verification = sprintf(
-			'<div style="position:absolute;right:%1$.2Fpt;bottom:%1$.2Fpt;width:180pt;text-align:right;font-size:7pt;line-height:1.35;color:%2$s"><img alt="" src="%3$s" style="width:64pt;height:64pt;display:block;margin:0 0 4pt auto"><div style="font-family:\'Inter\';font-weight:500;font-size:8pt;color:%4$s">%5$s</div><div>%6$s<br>%7$s</div></div>',
-			$pad,
+			// Two columns, all to the right: the code and the hint, then the QR code (less height than stacked).
+			'<table style="margin:0 0 0 auto;border-collapse:collapse;font-size:7pt;line-height:1.35;color:%2$s"><tr>'
+			. '<td style="text-align:right;vertical-align:middle;padding:0 8pt 0 0"><div style="font-family:\'Inter\';font-weight:500;font-size:8pt;color:%4$s">%5$s</div><div>%6$s<br>%7$s</div></td>'
+			. '<td style="vertical-align:middle;padding:0"><img alt="" src="%3$s" style="width:52pt;height:52pt;display:block"></td>'
+			. '</tr></table>',
+			0,
 			esc_attr( $muted ),
 			esc_attr( qr_src( \EventsCertificate\Certificates\url( $values['code'] ), $text, $qr_back, ! empty( $options['preview'] ) ) ),
 			esc_attr( $text ),
@@ -737,11 +741,14 @@ function declaration( array $cert, array $design, array $values, array $options 
 
 	return sprintf(
 		// An inner box with its own width: dompdf ignores box-sizing with padding (the text wouldn't wrap).
-		'<div class="evcert-page evcert-page--declaration" style="%10$sposition:relative;overflow:hidden;width:%1$.2Fpt;height:%2$.2Fpt;background:%4$s;color:%5$s;font-family:\'Inter\';font-size:10pt;line-height:1.45">'
+		'<div class="evcert-page evcert-page--declaration" style="%10$sposition:relative;overflow:hidden;width:%1$.2Fpt;height:%2$.2Fpt;background:%4$s;color:%5$s;font-family:\'Inter\';font-size:9.5pt;line-height:1.38">'
 		. '<div style="position:absolute;left:%3$.2Fpt;top:%3$.2Fpt;width:%11$.2Fpt">'
-		. '<h1 style="font-family:\'Lora\';font-weight:500;font-size:18pt;margin:0 0 12pt">%6$s</h1><p style="margin:0">%7$s</p>%8$s%9$s</div>%12$s'
-		// Footnote: the activities are self-declared; the event only confirms presence per day (decision 0014).
-		. '<p style="position:absolute;left:%3$.2Fpt;bottom:%3$.2Fpt;width:%13$.2Fpt;margin:0;font-size:7pt;line-height:1.4;color:%14$s">%15$s</p></div>',
+		. '<h1 style="font-family:\'Lora\';font-weight:500;font-size:17pt;margin:0 0 10pt">%6$s</h1><p style="margin:0">%7$s</p>%8$s</div>'
+		// A bottom band: place, date and signer on the left; code, hint and QR code on the right; under it the
+		// footnote: the activities are self-declared, the event only confirms presence per day (decision 0014).
+		. '<div style="position:absolute;left:%3$.2Fpt;bottom:%3$.2Fpt;width:%11$.2Fpt">'
+		. '<table style="width:100%%;border-collapse:collapse"><tr><td style="vertical-align:bottom;padding:0">%9$s</td><td style="vertical-align:bottom;padding:0;text-align:right">%12$s</td></tr></table>'
+		. '<p style="margin:8pt 0 0;font-size:6.5pt;line-height:1.35;color:%14$s">%15$s</p></div></div>',
 		(float) $page['w'],
 		(float) $page['h'],
 		$pad,
@@ -754,7 +761,7 @@ function declaration( array $cert, array $design, array $values, array $options 
 		! empty( $options['for_pdf'] ) ? 'page-break-before:always;' : '',
 		max( 100.0, (float) $page['w'] - 2 * $pad ),
 		$verification,
-		max( 100.0, (float) $page['w'] - 2 * $pad - ( '' !== $verification ? 200 : 0 ) ),
+		0,
 		esc_attr( $muted ),
 		esc_html__( 'Activities and workload declared by the participant. The event confirms only their presence on each day; sessions are chosen freely and are not checked one by one.', 'events-certificate' )
 	);
