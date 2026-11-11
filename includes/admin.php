@@ -192,6 +192,11 @@ function sanitize_posted( $value ) {
 		}
 		unset( $value['verify_page'] );
 	}
+	// The event's days are their own option (includes/days.php).
+	if ( is_array( $value ) && isset( $value['days'] ) && is_array( $value['days'] ) ) {
+		\EventsCertificate\Days\save( $value['days'] );
+		unset( $value['days'] );
+	}
 
 	return Settings\sanitize( $value );
 }
@@ -257,6 +262,13 @@ function add_settings_fields( $page ) {
 	);
 
 	add_settings_section(
+		'evcert_days',
+		__( 'Event days', 'events-certificate' ),
+		__NAMESPACE__ . '\\render_days_section',
+		$page
+	);
+
+	add_settings_section(
 		'evcert_data',
 		__( 'Data', 'events-certificate' ),
 		'__return_false',
@@ -312,6 +324,64 @@ function render_force_public_field() {
 		esc_html__( 'Treat this site as public', 'events-certificate' ),
 		esc_html__( 'For a staging site with a public address. Only turn it on when anyone can open this site’s pages.', 'events-certificate' )
 	);
+}
+
+/**
+ * The event's days: name per language, mode, tables (includes/days.php).
+ * Until saved they come from the schedule.
+ */
+function render_days_section() {
+	$days    = \EventsCertificate\Days\all();
+	$locales = \EventsCertificate\Verify\locales();
+	if ( ! $days ) {
+		printf( '<p class="description">%s</p>', esc_html__( 'No days yet: they come from the schedule (Sessions) once it has dates.', 'events-certificate' ) );
+		return;
+	}
+	$name = esc_attr( Settings\OPTION ) . '[days]';
+	echo '<table class="widefat striped evcert-days-settings"><thead><tr>';
+	echo '<th>' . esc_html__( 'Date', 'events-certificate' ) . '</th>';
+	echo '<th>' . esc_html__( 'Name', 'events-certificate' ) . '</th>';
+	echo '<th>' . esc_html__( 'Kind', 'events-certificate' ) . '</th>';
+	echo '<th>' . esc_html__( 'Tables (one per line)', 'events-certificate' ) . '</th>';
+	echo '</tr></thead><tbody>';
+	foreach ( $days as $i => $day ) {
+		echo '<tr><td>';
+		printf( '<input type="hidden" name="%1$s[%2$d][date]" value="%3$s"><strong>%4$s</strong>', $name, (int) $i, esc_attr( $day['date'] ), esc_html( \EventsCertificate\Days\short_date( $day ) ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $name is escaped above.
+		echo '</td><td>';
+		foreach ( $locales as $locale ) {
+			printf(
+				'<label style="display:block;margin-bottom:4px"><span class="screen-reader-text">%5$s</span><input type="text" class="regular-text" name="%1$s[%2$d][names][%3$s]" value="%4$s" placeholder="%5$s" lang="%6$s"></label>',
+				$name, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped above.
+				(int) $i,
+				esc_attr( $locale ),
+				esc_attr( $day['names'][ $locale ] ?? '' ),
+				esc_attr( \EventsCertificate\Verify\locale_name( $locale ) ),
+				esc_attr( str_replace( '_', '-', $locale ) )
+			);
+		}
+		echo '</td><td>';
+		printf( '<select name="%1$s[%2$d][mode]">', $name, (int) $i ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped above.
+		foreach ( array(
+			'sessions' => __( 'Talks', 'events-certificate' ),
+			'table'    => __( 'Tables', 'events-certificate' ),
+		) as $mode => $label ) {
+			printf( '<option value="%s"%s>%s</option>', esc_attr( $mode ), selected( $day['mode'], $mode, false ), esc_html( $label ) );
+		}
+		echo '</select></td><td>';
+		foreach ( $locales as $locale ) {
+			printf(
+				'<label style="display:block;margin-bottom:4px"><span class="screen-reader-text">%5$s</span><textarea rows="3" class="large-text" name="%1$s[%2$d][tables][%3$s]" placeholder="%5$s" lang="%6$s">%4$s</textarea></label>',
+				$name, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped above.
+				(int) $i,
+				esc_attr( $locale ),
+				esc_textarea( implode( "\n", (array) ( $day['tables'][ $locale ] ?? array() ) ) ),
+				esc_attr( \EventsCertificate\Verify\locale_name( $locale ) ),
+				esc_attr( str_replace( '_', '-', $locale ) )
+			);
+		}
+		echo '</td></tr>';
+	}
+	echo '</tbody></table>';
 }
 
 /**

@@ -44,6 +44,7 @@ function register() {
 	remove_action( 'evcert_certificates_screen', 'EventsCertificate\Admin\render_settings_form' );
 	add_action( 'evcert_certificates_title_actions', __NAMESPACE__ . '\render_settings_link' );
 	register_front();
+	Days\register();
 }
 
 /**
