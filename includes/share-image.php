@@ -42,7 +42,7 @@ function bootstrap() {
  */
 function look() {
 	$now = array(
-		\EventsCertificate\Designs\get( \EventsCertificate\Designs\site_design_id() ),
+		\EventsCertificate\Designs\fingerprint(),
 		\EventsCertificate\Signer\current(),
 		\EventsCertificate\Render\event_title( array() ),
 		\EventsCertificate\Render\event_location( array() ),

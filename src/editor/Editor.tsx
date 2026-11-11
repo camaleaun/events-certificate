@@ -48,7 +48,7 @@ import './style.scss';
 declare global {
 	interface Window {
 		// development: unfinished features, off unless a constant turns them on (includes/admin-app.php).
-		evcertEditor: { design: number; exitUrl: string; fonts: string; sample: Record< string, string >; development?: { screenViews?: boolean } };
+		evcertEditor: { design: number; exitUrl: string; fonts: string; sample: Record< string, string >; roles: Record< string, string >; isDefault: boolean; development?: { screenViews?: boolean } };
 	}
 }
 
@@ -443,13 +443,16 @@ export default function Editor() {
 	const dragRef = useRef< Drag >( null );
 	const savedRef = useRef< Design | null >( null );
 	const savedTitleRef = useRef( '' );
+	// The roles this template applies to (Designs\ROLES_META); the default template has none.
+	const [ roles, setRoles ] = useState< string[] >( [] );
+	const savedRolesRef = useRef( '' );
 	const selRef = useRef< SVGRectElement >( null );
 	const [ anchor, setAnchor ] = useState< SVGRectElement | null >( null );
 	useEffect( () => setAnchor( selRef.current ), [ selected, tab, zoom ] );
 
 	// Load the design.
 	useEffect( () => {
-		apiFetch< { title: { raw: string }; content: { raw: string } } >( { path: `/wp/v2/evcert-designs/${ config.design }?context=edit` } )
+		apiFetch< { title: { raw: string }; content: { raw: string }; meta?: { _evcert_roles?: string[] } } >( { path: `/wp/v2/evcert-designs/${ config.design }?context=edit` } )
 			.then( ( post ) => {
 				let loaded = baseDesign();
 				try {
@@ -462,6 +465,9 @@ export default function Editor() {
 				savedRef.current = loaded;
 				dispatch( { type: 'load', design: loaded } );
 				savedTitleRef.current = post.title.raw;
+				const loadedRoles = post.meta?._evcert_roles || [];
+				savedRolesRef.current = loadedRoles.join( ',' );
+				setRoles( loadedRoles );
 				setTitle( post.title.raw );
 				setStatus( 'saved' );
 			} )
@@ -471,9 +477,9 @@ export default function Editor() {
 	// Unsaved: the design or its name differ from what was saved.
 	useEffect( () => {
 		if ( status !== 'loading' && status !== 'saving' ) {
-			setStatus( stored === savedRef.current && title === savedTitleRef.current ? 'saved' : 'dirty' );
+			setStatus( stored === savedRef.current && title === savedTitleRef.current && roles.join( ',' ) === savedRolesRef.current ? 'saved' : 'dirty' );
 		}
-	}, [ stored, title ] );
+	}, [ stored, title, roles ] );
 
 	// Fit the page in the window (and keep fitting on resize until zoomed by hand).
 	const fittedRef = useRef( true );
@@ -689,9 +695,10 @@ export default function Editor() {
 	const save = async () => {
 		setStatus( 'saving' );
 		try {
-			await apiFetch( { path: `/wp/v2/evcert-designs/${ config.design }`, method: 'POST', data: { title, content: JSON.stringify( stored ) } } );
+			await apiFetch( { path: `/wp/v2/evcert-designs/${ config.design }`, method: 'POST', data: { title, content: JSON.stringify( stored ), ...( config.isDefault ? {} : { meta: { _evcert_roles: roles } } ) } } );
 			savedRef.current = stored;
 			savedTitleRef.current = title;
+			savedRolesRef.current = roles.join( ',' );
 			setStatus( 'saved' );
 		} catch ( e ) {
 			setStatus( 'error' );
@@ -820,7 +827,7 @@ export default function Editor() {
 	 */
 	const preview = () => {
 		const tab = window.open( '', '_blank' );
-		apiFetch< { url: string } >( { path: '/evcert/v1/preview', method: 'POST', data: { design: stored } } )
+		apiFetch< { url: string } >( { path: '/evcert/v1/preview', method: 'POST', data: { design: stored, role: roles[ 0 ] || '' } } )
 			.then( ( { url } ) => {
 				if ( tab ) {
 					tab.location.href = url;
@@ -1139,7 +1146,7 @@ export default function Editor() {
 						{ sidebarTab === 'element' && current && (
 							<Inspector el={ current } stored={ currentStored } design={ design } mode={ mode } tab={ tab } locale={ LOCALE } sample={ sample } onChange={ ( patch ) => update( current.id, patch ) } onBox={ ( b ) => setBox( current.id, b ) } onImage={ ( picked ) => pickImage( current.id, picked ) } />
 						) }
-						{ sidebarTab === 'design' && <DesignPanel design={ stored } mode={ mode } title={ title } status={ statusLabel } sample={ sample } defaults={ config.sample } onTitle={ setTitle } onChange={ replaceDesign } /> }
+						{ sidebarTab === 'design' && <DesignPanel design={ stored } mode={ mode } title={ title } status={ statusLabel } sample={ sample } defaults={ config.sample } onTitle={ setTitle } roles={ roles } roleLabels={ config.roles } isDefault={ config.isDefault } onRoles={ setRoles } onChange={ replaceDesign } /> }
 					</aside>
 				) }
 			</div>

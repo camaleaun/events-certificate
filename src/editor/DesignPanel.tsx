@@ -16,8 +16,7 @@ import {
 	__experimentalItemGroup as ItemGroup,
 	__experimentalNumberControl as NumberControl,
 	__experimentalToggleGroupControl as ToggleGroupControl,
-	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
-} from '@wordpress/components';
+	__experimentalToggleGroupControlOption as ToggleGroupControlOption, CheckboxControl, __experimentalVStack as VStack } from '@wordpress/components';
 import { useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import { Icon, page as pageIcon } from '@wordpress/icons';
@@ -46,6 +45,11 @@ type Props = {
 	mode: Mode;
 	title: string;
 	status: string;
+	// The template's conditions (Templates screen): the roles it applies to; the default one takes everyone else.
+	roles: string[];
+	roleLabels: Record< string, string >;
+	isDefault: boolean;
+	onRoles: ( roles: string[] ) => void;
 	sample: Record< string, string >;
 	defaults: Record< string, string >;
 	onTitle: ( title: string ) => void;
@@ -78,7 +82,7 @@ export function DropdownRow( { label, value, children }: { label: string; value:
 	);
 }
 
-export default function DesignPanel( { design, mode, title, status, sample, defaults, onTitle, onChange }: Props ) {
+export default function DesignPanel( { design, mode, title, status, roles, roleLabels, isDefault, onRoles, sample, defaults, onTitle, onChange }: Props ) {
 	const { page } = design;
 	const landscape = page.w >= page.h;
 	const sizeKey = ( Object.keys( SIZES ) as Array< keyof typeof SIZES > ).find( ( k ) => ( [ SIZES[ k ].w, SIZES[ k ].h ].sort().join() === [ page.w, page.h ].sort().join() ) ) || 'a4';
@@ -103,6 +107,28 @@ export default function DesignPanel( { design, mode, title, status, sample, defa
 			<div className="evcert-inspector__section">
 				<DropdownRow label={ __( 'Name', 'events-certificate' ) } value={ title || __( 'Certificate', 'events-certificate' ) }>
 					{ () => <TextControl __next40pxDefaultSize __nextHasNoMarginBottom label={ __( 'Name', 'events-certificate' ) } value={ title } onChange={ onTitle } /> }
+				</DropdownRow>
+				<DropdownRow
+					label={ __( 'Applies to', 'events-certificate' ) }
+					value={ isDefault ? __( 'Everyone else', 'events-certificate' ) : roles.map( ( r ) => roleLabels[ r ] ).filter( Boolean ).join( ', ' ) || __( 'Nobody yet', 'events-certificate' ) }
+				>
+					{ () =>
+						isDefault ? (
+							<p className="evcert-meta">{ __( 'The default template: certificates no other template applies to.', 'events-certificate' ) }</p>
+						) : (
+							<VStack spacing={ 2 }>
+								{ Object.entries( roleLabels ).map( ( [ key, label ] ) => (
+									<CheckboxControl
+										key={ key }
+										__nextHasNoMarginBottom
+										label={ label }
+										checked={ roles.includes( key ) }
+										onChange={ ( on ) => onRoles( on ? [ ...roles, key ].filter( ( r, i, all ) => all.indexOf( r ) === i ) : roles.filter( ( r ) => r !== key ) ) }
+									/>
+								) ) }
+							</VStack>
+						)
+					}
 				</DropdownRow>
 				<DropdownRow label={ __( 'Size', 'events-certificate' ) } value={ `${ SIZES[ sizeKey ].label } · ${ landscape ? __( 'Landscape', 'events-certificate' ) : __( 'Portrait', 'events-certificate' ) }` }>
 					{ () => (

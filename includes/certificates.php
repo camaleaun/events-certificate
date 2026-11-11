@@ -111,7 +111,8 @@ function store_design( array $design ) {
 }
 
 /**
- * The design a certificate is drawn with: the current site design, so a
+ * The design a certificate is drawn with: the current template for its role
+ * (Designs\for_certificate(), the default one otherwise), so a
  * change to the design (a logo, a date format) shows on every certificate
  * (docs/decisions/0001). What the certificate says (name, event, hours,
  * signer, code) stays frozen in the row. The version it was issued with
@@ -123,7 +124,7 @@ function store_design( array $design ) {
 function design( array $cert ) {
 	global $wpdb;
 
-	$current = Designs\get( Designs\site_design_id() );
+	$current = Designs\get( Designs\for_certificate( $cert ) );
 	if ( is_array( $current ) && isset( $current['elements'], $current['page'] ) ) {
 		return $current;
 	}
@@ -173,7 +174,7 @@ function issue( array $data ) {
 	$now                     = current_time( 'mysql', true );
 	$row['status']           = 'issued';
 	$row['locale']           = $row['locale'] ?? get_locale();
-	$row['design_hash']      = store_design( Designs\get( Designs\site_design_id() ) );
+	$row['design_hash']      = store_design( Designs\get( Designs\for_certificate( $row ) ) );
 	$row['issued_at']        = $now;
 	$row['created_at']       = $now;
 	$row['updated_at']       = $now;

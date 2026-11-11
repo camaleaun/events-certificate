@@ -34,6 +34,8 @@ require_once __DIR__ . '/includes/designs.php';
 require_once __DIR__ . '/includes/admin.php';
 require_once __DIR__ . '/includes/class-list-table.php';
 require_once __DIR__ . '/includes/admin-app.php';
+require_once __DIR__ . '/includes/templates.php';
+require_once __DIR__ . '/includes/class-templates-list-table.php';
 require_once __DIR__ . '/includes/certificates.php';
 require_once __DIR__ . '/includes/render.php';
 require_once __DIR__ . '/includes/verify.php';
@@ -53,6 +55,7 @@ Preview\bootstrap();
 Signer\bootstrap();
 Admin\bootstrap();
 AdminApp\bootstrap();
+Templates\bootstrap();
 
 // Integrations with other plugins register on this action, after every
 // plugin has loaded; each checks that its plugin is active.

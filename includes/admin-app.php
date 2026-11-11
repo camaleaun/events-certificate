@@ -42,7 +42,6 @@ function bootstrap() {
 	add_action( 'load-admin_page_' . SLUG, __NAMESPACE__ . '\set_title' );
 	add_action( 'admin_enqueue_scripts', __NAMESPACE__ . '\enqueue' );
 	add_filter( 'admin_body_class', __NAMESPACE__ . '\body_class' );
-	add_action( 'evcert_certificates_title_actions', __NAMESPACE__ . '\render_editor_link', 5 );
 }
 
 /**
@@ -197,7 +196,10 @@ function enqueue() {
 				'development' => array(
 					'screenViews' => defined( 'EVCERT_DEVELOPMENT_SCREEN_VIEWS' ) && EVCERT_DEVELOPMENT_SCREEN_VIEWS,
 				),
-				'exitUrl'     => Admin\page_url(),
+				'exitUrl'     => \EventsCertificate\Templates\url(),
+				// The template's conditions: role names, and whether it is the default (applies to everyone else).
+				'roles'       => \EventsCertificate\Designs\role_labels(),
+				'isDefault'   => \EventsCertificate\Designs\site_design_id() === (int) $design,
 				'fonts'       => $url . '/fonts',
 				'sample'      => array(
 					// The organizer who signs previews the participant too, when there is one.
@@ -255,18 +257,4 @@ function fonts_css( $base ) {
 	}
 
 	return $css;
-}
-
-/**
- * Link to the editor on the Certificates screen.
- */
-function render_editor_link() {
-	if ( ! available() ) {
-		return;
-	}
-	printf(
-		'<a class="page-title-action" href="%s">%s</a>',
-		esc_url( url( Designs\site_design_id() ) ),
-		esc_html__( 'Edit', 'events-certificate' )
-	);
 }

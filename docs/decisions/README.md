@@ -19,6 +19,7 @@ measurements are in [`../spikes/`](../spikes/).
 | [0010](0010-non-public-sites.md) | Sites that are not public print no QR code, code, verification hint or address | Accepted |
 | [0011](0011-on-record-not-authentic.md) | The certificate page says "on record" and asks to compare, never "authentic" | Accepted |
 | [0012](0012-check-page-in-the-site.md) | "Check a certificate" is a block in a page of the site; only a certificate is full-screen | Accepted |
+| [0013](0013-templates-by-condition.md) | Certificate templates chosen by role, a default for everyone else | Accepted |
 
 New decisions get the next number. A decision that is replaced keeps its file,
 with its status changed to "Replaced by NNNN".

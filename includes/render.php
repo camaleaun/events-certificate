@@ -532,13 +532,7 @@ function values( array $cert ) {
 	$data   = is_array( $data ) ? $data : array();
 	$issued = strtotime( ( $cert['issued_at'] ?? 'now' ) . ' UTC' );
 	$start  = ! empty( $cert['event_start'] ) ? strtotime( $cert['event_start'] . ' UTC' ) : $issued;
-	$roles  = array(
-		'attendee'  => __( 'Attendee', 'events-certificate' ),
-		'speaker'   => __( 'Speaker', 'events-certificate' ),
-		'organizer' => __( 'Organizer', 'events-certificate' ),
-		'volunteer' => __( 'Volunteer', 'events-certificate' ),
-		'sponsor'   => __( 'Sponsor', 'events-certificate' ),
-	);
+	$roles  = \EventsCertificate\Designs\role_labels();
 	$hours  = isset( $cert['hours'] ) && '' !== (string) $cert['hours'] ? (float) $cert['hours'] : null;
 	// The signer is part of the look, like the design: the current one; what was recorded at issue only when none is set.
 	$signer = \EventsCertificate\Signer\current();

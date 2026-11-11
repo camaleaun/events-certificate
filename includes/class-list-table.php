@@ -80,6 +80,7 @@ class List_Table extends \WP_List_Table {
 			'name'      => __( 'Name', 'events-certificate' ),
 			'code'      => __( 'Code', 'events-certificate' ),
 			'event'     => __( 'Event', 'events-certificate' ),
+			'template'  => __( 'Template', 'events-certificate' ),
 			'hours'     => __( 'Workload', 'events-certificate' ),
 			'source'    => __( 'Source', 'events-certificate' ),
 			'status'    => __( 'Status', 'events-certificate' ),
@@ -315,6 +316,20 @@ class List_Table extends \WP_List_Table {
 	 */
 	protected function column_event( $item ) {
 		return esc_html( \EventsCertificate\Render\event_title( $item ) );
+	}
+
+	/**
+	 * The template that draws it now (by its role).
+	 *
+	 * @param array<string, mixed> $item Certificate.
+	 * @return string
+	 */
+	protected function column_template( $item ) {
+		$id    = \EventsCertificate\Designs\for_certificate( $item );
+		$title = get_the_title( $id );
+		$title = '' !== $title ? $title : __( '(no title)', 'events-certificate' );
+
+		return \EventsCertificate\AdminApp\available() ? sprintf( '<a href="%s">%s</a>', esc_url( \EventsCertificate\AdminApp\url( $id ) ), esc_html( $title ) ) : esc_html( $title );
 	}
 
 	/**

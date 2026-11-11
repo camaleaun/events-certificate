@@ -109,6 +109,7 @@ function register_route() {
 					'type'     => 'object',
 					'required' => true,
 				),
+				'role'   => array( 'type' => 'string' ),
 			),
 		)
 	);
@@ -124,6 +125,12 @@ function store( WP_REST_Request $request ) {
 	$design = $request['design'];
 	if ( ! is_array( $design ) || ! isset( $design['page'], $design['elements'] ) || ! is_array( $design['elements'] ) ) {
 		return new WP_Error( 'evcert_design', 'Not a design.', array( 'status' => 400 ) );
+	}
+	// The template's first role is the preview's role (a volunteers' template shows a volunteer).
+	$role = (string) $request['role'];
+	if ( isset( \EventsCertificate\Designs\role_labels()[ $role ] ) ) {
+		$design['sample']         = (array) ( $design['sample'] ?? array() );
+		$design['sample']['role'] = $design['sample']['role'] ?? \EventsCertificate\Designs\role_labels()[ $role ];
 	}
 	set_transient( key( get_current_user_id() ), $design, HOUR_IN_SECONDS );
 
