@@ -1,0 +1,14 @@
+// The Generator screen of the admin: the block editor's own look around the certificate sample and the form.
+//
+// Built by `npm run build` (bin/build-assets.mjs) into assets/css/generator.css and generator.min.css.
+// Keep the order of the @use rules: where two rules have the same specificity, the later one wins.
+
+@use 'generator/screen';
+@use 'generator/header';
+@use 'generator/body';
+@use 'generator/left-panel';
+@use 'generator/canvas';
+@use 'generator/sidebar';
+@use 'generator/responsive';
+@use 'generator/csv';
+@use 'generator/tutorial-modal';

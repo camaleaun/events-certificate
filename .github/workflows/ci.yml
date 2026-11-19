@@ -1,0 +1,98 @@
+# Builds everything the repository does not hold (build/, build-signer/, build-blocks/, assets/css, assets/js)
+# and runs the checks that need no WordPress site: types, PHP lint and coding standards.
+# The PHPUnit tests and Plugin Check run against a WordPress site (bin/plugin-check.sh, composer test).
+name: CI
+
+on:
+  push:
+    branches: [ trunk, 'release/**' ]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  changelog:
+    name: Changelog entry
+    # A pull request that changes what ships adds a file to changelog/ (see .github/CONTRIBUTING.md).
+    # Release branches compile and delete the files, so they are exempt.
+    if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: An entry when the plugin changes, and every entry well formed
+        run: |
+          base="origin/${GITHUB_BASE_REF}"
+          changed=$(git diff --name-only "$base"...HEAD)
+          echo "$changed"
+          for f in changelog/*; do
+            [ -f "$f" ] || continue
+            sed -n 1p "$f" | grep -Eq '^Significance: (patch|minor|major)$' &&
+              sed -n 2p "$f" | grep -Eq '^Type: (add|fix|update|dev)$' &&
+              [ -z "$(sed -n 3p "$f")" ] && [ -n "$(sed -n '4,$p' "$f" | tr -d '[:space:]')" ] ||
+              { echo "::error file=$f::Expected Significance, Type, a blank line and the entry."; exit 1; }
+          done
+          if grep -Eq '^(includes/|src/|routes/|templates/|blocks/|events-certificates\.php$|uninstall\.php$|readme\.txt$)' <<< "$changed" &&
+             ! git diff --name-only --diff-filter=A "$base"...HEAD | grep -q '^changelog/'; then
+            echo "::error::This pull request changes the plugin: add a changelog/ entry (see .github/CONTRIBUTING.md)."
+            exit 1
+          fi
+
+  versions:
+    name: Versions agree
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Header, constant and Stable tag
+        run: |
+          header=$(sed -n 's/^ \* Version: *//p' events-certificates.php)
+          constant=$(sed -n "s/^const VERSION = '\(.*\)';$/\1/p" events-certificates.php)
+          stable=$(sed -n 's/^Stable tag: *//p' readme.txt)
+          echo "header=$header constant=$constant stable=$stable"
+          [ -n "$header" ] && [ "$header" = "$constant" ]
+          # A final: Stable tag is the version. A dev or pre-release (trunk's 0.72-dev, 0.71-rc.1):
+          # Stable tag is a final that is not after its series (it may be the series' own final
+          # until that first release is made).
+          case "$header" in
+            *-*) [[ "$stable" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]] && [ "$(printf '%s\n' "$stable" "${header%%-*}" | sort -V | head -n1)" = "$stable" ] ;;
+            *) [ "$header" = "$stable" ] ;;
+          esac
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Build the editor and the assets
+        run: |
+          npm ci
+          npm run build
+
+      - name: README.md is made from readme.txt
+        run: |
+          npm run readme
+          git diff --exit-code README.md || { echo "::error::README.md is out of date: run npm run readme and commit it."; exit 1; }
+
+      - name: Types
+        run: npm run check-types
+
+      - name: JavaScript tests
+        run: npm run test:js
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+          tools: composer
+
+      - name: PHP lint and coding standards
+        run: |
+          composer install --no-progress --prefer-dist
+          composer lint
+          composer phpcs

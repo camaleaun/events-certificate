@@ -1,0 +1,48 @@
+.evcert-app,
+body.evcert-quick-generator-page {
+	--bg: #f4f5f8;
+	--surface: #ffffff;
+	--ink: #1b1f2e;
+	--muted: #5d6478;
+	--line: #dde0e8;
+	--accent: #3858e9;
+	--accent-ink: #ffffff;
+	--accent-soft: #e8ecfd;
+	--warn-bg: #fff6e0;
+	--warn-ink: #6b4a00;
+	--font-ui: "CertSans", "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+	--font-display: "CertSerif", "Instrument Serif", Georgia, "Times New Roman", serif;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme="light"]) .evcert-app,
+	:root:not([data-theme="light"]) body.evcert-quick-generator-page {
+		--bg: #12141b;
+		--surface: #1b1e28;
+		--ink: #e8eaf2;
+		--muted: #a0a6b8;
+		--line: #2e3242;
+		--accent: #7b93ff;
+		--accent-ink: #0d1020;
+		--accent-soft: #252c4d;
+		--warn-bg: #3a2f12;
+		--warn-ink: #f3d68a;
+		color-scheme: dark;
+	}
+
+}
+
+:root[data-theme="dark"] .evcert-app,
+:root[data-theme="dark"] body.evcert-quick-generator-page {
+	--bg: #12141b;
+	--surface: #1b1e28;
+	--ink: #e8eaf2;
+	--muted: #a0a6b8;
+	--line: #2e3242;
+	--accent: #7b93ff;
+	--accent-ink: #0d1020;
+	--accent-soft: #252c4d;
+	--warn-bg: #3a2f12;
+	--warn-ink: #f3d68a;
+	color-scheme: dark;
+}

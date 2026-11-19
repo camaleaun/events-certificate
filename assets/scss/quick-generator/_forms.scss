@@ -1,0 +1,134 @@
+.evcert-app .row {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+	gap: 12px;
+}
+
+.evcert-app label.f {
+	display: grid;
+	gap: 4px;
+	font-size: 13px;
+	color: var(--muted);
+	min-width: 0;
+}
+
+.evcert-app label.f > span small {
+	color: var(--muted);
+	font-weight: 400;
+}
+
+.evcert-app input[type=text],
+.evcert-app input[type=date],
+.evcert-app input[type=time],
+.evcert-app input[type=url],
+.evcert-app textarea {
+	width: 100%;
+	font: inherit;
+	color: var(--ink);
+	background: var(--bg);
+	border: 1px solid var(--line);
+	border-radius: 6px;
+	padding: 8px 10px;
+}
+
+.evcert-app textarea {
+	min-height: 84px;
+	resize: vertical;
+}
+
+.evcert-app input:focus-visible,
+.evcert-app textarea:focus-visible,
+.evcert-app button:focus-visible,
+.evcert-app .drop:focus-within {
+	outline: 2px solid var(--accent);
+	outline-offset: 1px;
+}
+
+.evcert-app .check {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	font-size: 14px;
+	color: var(--ink);
+}
+
+.evcert-app button {
+	font: inherit;
+	cursor: pointer;
+	border-radius: 6px;
+	border: 1px solid var(--line);
+	background: var(--surface);
+	color: var(--ink);
+	padding: 8px 14px;
+}
+
+.evcert-app button:hover {
+	border-color: var(--accent);
+}
+
+.evcert-app button.primary {
+	background: var(--accent);
+	color: var(--accent-ink);
+	border-color: var(--accent);
+	font-weight: 600;
+}
+
+.evcert-app button.primary:hover {
+	filter: brightness(1.08);
+}
+
+.evcert-app button.small {
+	padding: 4px 10px;
+	font-size: 13px;
+}
+
+.evcert-app button:disabled {
+	opacity: .5;
+	cursor: progress;
+}
+
+.evcert-app .drop {
+	border: 1.5px dashed var(--line);
+	border-radius: 8px;
+	padding: 14px;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.evcert-app .drop.over {
+	border-color: var(--accent);
+	background: var(--accent-soft);
+}
+
+.evcert-app .drop p {
+	margin: 0;
+	font-size: 13px;
+	color: var(--muted);
+}
+
+.evcert-app .drop input[type=file] {
+	max-width: 100%;
+	font-size: 13px;
+	color: var(--muted);
+}
+
+.evcert-app .note {
+	font-size: 13px;
+	padding: 8px 12px;
+	border-radius: 6px;
+	background: var(--warn-bg);
+	color: var(--warn-ink);
+}
+
+.evcert-app .note[hidden] {
+	display: none;
+}
+
+.evcert-app .status {
+	font-size: 13px;
+	color: var(--muted);
+	min-height: 1.2em;
+}

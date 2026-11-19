@@ -1,0 +1,19 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "events-certificates/event-fields",
+	"version": "1.0.0",
+	"title": "Generator: event",
+	"category": "events-certificates",
+	"icon": "calendar-alt",
+	"description": "The event section of the certificate generator. It holds the event's fields.",
+	"textdomain": "events-certificates",
+	"attributes": {},
+	"supports": {
+		"html": false,
+		"className": false,
+		"inserter": true
+	},
+	"editorScript": "evcert-blocks-editor",
+	"style": "evcert-quick-generator"
+}

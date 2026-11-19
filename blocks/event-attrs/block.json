@@ -1,0 +1,34 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "events-certificates/event-attrs",
+	"version": "1.0.0",
+	"title": "Generator: extras",
+	"category": "events-certificates",
+	"icon": "admin-links",
+	"description": "Speakers, event link and the workload.",
+	"parent": [
+		"events-certificates/event-fields"
+	],
+	"textdomain": "events-certificates",
+	"attributes": {
+		"speakers": {
+			"type": "string",
+			"default": ""
+		},
+		"link": {
+			"type": "string",
+			"default": ""
+		},
+		"showHours": {
+			"type": "boolean",
+			"default": true
+		}
+	},
+	"supports": {
+		"html": false,
+		"className": false
+	},
+	"editorScript": "evcert-blocks-editor",
+	"style": "evcert-quick-generator"
+}

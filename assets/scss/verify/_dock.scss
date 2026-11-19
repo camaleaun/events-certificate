@@ -1,0 +1,264 @@
+/*
+ * Dock: like WordPress Playground's (website/src/components/dock): welded to the bottom edge of the
+ * screen, only its top corners round, lifted by soft shadows and a light rim; a row with the code
+ * and the corner buttons, and a row of tools with an icon over a label.
+ */
+.evcert-dock {
+	position: fixed;
+	z-index: 10;
+	left: 50%;
+	bottom: 0;
+	transform: translateX(-50%);
+	/* Content-based width, so it stays put while the tools change. */
+	width: max-content;
+	max-width: calc(100vw - 24px);
+	color: var(--dock-fg);
+	/* The whole bar is a handle for the eye, not text to select. */
+	-webkit-user-select: none;
+	user-select: none;
+}
+.evcert-dock input { -webkit-user-select: text; user-select: text; }
+.evcert-dock__bar {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 8px 8px 10px;
+	background: var(--dock);
+	border-radius: 18px 18px 0 0;
+	/* The bottom is clipped flush, so it reads as part of the screen's edge. */
+	clip-path: inset(0 round 18px 18px 0 0);
+	/* drop-shadow follows the clipped shape: two soft casts lift the bar, a tight one defines its edge on light backgrounds. */
+	filter: drop-shadow(0 -14px 34px rgba(26, 25, 25, 0.5))
+		drop-shadow(0 -3px 10px rgba(26, 25, 25, 0.34))
+		drop-shadow(0 0 1px rgba(26, 25, 25, 0.6));
+	/* A light rim inside (the brighter top line reads as the lit edge of a raised panel). */
+	box-shadow: inset 0 0 0 1px rgba(246, 246, 246, 0.16), inset 0 2px 0 -1px rgba(246, 246, 246, 0.26);
+}
+.evcert-dock__row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.evcert-dock__status {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	height: 32px;
+	padding: 0 10px 0 6px;
+	border: 0;
+	border-radius: 8px;
+	background: var(--dock-field);
+	color: var(--dock-fg);
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+}
+.evcert-dock__status svg { width: 20px; height: 20px; }
+.evcert-dock__status.is-valid svg, .evcert-dock__heading.is-valid { color: var(--ok); }
+.evcert-dock__status.is-replaced svg, .evcert-dock__heading.is-replaced { color: var(--warn); }
+.evcert-dock__status.is-revoked svg, .evcert-dock__heading.is-revoked { color: var(--bad); }
+.evcert-dock__code {
+	display: inline-flex;
+	flex: 1;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	min-width: 0;
+	height: 32px;
+	padding: 0 12px;
+	border: 0;
+	border-radius: 8px;
+	background: var(--dock-field);
+	cursor: pointer;
+	color: var(--dock-fg);
+	font: 15px/1 ui-monospace, Menlo, Consolas, monospace;
+	letter-spacing: 0.08em;
+	white-space: nowrap;
+	transition: background 120ms ease;
+}
+.evcert-dock__code svg { width: 20px; height: 20px; }
+.evcert-dock__code.is-valid svg { color: var(--ok); }
+.evcert-dock__code.is-replaced svg { color: var(--warn); }
+.evcert-dock__code.is-revoked svg { color: var(--bad); }
+.evcert-dock__code[aria-expanded="true"] { background: var(--dock-active); }
+.evcert-dock__spacer { flex: 1; min-width: 12px; }
+.evcert-dock__icon,
+.evcert-dock__tool {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border: 0;
+	background: transparent;
+	color: var(--dock-item) !important;
+	font: inherit;
+	text-decoration: none;
+	cursor: pointer;
+	transition: background 120ms ease, color 120ms ease;
+}
+.evcert-dock__icon { flex: none; width: 32px; height: 32px; border-radius: 8px; }
+.evcert-dock__icon svg { width: 20px; height: 20px; }
+/* Tools: an icon over its label, the same height whatever the label. */
+.evcert-dock__tools {
+	display: flex;
+	align-items: stretch;
+	justify-content: safe center;
+	gap: 2px;
+	overflow-x: auto;
+	overflow-y: hidden;
+	scrollbar-width: none;
+}
+.evcert-dock__tools::-webkit-scrollbar { display: none; }
+.evcert-dock__tool {
+	flex: none;
+	flex-direction: column;
+	gap: 3px;
+	min-width: 72px;
+	min-height: 52px;
+	padding: 8px 7px 7px;
+	border-radius: 12px;
+	font-size: 11px;
+	font-weight: 500;
+	letter-spacing: 0.015em;
+	line-height: 1;
+	white-space: nowrap;
+}
+.evcert-dock__tool svg { display: block; width: 24px; height: 24px; fill: currentColor; }
+.evcert-dock__tool.is-icon { min-width: 48px; }
+.evcert-dock__glyph { font-size: 20px; line-height: 24px; }
+/* A divider before the last group (Details), in the gap: the button's own highlight stays flush. */
+.evcert-dock__tools > .evcert-dock__tool:last-child { position: relative; margin-left: 9px; }
+.evcert-dock__tools > .evcert-dock__tool:last-child::before {
+	content: "";
+	position: absolute;
+	top: 50%;
+	left: -5px;
+	width: 1px;
+	height: 24px;
+	transform: translateY(-50%);
+	background: rgba(246, 246, 246, 0.16);
+}
+.evcert-dock__icon:hover,
+.evcert-dock__tool:hover,
+.evcert-dock__status:hover,
+.evcert-dock__code:hover { background: var(--dock-hover); }
+.evcert-dock__icon:hover,
+.evcert-dock__tool:hover { color: #fff !important; }
+/* The open one is stronger than hover: the fill alone says "current". */
+.evcert-dock__tool[aria-expanded="true"] { background: var(--dock-active); color: #fff !important; }
+/* The main action (the PDF) is filled with the accent. */
+.evcert-dock__tool.is-primary { background: var(--dock-accent); color: #fff !important; }
+.evcert-dock__tool.is-primary:hover { background: var(--dock-accent-hover); }
+.evcert-dock :focus-visible { outline: 2px solid var(--dock-accent-soft); outline-offset: -2px; }
+@media (prefers-reduced-motion: reduce) {
+	.evcert-dock__code,
+	.evcert-dock__icon,
+	.evcert-dock__tool { transition: none; }
+}
+
+/* Popovers above the Dock. */
+.evcert-dock__pop {
+	position: absolute;
+	bottom: calc(100% + 8px);
+	right: 0;
+	min-width: 260px;
+	max-width: min(360px, calc(100vw - 32px));
+	padding: 14px 16px;
+	background: var(--dock);
+	border-radius: 12px;
+	box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+.evcert-dock__pop[hidden] { display: none; }
+.evcert-dock__heading { margin: 0 0 4px; font-weight: 600; }
+.evcert-dock__note { margin: 0 0 10px; color: var(--dock-muted); }
+.evcert-dock__note a { color: #8ea2ff; }
+.evcert-dock__pop dl { margin: 0; display: grid; gap: 8px; }
+.evcert-dock__pop dt { color: var(--dock-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+.evcert-dock__pop dd { margin: 0; overflow-wrap: anywhere; }
+.evcert-dock__pop.is-menu { min-width: 180px; padding: 6px; }
+.evcert-dock__pop.is-menu a {
+	display: block;
+	padding: 8px 12px;
+	border-radius: 8px;
+	color: var(--dock-fg);
+	text-decoration: none;
+}
+.evcert-dock__pop.is-menu a:hover { background: var(--dock-hover); }
+.evcert-dock__item {
+	display: flex !important;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	padding: 8px 12px;
+	border: 0;
+	border-radius: 8px;
+	background: transparent;
+	color: var(--dock-fg);
+	font: inherit;
+	text-align: left;
+	text-decoration: none;
+	cursor: pointer;
+}
+.evcert-dock__item[hidden] { display: none !important; }
+.evcert-dock__item svg { width: 20px; height: 20px; flex: none; }
+.evcert-dock__item:hover { background: var(--dock-hover); }
+.evcert-dock__item.is-linkedin-profile { font-weight: 600; }
+
+.evcert-dock__pop.is-menu a[aria-current]::after { content: " ✓"; color: var(--ok); }
+
+/*
+ * Dragging (assets/es/verify.js, after Playground's Dock): sideways on a wide screen, the bar centred on
+ * --dock-center. Past an edge it shrinks toward that corner, previewing the button it folds into.
+ */
+@media (min-width: 1025px) {
+	.evcert-dock.is-dragged { left: var(--dock-center); }
+	/*
+	 * The grab sheen (Playground's "dock-sheen"): light pools along the bar's top edge under the pointer, with a
+	 * bright hairline on the very edge: invisible at rest, it answers when the pointer comes near and while dragging.
+	 * Driven by --sheen-x and --sheen-o, written by assets/es/verify.js.
+	 */
+	.evcert-dock__bar { position: relative; }
+	.evcert-dock__sheen {
+		position: absolute;
+		inset: 0 0 auto;
+		height: 30px;
+		border-radius: 18px 18px 0 0;
+		overflow: hidden;
+		opacity: var(--sheen-o, 0);
+		pointer-events: none;
+		transition: opacity 0.3s ease;
+		z-index: 3;
+	}
+	.evcert-dock__sheen::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: radial-gradient(180px 32px at var(--sheen-x, 50%) 0, rgba(246, 246, 246, 0.27), rgba(246, 246, 246, 0.06) 55%, transparent 80%);
+	}
+	.evcert-dock__sheen::after {
+		content: '';
+		position: absolute;
+		inset: 0 0 auto;
+		height: 2px;
+		background: radial-gradient(110px 3px at var(--sheen-x, 50%) 1px, rgba(246, 246, 246, 0.85), rgba(246, 246, 246, 0.16) 62%, transparent 85%);
+	}
+	.evcert-dock[data-docked] .evcert-dock__sheen { display: none; }
+	@media (prefers-reduced-motion: reduce) { .evcert-dock__sheen { transition: none; } }
+	.evcert-dock__bar { cursor: grab; touch-action: none; }
+	.evcert-dock.is-dragging,
+	.evcert-dock.is-dragging .evcert-dock__bar { cursor: grabbing; }
+}
+.evcert-dock__bar { transition: transform 0.2s ease, opacity 0.2s ease; }
+.evcert-dock[data-will-corner] .evcert-dock__bar {
+	opacity: 0.82;
+	transform: scale(0.8);
+	clip-path: inset(0 round 20px);
+}
+.evcert-dock[data-will-corner="left"] .evcert-dock__bar { transform-origin: left bottom; }
+.evcert-dock[data-will-corner="right"] .evcert-dock__bar { transform-origin: right bottom; }
+.evcert-dock.is-folding { pointer-events: none; }
+@media (prefers-reduced-motion: reduce) {
+	.evcert-dock__bar { transition: none; }
+	.evcert-dock[data-will-corner] .evcert-dock__bar { opacity: 0.55; transform: none; }
+}
+.evcert-dock__sheen { display: none; }
+@media (min-width: 1025px) { .evcert-dock__sheen { display: block; } }

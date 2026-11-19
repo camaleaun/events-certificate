@@ -1,0 +1,31 @@
+/* The canvas stage (evcert-stage): the sheet aligned to the top (keeps the
+ * A4 aspect ratio; height fills, width fit), centred horizontally on grey. */
+.evcert-generator__canvas {
+	flex: 1;
+	min-width: 0;
+	min-height: 0;
+	display: flex;
+	align-items: flex-start;
+	justify-content: center;
+	padding: 32px;
+	overflow: auto;
+	background: #f0f0f0;
+}
+
+/* The sheet (evcert-canvas): the generator-preview SVG on a white card,
+ * keeping the A4 landscape ratio. Width fills the canvas comfortably; height
+ * derives from it (aspect-ratio) so the certificate is never stretched. The
+ * grey stage behind it stays untouched and fills the full canvas height. */
+.evcert-generator__sheet {
+	width: 100%;
+	max-width: 100%;
+	aspect-ratio: 297 / 210;
+	background: #fff;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12), 0 12px 32px rgba(0, 0, 0, 0.08);
+	overflow: hidden;
+}
+.evcert-generator__sheet svg {
+	width: 100%;
+	height: 100%;
+	display: block;
+}

@@ -1,0 +1,27 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "events-certificates/signature",
+	"version": "1.0.0",
+	"title": "Generator: signature",
+	"category": "events-certificates",
+	"icon": "edit",
+	"description": "Who signs the certificates, and the signature image.",
+	"textdomain": "events-certificates",
+	"attributes": {
+		"signName": {
+			"type": "string",
+			"default": ""
+		},
+		"signRole": {
+			"type": "string",
+			"default": ""
+		}
+	},
+	"supports": {
+		"html": false,
+		"className": false
+	},
+	"editorScript": "evcert-blocks-editor",
+	"style": "evcert-quick-generator"
+}

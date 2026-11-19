@@ -1,0 +1,35 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "events-certificates/mine",
+	"title": "Get my certificate",
+	"category": "widgets",
+	"icon": "awards",
+	"description": "A form where someone types their e-mail to get their certificate.",
+	"keywords": [
+		"certificate",
+		"email",
+		"get",
+		"mine"
+	],
+	"textdomain": "events-certificates",
+	"attributes": {
+		"title": {
+			"type": "string",
+			"default": ""
+		}
+	},
+	"supports": {
+		"html": false,
+		"align": [
+			"wide"
+		],
+		"spacing": {
+			"margin": true,
+			"padding": true
+		}
+	},
+	"editorScript": "evcert-blocks-editor",
+	"style": "file:./style.css",
+	"render": "file:./render.php"
+}

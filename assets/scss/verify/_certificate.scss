@@ -1,0 +1,26 @@
+/* The certificate, as large as the screen allows; the Dock floats over it. */
+.evcert-verify__stage {
+	position: fixed;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 24px;
+}
+.evcert-verify__art {
+	position: relative;
+	flex: none;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08), 0 12px 40px rgba(0, 0, 0, 0.12);
+	background: var(--card);
+	overflow: hidden;
+}
+.evcert-verify__mode { position: absolute; inset: 0; }
+.evcert-verify__mode .evcert-page { transform-origin: 0 0; transform: scale(var(--evcert-scale, 1)); }
+.evcert-verify__mode.is-dark { display: none; }
+:root[data-mode="dark"] .evcert-verify__mode.is-light { display: none; }
+:root[data-mode="dark"] .evcert-verify__mode.is-dark { display: block; }
+@media (prefers-color-scheme: dark) {
+	:root:not([data-mode="light"]) .evcert-verify__mode.is-light { display: none; }
+	:root:not([data-mode="light"]) .evcert-verify__mode.is-dark { display: block; }
+}
+.evcert-verify__art strong { font-weight: 600; }

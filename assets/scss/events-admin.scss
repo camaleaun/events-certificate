@@ -1,0 +1,65 @@
+/* Events screen: participants' status badges and the event form. */
+.evcert-badge {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 2px;
+	background: #f0f0f1;
+	color: #1d2327;
+	font-size: 12px;
+	line-height: 1.6;
+	white-space: nowrap;
+}
+.evcert-badge.is-attended {
+	background: #edfaef;
+	color: #00450c;
+}
+.evcert-badge.is-no_show {
+	background: #fcf0f1;
+	color: #8a2424;
+}
+.evcert-event__to {
+	margin: 0 6px;
+}
+.evcert-event__add {
+	max-width: 960px;
+}
+.evcert-event .column-status,
+.evcert-event .column-role,
+.evcert-event .column-source {
+	width: 12%;
+}
+.evcert-event .column-certificate {
+	width: 20%;
+}
+.evcert-event__downloads {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin: 8px 0 12px;
+}
+.evcert-gatherpress {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+	margin: 0 0 8px 8px;
+	vertical-align: middle;
+}
+.evcert-event .evcert-gatherpress {
+	display: flex;
+	margin: 0 0 12px;
+}
+
+/* The people list: roles and certificates are the list table's own text. */
+.evcert-event .column-roles { width: 16%; }
+.evcert-event .column-certificates { width: 24%; }
+
+/* Hours by role on the event form: one small field per role. */
+.evcert-event__role-hours {
+	display: inline-flex;
+	flex-direction: column;
+	gap: 2px;
+	margin: 0 12px 8px 0;
+	font-size: 12px;
+}

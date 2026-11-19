@@ -1,0 +1,14 @@
+/* The editor body (evcert-body): left panel + canvas + sidebar. The <form>
+ * sits between the header and the body, so it must stretch too for the
+ * height to reach the bottom of the screen. */
+.evcert-generator form {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+}
+.evcert-generator__body {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+}

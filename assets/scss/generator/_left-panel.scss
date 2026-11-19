@@ -1,0 +1,72 @@
+/* The left panel (evcert-left-panel), 350px drawer like the editor's
+ * Inserter/List view: hidden on open, shown by the header toggle. */
+.evcert-generator__left-panel {
+	display: none;
+	width: 350px;
+	flex: none;
+	border-right: 1px solid #e0e0e0;
+	overflow: auto;
+	background: #fff;
+}
+.evcert-generator__left-panel.is-open {
+	display: block;
+}
+.evcert-generator__left-head {
+	padding: 12px 16px;
+	border-bottom: 1px solid #e0e0e0;
+	font-size: 13px;
+	font-weight: 600;
+	color: #1e1e1e;
+}
+.evcert-generator__left-panel > #evcert-generator-left-root {
+	width: 100%;
+	box-sizing: border-box;
+}
+.evcert-generator__steps {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+.evcert-generator__step {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	min-height: 36px;
+	padding: 6px 8px;
+	border-radius: 2px;
+}
+.evcert-generator__step:hover {
+	background: #f0f0f0;
+}
+.evcert-generator__step.is-active {
+	background: #e6edf8;
+}
+.evcert-generator__step.is-active .evcert-generator__step-num {
+	background: #3858e9;
+	color: #fff;
+}
+.evcert-generator__step.is-active .evcert-generator__step-label {
+	color: #1d2327;
+	font-weight: 500;
+}
+.evcert-generator__step-num {
+	flex: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	background: #f0f0f0;
+	color: #1e1e1e;
+	font-size: 12px;
+	font-weight: 500;
+}
+.evcert-generator__step-label {
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 13px;
+	color: #1e1e1e;
+}

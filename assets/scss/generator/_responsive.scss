@@ -1,0 +1,34 @@
+@media (max-width: 782px) {
+	.evcert-generator {
+		top: 46px;
+	}
+	.evcert-generator__header-center {
+		display: none;
+	}
+	.evcert-generator__header {
+		grid-template-columns: 1fr auto;
+	}
+	.evcert-generator__body {
+		flex-direction: column;
+	}
+	.evcert-generator__left-panel {
+		width: auto;
+		border-right: 0;
+		border-bottom: 1px solid #e0e0e0;
+	}
+	.evcert-generator__steps {
+		display: flex;
+		gap: 4px;
+	}
+	.evcert-generator__step:hover {
+		background: transparent;
+	}
+	.evcert-generator__sidebar {
+		width: auto;
+		border-left: 0;
+		border-top: 1px solid #e0e0e0;
+	}
+	.evcert-generator__canvas {
+		padding: 24px;
+	}
+}

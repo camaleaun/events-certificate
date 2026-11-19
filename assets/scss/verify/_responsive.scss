@@ -1,0 +1,8 @@
+/* Up to a tablet the Dock spans the screen's width, welded to the bottom edge. */
+@media (max-width: 1024px) {
+	.evcert-dock { left: 0; right: 0; width: auto; max-width: none; transform: none; }
+}
+@media (max-width: 600px) {
+	.evcert-verify__stage { padding: 12px; }
+	.evcert-dock__tool { min-width: 56px; padding: 8px 4px 7px; }
+}

@@ -1,0 +1,25 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "events-certificates/preview",
+	"version": "1.0.0",
+	"title": "Generator: preview",
+	"category": "events-certificates",
+	"icon": "visibility",
+	"description": "The certificate preview and the download buttons.",
+	"textdomain": "events-certificates",
+	"attributes": {
+		"accent": {
+			"type": "string",
+			"default": "#3858e9"
+		}
+	},
+	"supports": {
+		"html": false,
+		"className": false
+	},
+	"editorScript": "evcert-blocks-editor",
+	"style": "evcert-quick-generator",
+	"viewScript": "evcert-quick-generator",
+	"editorStyle": "evcert-generator-sheet"
+}

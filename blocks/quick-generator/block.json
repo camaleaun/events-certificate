@@ -1,0 +1,74 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "events-certificates/quick-generator",
+	"version": "1.0.0",
+	"title": "Certificate generator",
+	"category": "events-certificates",
+	"icon": "awards",
+	"description": "The whole certificate generator for meetups: form, participants and preview.",
+	"keywords": [
+		"certificate",
+		"meetup",
+		"generator"
+	],
+	"textdomain": "events-certificates",
+	"attributes": {
+		"community": {
+			"type": "string",
+			"default": ""
+		},
+		"title": {
+			"type": "string",
+			"default": ""
+		},
+		"venue": {
+			"type": "string",
+			"default": ""
+		},
+		"city": {
+			"type": "string",
+			"default": ""
+		},
+		"speakers": {
+			"type": "string",
+			"default": ""
+		},
+		"link": {
+			"type": "string",
+			"default": ""
+		},
+		"signName": {
+			"type": "string",
+			"default": ""
+		},
+		"signRole": {
+			"type": "string",
+			"default": ""
+		},
+		"showHours": {
+			"type": "boolean",
+			"default": true
+		},
+		"accent": {
+			"type": "string",
+			"default": "#3858e9"
+		},
+		"logoId": {
+			"type": "number",
+			"default": 0
+		},
+		"logoUrl": {
+			"type": "string",
+			"default": ""
+		}
+	},
+	"supports": {
+		"html": false,
+		"className": false
+	},
+	"editorScript": "evcert-blocks-editor",
+	"style": "evcert-quick-generator",
+	"viewScript": "evcert-quick-generator",
+	"editorStyle": "evcert-generator-sheet"
+}

@@ -1,0 +1,15 @@
+/* The design editor takes the screen below the admin bar, like the block editor in WordPress 7.1. */
+body.evcert-editor-screen #adminmenumain,
+body.evcert-editor-screen #wpfooter,
+body.evcert-editor-screen .notice,
+body.evcert-editor-screen .update-nag {
+	display: none !important;
+}
+body.evcert-editor-screen #wpcontent,
+body.evcert-editor-screen #wpbody-content {
+	margin: 0 !important;
+	padding: 0 !important;
+}
+body.evcert-editor-screen {
+	overflow: hidden;
+}

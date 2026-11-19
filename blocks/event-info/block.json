@@ -1,0 +1,38 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "events-certificates/event-info",
+	"version": "1.0.0",
+	"title": "Generator: event info",
+	"category": "events-certificates",
+	"icon": "id",
+	"description": "Community, logo and title of the meetup.",
+	"parent": [
+		"events-certificates/event-fields"
+	],
+	"textdomain": "events-certificates",
+	"attributes": {
+		"community": {
+			"type": "string",
+			"default": ""
+		},
+		"title": {
+			"type": "string",
+			"default": ""
+		},
+		"logoId": {
+			"type": "number",
+			"default": 0
+		},
+		"logoUrl": {
+			"type": "string",
+			"default": ""
+		}
+	},
+	"supports": {
+		"html": false,
+		"className": false
+	},
+	"editorScript": "evcert-blocks-editor",
+	"style": "evcert-quick-generator"
+}

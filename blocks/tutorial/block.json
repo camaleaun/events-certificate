@@ -1,0 +1,18 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "events-certificates/tutorial",
+	"version": "1.0.0",
+	"title": "Generator: Meetup step by step",
+	"category": "events-certificates",
+	"icon": "editor-ol",
+	"description": "How to download the attendee list from Meetup, in four steps.",
+	"textdomain": "events-certificates",
+	"attributes": {},
+	"supports": {
+		"html": false,
+		"className": false
+	},
+	"editorScript": "evcert-blocks-editor",
+	"style": "evcert-quick-generator"
+}

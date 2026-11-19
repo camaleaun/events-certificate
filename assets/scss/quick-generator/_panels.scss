@@ -1,0 +1,43 @@
+.evcert-app .panel {
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: 10px;
+	padding: 20px;
+	display: grid;
+	gap: 14px;
+}
+
+/* Blocks nest inside the panel (each block draws its own .evcert-app wrapper): let their fields take part in the panel's grid. */
+.evcert-app .panel > .evcert-app {
+	display: contents;
+}
+
+.evcert-app .stack {
+	display: grid;
+	gap: 16px;
+	min-width: 0;
+}
+
+.evcert-app .panel h2 {
+	margin: 0;
+	font-size: 12px;
+	letter-spacing: .08em;
+	text-transform: uppercase;
+	color: var(--accent);
+	font-weight: 600;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 8px;
+}
+
+/* In the block editor the fields of a panel are inner blocks, each in a wrapper of the editor's: lay them out like the panel's own grid. */
+.evcert-app .panel .block-editor-block-list__layout {
+	display: grid;
+	gap: 14px;
+}
+
+.evcert-app .panel .block-editor-block-list__block {
+	margin: 0;
+}
+

@@ -1,0 +1,35 @@
+/**
+ * "Check a certificate": CampTix's markup (#tix tables) does most of the look
+ * when CampTix is active; this keeps it usable when it isn't.
+ */
+.evcert-verify-form .tix_tickets_table {
+	width: 100%;
+	border-collapse: collapse;
+}
+.evcert-verify-form .tix_tickets_table th,
+.evcert-verify-form .tix_tickets_table td {
+	padding: 0.5em 0.75em;
+	text-align: left;
+	vertical-align: top;
+}
+.evcert-verify-form .tix-left {
+	width: 30%;
+}
+.evcert-verify-form input[data-evcert-code] {
+	width: 100%;
+	max-width: 22ch;
+	font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+.evcert-verify-form input[data-evcert-code]::placeholder {
+	text-transform: none;
+}
+.evcert-verify-form .tix-description {
+	margin: 0.4em 0 0;
+	font-size: 0.875em;
+	opacity: 0.8;
+}
+.evcert-verify-form .tix-submit {
+	margin-top: 1em;
+}

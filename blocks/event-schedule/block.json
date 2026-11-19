@@ -1,0 +1,30 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "events-certificates/event-schedule",
+	"version": "1.0.0",
+	"title": "Generator: date and place",
+	"category": "events-certificates",
+	"icon": "clock",
+	"description": "Date, times, venue and city.",
+	"parent": [
+		"events-certificates/event-fields"
+	],
+	"textdomain": "events-certificates",
+	"attributes": {
+		"venue": {
+			"type": "string",
+			"default": ""
+		},
+		"city": {
+			"type": "string",
+			"default": ""
+		}
+	},
+	"supports": {
+		"html": false,
+		"className": false
+	},
+	"editorScript": "evcert-blocks-editor",
+	"style": "evcert-quick-generator"
+}

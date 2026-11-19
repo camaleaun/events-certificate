@@ -1,0 +1,26 @@
+/*
+ * The certificate generator's page and blocks. The layout is the one of the
+ * generator made by Pamela Ribeiro (pamprn), Débora Venâncio de Oliveira and
+ * Sandra Peres at WordCamp Brasil 2026's Contributor Day, used with their
+ * permission (credits in readme.txt); its rules are kept as they were, scoped
+ * to .evcert-app so they don't touch the theme. Light and dark follow the
+ * visitor's setting (prefers-color-scheme) unless the theme sets data-theme.
+ */
+@font-face {
+	font-family: "CertSerif";
+	src: url("../../fonts/CertSerif-Regular.ttf") format("truetype");
+	font-display: swap;
+}
+
+@font-face {
+	font-family: "CertSans";
+	src: url("../../fonts/CertSans-Regular.ttf") format("truetype");
+	font-display: swap;
+}
+
+@font-face {
+	font-family: "CertSansBold";
+	src: url("../../fonts/CertSans-Bold.ttf") format("truetype");
+	font-weight: 600;
+	font-display: swap;
+}

@@ -1,0 +1,37 @@
+{
+	"$schema": "https://playground.wordpress.net/blueprint-schema.json",
+	"meta": {
+		"title": "Events Certificates: a WordPress Meetup",
+		"description": "Try Events Certificates with a Base design that says WORDPRESS MEETUP: open the Generator, add the people of your meetup and download their certificates.",
+		"author": "camaleaun",
+		"categories": [
+			"Plugin"
+		]
+	},
+	"landingPage": "/wp-admin/admin.php?page=evcert-generator",
+	"preferredVersions": {
+		"php": "8.3",
+		"wp": "latest"
+	},
+	"features": {
+		"networking": true
+	},
+	"login": true,
+	"steps": [
+		{
+			"step": "writeFile",
+			"path": "/wordpress/wp-content/mu-plugins/evcert-meetup.php",
+			"data": "<?php\n/**\n * Plugin Name: Events Certificates: WordPress Meetup wording (Playground)\n *\n * The plugin's Base design says nothing about meetups. A site that wants \"WORDPRESS MEETUP\" on the\n * band and \"took part in the meetup\" gives it through the evcert_base_design filter, as a network can.\n */\nadd_filter(\n\t'evcert_base_design',\n\tstatic function ( $design ) {\n\t\tforeach ( $design['elements'] as &$element ) {\n\t\t\tif ( 'band-text' === ( $element['id'] ?? '' ) ) {\n\t\t\t\t$element['runs'] = array( array( 'text' => 'WORDPRESS MEETUP' ) );\n\t\t\t}\n\t\t\tif ( 'took-part' === ( $element['id'] ?? '' ) ) {\n\t\t\t\t$element['runs'] = array( array( 'text' => 'took part in the meetup' ) );\n\t\t\t}\n\t\t}\n\n\t\treturn $design;\n\t}\n);\n"
+		},
+		{
+			"step": "installPlugin",
+			"pluginData": {
+				"resource": "wordpress.org/plugins",
+				"slug": "events-certificates"
+			},
+			"options": {
+				"activate": true
+			}
+		}
+	]
+}

@@ -1,0 +1,44 @@
+/* Keeps the theme's text styles (weight, letter spacing, wrapping, heading line height, bold) out of the app, so the page looks the same on any theme. */
+.evcert-app,
+.evcert-app * {
+	letter-spacing: normal;
+	text-wrap: wrap;
+}
+
+.evcert-app a {
+	text-decoration-thickness: auto !important;
+	text-underline-offset: auto;
+}
+
+.evcert-app {
+	font-weight: 400;
+}
+
+/* The page can be built with core blocks (hero, tutorial, layout): keep the flow layout's spacing out of them; the app's own rules below set the gaps. */
+.evcert-app .wp-block-group > * {
+	margin-block: 0;
+}
+
+.evcert-app h1,
+.evcert-app h2,
+.evcert-app h3 {
+	line-height: inherit;
+}
+
+.evcert-app b,
+.evcert-app strong {
+	font-weight: bolder;
+}
+
+body.evcert-quick-generator-page,
+.evcert-app {
+	margin:0;
+}
+
+.evcert-app img {
+	max-width:100%;
+}
+
+.evcert-app [hidden] {
+	display:none!important;
+}

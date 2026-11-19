@@ -1,0 +1,64 @@
+.evcert-app .wrap {
+	max-width: 1240px;
+	margin: 0 auto;
+	padding-block: 28px 56px;
+	padding-left: max(16px, env(safe-area-inset-left, 0px));
+	padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+.evcert-app header.top {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: end;
+	justify-content: space-between;
+	gap: 12px 24px;
+	margin-bottom: 24px;
+}
+
+.evcert-app header.top h1 {
+	font-family: var(--font-display);
+	font-weight: 400;
+	font-size: clamp(30px, 4vw, 42px);
+	line-height: 1.05;
+	margin: 0;
+	text-wrap: balance;
+}
+
+.evcert-app header.top > div:first-child p {
+	margin: 6px 0 0;
+	color: var(--muted);
+	max-width: 60ch;
+}
+
+.evcert-app .privacy {
+	font-size: 13px;
+	color: var(--muted);
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+
+.evcert-app .privacy b,
+.evcert-app .privacy strong {
+	color: var(--ink);
+	font-weight: 600;
+}
+
+.evcert-app .grid {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+	gap: 24px;
+	align-items: start;
+}
+
+@media (max-width: 900px) {
+	.evcert-app .grid {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.evcert-app .preview-col {
+		position: static !important;
+		order: -1;
+	}
+
+}

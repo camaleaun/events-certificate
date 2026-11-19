@@ -1,0 +1,95 @@
+{
+    "name": "camaleaun/events-certificates",
+    "description": "Verifiable attendance certificates for events.",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "camaleaun",
+            "homepage": "https://profiles.wordpress.org/camaleaun/"
+        }
+    ],
+    "require": {
+        "php": ">=7.4",
+        "dompdf/dompdf": "^3.1",
+        "chillerlan/php-qrcode": "^4.4"
+    },
+    "require-dev": {
+        "wp-coding-standards/wpcs": "^3",
+        "phpcompatibility/phpcompatibility-wp": "*",
+        "php-parallel-lint/php-parallel-lint": "^1",
+        "phpunit/phpunit": "^9.6",
+        "yoast/phpunit-polyfills": "^2"
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        },
+        "platform": {
+            "php": "7.4.33"
+        }
+    },
+    "scripts": {
+        "lint": "parallel-lint --exclude vendor --exclude vendor-prefixed --exclude node_modules --exclude build --exclude build-signer --exclude docs .",
+        "phpcs": "phpcs",
+        "phpcbf": "phpcbf",
+        "test": "phpunit",
+        "test:none": [
+            "@putenv EVCERT_INTEGRATIONS=none",
+            "@test"
+        ],
+        "test:camptix": [
+            "@putenv EVCERT_INTEGRATIONS=camptix",
+            "@test"
+        ],
+        "test:gatherpress": [
+            "@putenv EVCERT_INTEGRATIONS=gatherpress",
+            "@test"
+        ],
+        "test:both": [
+            "@putenv EVCERT_INTEGRATIONS=both",
+            "@test"
+        ],
+        "test:all": [
+            "@test:none",
+            "@test:camptix",
+            "@test:gatherpress",
+            "@test:both"
+        ],
+        "check": [
+            "@lint",
+            "@phpcs",
+            "@test:all"
+        ],
+        "prefix-namespaces": [
+            "php bin/strauss.phar",
+            "php bin/patch-prefixed.php"
+        ]
+    },
+    "scripts-descriptions": {
+        "lint": "PHP syntax check of every file.",
+        "phpcs": "WordPress Coding Standards and PHP 7.4+ compatibility.",
+        "phpcbf": "Fix what PHPCS can fix automatically.",
+        "test": "PHPUnit tests (loads the WordPress site the plugin is installed in; set WP_LOAD for another).",
+        "check": "Lint, PHPCS and tests.",
+        "prefix-namespaces": "Copy dompdf and php-qrcode into vendor-prefixed/ with the EventsCertificate\\Vendor\\ prefix (needs bin/strauss.phar, see bin/README.md)."
+    },
+    "extra": {
+        "strauss": {
+            "target_directory": "vendor-prefixed",
+            "namespace_prefix": "EventsCertificate\\Vendor\\",
+            "classmap_prefix": "EventsCertificate_Vendor_",
+            "constant_prefix": "EVCERT_VENDOR_",
+            "packages": [
+                "dompdf/dompdf",
+                "chillerlan/php-qrcode"
+            ],
+            "delete_vendor_packages": false,
+            "exclude_from_copy": {
+                "file_patterns": [
+                    "/dompdf\\/lib\\/fonts\\/DejaVu/"
+                ]
+            }
+        }
+    }
+}

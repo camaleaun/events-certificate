@@ -1,0 +1,20 @@
+/* The CSV file, like the editor's featured image button: full width, short label, a drop zone. */
+.evcert-generator__file {
+	position: relative;
+}
+
+.evcert-generator__file .evcert-generator__file-toggle {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
+	min-height: 90px;
+	padding: 0;
+	white-space: normal;
+}
+
+.evcert-generator__file-name {
+	margin: 8px 0 0;
+	overflow-wrap: anywhere;
+	color: #757575;
+}

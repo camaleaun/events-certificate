@@ -1,0 +1,12 @@
+// The certificate page and the code form: tokens, the certificate, the Dock and its popovers, the card.
+//
+// Built by `npm run build` (bin/build-assets.mjs) into assets/css/verify.css and verify.min.css.
+// Keep the order of the @use rules: where two rules have the same specificity, the later one wins.
+
+@use 'verify/tokens';
+@use 'verify/certificate';
+@use 'verify/dock';
+@use 'verify/docked';
+@use 'verify/responsive';
+@use 'verify/card';
+@use 'verify/preview';

@@ -1,0 +1,28 @@
+/* Quick issue screen — the block editor's real Gutenberg components brought
+ * into the admin. The visual of the panels, fields and buttons comes from
+ * core's wp-components stylesheet (the same @wordpress/components the design
+ * editor's Inspector uses); this sheet only adapts the layout: the full-screen
+ * shell below the admin bar, the editor's three-column body (left panel +
+ * canvas + 280px Inspector sidebar), the header, the two-field rows and the
+ * pinned actions. It still POSTs the real quick-issue form.
+ */
+
+.evcert-generator {
+	--wp-components-color-accent: #3858e9;
+	--wp-admin-theme-color: #3858e9;
+	--wp-admin-theme-color--rgb: 56, 88, 233;
+	position: fixed;
+	top: var(--wp-admin--admin-bar--height, 32px);
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: calc(100vh - var(--wp-admin--admin-bar--height, 32px));
+	z-index: 1000;
+	background: #fff;
+	display: flex;
+	flex-direction: column;
+}
+.evcert-generator.wrap {
+	padding: 0;
+	margin: 0;
+}

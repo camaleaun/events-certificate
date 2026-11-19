@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1000" height="390" viewBox="0 0 1000 390" role="img" aria-labelledby="svgTitle svgDesc">
+<title id="svgTitle">Etapa 4 — Exportar detalhes dos participantes</title><desc id="svgDesc">Ilustração vetorial editável de uma interface genérica de eventos e participantes.</desc>
+
+<defs>
+  <linearGradient id="lavender" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0f1ff"/><stop offset="1" stop-color="#e7e9ff"/></linearGradient>
+  <linearGradient id="banner" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d9d8ff"/><stop offset="0.55" stop-color="#e9e8ff"/><stop offset="1" stop-color="#c9c7fb"/></linearGradient>
+  <linearGradient id="coverA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e9edff"/><stop offset="1" stop-color="#f8e9f1"/></linearGradient>
+  <linearGradient id="coverB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fde7d7"/><stop offset="1" stop-color="#e5e8ff"/></linearGradient>
+  <pattern id="dots" width="14" height="14" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="#cbd0ef" opacity=".8"/></pattern>
+  <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%"><feGaussianBlur in="SourceAlpha" stdDeviation="5"/><feOffset dy="3"/><feComponentTransfer><feFuncA type="linear" slope=".14"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <clipPath id="avatarClip"><circle r="20"/></clipPath>
+  <style>
+    text { font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; fill: #24242a; }
+    .muted { fill: #77777f; }
+    .tiny { font-size: 10px; }
+    .small { font-size: 12px; }
+    .body { font-size: 14px; }
+    .heading { font-size: 30px; font-weight: 750; letter-spacing: -.8px; }
+    .card-title { font-size: 17px; font-weight: 700; }
+    .button-label { font-size: 12px; font-weight: 600; }
+    .purple { fill: #7761c7; }
+    .red-outline { fill: none; stroke: #ef382b; stroke-width: 8; stroke-linejoin: round; }
+  </style>
+</defs>
+<rect x="0" y="0" width="1000" height="390" rx="0" fill="#fdfdff" /><text x="140" y="62" font-size="14" font-weight="500" style="fill:#77777f" >←  Back</text><text x="139" y="123" font-size="40" font-weight="780" >Attendees</text><text x="140" y="164" font-size="17" font-weight="400" style="fill:#77777f" >Encontro #42: Criando experiências digitais com IA</text><g fill="none" stroke="#7761c7" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="773" cy="113" r="6"/><circle cx="773" cy="113" r="2"/><path d="M 773 103 V 106 M 773 120 V 123 M 763 113 H 766 M 780 113 H 783 M 766 106 L 768 108 M 778 118 L 780 120 M 780 106 L 778 108 M 768 118 L 766 120 Z"/></g><text x="791" y="119" font-size="16" font-weight="650" style="fill:#7761c7" >Manage</text><rect x="139" y="231" width="692" height="53" rx="27" fill="#fff" stroke="#dedee4" stroke-width="1" /><circle cx="166" cy="257" r="8" fill="none" stroke="#87878f" stroke-width="1.7"/><path d="M 172 263 L 178 269" stroke="#87878f" stroke-width="1.7"/><text x="188" y="263" font-size="16" font-weight="400" style="fill:#909098" >Search attendees</text><rect x="147" y="309" width="126" height="38" rx="21" fill="#7762c9" /><text x="162" y="334" font-size="15" font-weight="650" style="fill:#fff" >40 Attendees</text><text x="296" y="334" font-size="14" font-weight="650" >12 Checked in</text><text x="446" y="334" font-size="14" font-weight="650" >28 Not checked in</text><text x="649" y="334" font-size="14" font-weight="650" >0 Absent</text><text x="740" y="334" font-size="14" font-weight="650" >× 1 Canceled</text><rect x="611" y="133" width="246" height="184" rx="21" fill="#fff" stroke="#e9e9ee" stroke-width="1" filter="url(#shadow)"/><g fill="none" stroke="#c5c5cb" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="636" y="153" width="14" height="16" rx="1.5"/><path d="M 639 158 L 647 164 M 647 158 L 639 164"/></g><text x="660" y="167" font-size="14" font-weight="500" style="fill:#b8b8bf" >Close for RSVPs</text><g fill="none" stroke="#72727a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="636.2" y="199.9" width="16" height="12" rx="1.5"/><path d="M 637.05 200.75 L 643 205.85 L 648.95 200.75"/></g><text x="660" y="211" font-size="14" font-weight="500" >Contact attendees</text><g fill="none" stroke="#72727a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="643" cy="247" r="7"/><path d="M 640 247 L 642 250 L 647 244"/></g><text x="660" y="253" font-size="14" font-weight="500" >Select</text><g fill="none" stroke="#72727a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M 635 293 Q 632 285 639 284 Q 642 278 648 283 Q 654 283 653 291 Q 652 295 648 295 H 638"/><path d="M 643 288 V 298 M 639 294 L 643 298 L 647 294"/></g><text x="660" y="296" font-size="14" font-weight="600" >Attendee details</text><rect x="617" y="263" width="230" height="53" rx="4" class="red-outline"/>
+</svg>

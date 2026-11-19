@@ -1,0 +1,29 @@
+/* Docked: one icon in a bottom corner (the bar is welded to the edge, the icon floats clear of it). */
+.evcert-dock__fab {
+	display: none;
+	width: 48px;
+	height: 48px;
+	border: 0;
+	border-radius: 50%;
+	background: var(--dock);
+	color: var(--dock-fg);
+	box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+	cursor: grab;
+	touch-action: none;
+	align-items: center;
+	justify-content: center;
+}
+.evcert-dock__fab svg { width: 26px; height: 26px; }
+.evcert-dock__fab.is-valid svg { color: var(--ok); }
+.evcert-dock__fab.is-replaced svg { color: var(--warn); }
+.evcert-dock__fab.is-revoked svg { color: var(--bad); }
+.evcert-dock[data-docked="left"],
+.evcert-dock[data-docked="right"] { bottom: 16px; width: auto; transform: none; }
+.evcert-dock[data-docked="left"] { left: 16px; right: auto; }
+.evcert-dock[data-docked="right"] { left: auto; right: 16px; }
+.evcert-dock[data-docked="left"] .evcert-dock__bar,
+.evcert-dock[data-docked="right"] .evcert-dock__bar,
+.evcert-dock[data-docked="left"] .evcert-dock__pop,
+.evcert-dock[data-docked="right"] .evcert-dock__pop { display: none; }
+.evcert-dock[data-docked="left"] .evcert-dock__fab,
+.evcert-dock[data-docked="right"] .evcert-dock__fab { display: inline-flex; }

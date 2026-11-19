@@ -1,0 +1,11 @@
+/* In the block editor a classic theme limits every block to its content width (Twenty Twenty-One: .wp-block { max-width: 610px }):
+ * the app's blocks use the width of the app, whose .wrap sets its own. */
+.evcert-app .wp-block:not(.wrap) {
+	max-width: none;
+}
+
+/* ... and without theme.json it wraps the children of a group in an inner container, so a grid or a flex of the app would have one child:
+ * the wrapper takes no box of its own. */
+.evcert-app .wp-block-group > .wp-block-group__inner-container {
+	display: contents;
+}

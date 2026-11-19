@@ -1,0 +1,1302 @@
+.evcert-editor {
+	position: fixed;
+	top: var(--wp-admin--admin-bar--height, 32px);
+	left: 0;
+	right: 0;
+	bottom: 0;
+	display: flex;
+	flex-direction: column;
+	background: #fff;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	font-size: 13px;
+	color: #1e1e1e;
+	z-index: 1000;
+}
+
+/* Header: like the block editor's (back, inserter, undo/redo, list view | document bar | save, settings, options). */
+.evcert-header {
+	height: 64px;
+	flex: none;
+	display: grid;
+	grid-template-columns: 1fr auto 1fr;
+	align-items: center;
+	padding: 0 8px 0 0;
+	border-bottom: 1px solid #e0e0e0;
+	background: #fff;
+}
+.evcert-header-left,
+.evcert-header-right {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+.evcert-header-right {
+	justify-content: flex-end;
+}
+.evcert-back {
+	width: 64px;
+	height: 64px;
+	justify-content: center;
+}
+.evcert-inserter-toggle.components-button {
+	min-width: 32px;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	justify-content: center;
+	margin-right: 8px;
+}
+.evcert-mode-switch {
+	display: flex;
+	margin-left: 8px;
+	padding: 2px;
+	border-radius: 4px;
+	background: #f0f0f0;
+	.components-button.is-pressed {
+		background: #fff;
+		color: #1e1e1e;
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+	}
+}
+.evcert-document-bar {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	min-width: min(460px, 40vw);
+	height: 36px;
+	padding: 0 16px;
+	border: 0;
+	border-radius: 4px;
+	background: #f0f0f0;
+	color: #1e1e1e;
+	font-size: 13px;
+	cursor: pointer;
+	&:hover {
+		background: #e0e0e0;
+	}
+}
+.evcert-document-type {
+	color: #757575;
+}
+.evcert-status {
+	font-size: 13px;
+	color: #757575;
+	padding: 0 8px;
+	white-space: nowrap;
+	&.is-dirty { color: #996800; }
+	&.is-error { color: #cc1818; }
+}
+
+.evcert-body {
+	flex: 1;
+	display: flex;
+	min-height: 0;
+}
+
+.evcert-left-panel {
+	width: 350px;
+	flex: none;
+	border-right: 1px solid #e0e0e0;
+	overflow: auto;
+	background: #fff;
+}
+.evcert-panel-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	height: 48px;
+	padding: 0 8px 0 16px;
+	border-bottom: 1px solid #e0e0e0;
+}
+
+.evcert-sidebar {
+	width: 280px;
+	flex: none;
+	border-left: 1px solid #e0e0e0;
+	overflow: auto;
+	background: #fff;
+}
+.evcert-sidebar-tabs {
+	position: sticky;
+	top: 0;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	height: 48px;
+	padding: 0 8px 0 0;
+	border-bottom: 1px solid #e0e0e0;
+	background: #fff;
+	> button[role="tab"] {
+		height: 48px;
+		padding: 0 16px;
+		border: 0;
+		border-bottom: 2px solid transparent;
+		background: none;
+		font-size: 13px;
+		cursor: pointer;
+		color: #1e1e1e;
+		&.is-active {
+			border-bottom-color: var(--wp-admin-theme-color, #3858e9);
+			font-weight: 500;
+		}
+		&:disabled {
+			color: #a7aaad;
+			cursor: default;
+		}
+	}
+	.evcert-sidebar-close {
+		margin-left: auto;
+	}
+}
+
+.evcert-footer {
+	height: 24px;
+	flex: none;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 8px 0 16px;
+	border-top: 1px solid #e0e0e0;
+	background: #fff;
+	font-size: 13px;
+}
+.evcert-breadcrumb button {
+	border: 0;
+	background: none;
+	padding: 0;
+	cursor: pointer;
+	font-size: 13px;
+}
+
+.evcert-stage {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	// Centred with auto margins (not justify/align-content), so a zoomed-in page can still scroll to its left and top edges.
+	padding: 32px;
+	overflow: auto;
+	&.is-panning {
+		cursor: grab;
+		* {
+			cursor: grab !important;
+		}
+	}
+	&.is-grabbing,
+	&.is-grabbing * {
+		cursor: grabbing !important;
+	}
+	background: #f0f0f0;
+	touch-action: none;
+}
+.evcert-editor.is-dark .evcert-stage {
+	background: #2f2f2f;
+}
+
+.evcert-canvas {
+	margin: auto;
+	flex: none;
+	// The sheet casts the shadow, not the canvas: the canvas also holds the bleed around the page.
+	overflow: visible;
+	background: transparent;
+	user-select: none;
+}
+
+.evcert-sheet {
+	filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.12)) drop-shadow(0 12px 32px rgba(0, 0, 0, 0.08));
+}
+
+.evcert-el {
+	cursor: move;
+
+	&.is-locked {
+		cursor: default;
+	}
+}
+
+.evcert-text {
+	margin: 0;
+	strong {
+		font-weight: 600;
+	}
+}
+
+.evcert-guides {
+	.evcert-trim {
+		fill: none;
+		stroke: rgba(0, 0, 0, 0.25);
+		stroke-width: 0.5;
+	}
+	.evcert-safe {
+		fill: none;
+		stroke: #d63638;
+		stroke-width: 0.6;
+		stroke-dasharray: 4 3;
+		opacity: 0.6;
+	}
+	.evcert-snap {
+		stroke: #e26f56;
+		stroke-width: 0.8;
+	}
+}
+
+.evcert-selection {
+	> rect:first-child {
+		fill: none;
+		stroke: var(--wp-admin-theme-color, #3858e9);
+		stroke-width: 1;
+		vector-effect: non-scaling-stroke;
+		pointer-events: none;
+	}
+	.evcert-handle,
+	circle {
+		fill: #fff;
+		stroke: var(--wp-admin-theme-color, #3858e9);
+		stroke-width: 1;
+		vector-effect: non-scaling-stroke;
+	}
+	.is-nw, .is-se { cursor: nwse-resize; }
+	.is-ne, .is-sw { cursor: nesw-resize; }
+	.is-n, .is-s { cursor: ns-resize; }
+	.is-e, .is-w { cursor: ew-resize; }
+	circle { cursor: crosshair; }
+}
+
+
+
+
+
+
+
+
+
+.evcert-slot {
+	font-size: 11px;
+	padding: 1px 6px;
+	border-radius: 8px;
+	background: #f0f0f1;
+	color: #50575e;
+}
+
+.evcert-row {
+	display: flex;
+	gap: 8px;
+	> * {
+		flex: 1;
+		min-width: 0;
+	}
+}
+
+.evcert-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+}
+
+.evcert-insert {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 8px;
+	padding: 16px;
+}
+.evcert-insert-item {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+	padding: 16px 4px 12px;
+	border: 0;
+	border-radius: 2px;
+	background: none;
+	color: #1e1e1e;
+	font-size: 13px;
+	cursor: pointer;
+	&:hover {
+		background: #f0f0f0;
+		color: var(--wp-admin-theme-color, #3858e9);
+	}
+}
+.evcert-insert-icon {
+	font-size: 22px;
+	line-height: 1;
+}
+
+.evcert-layers {
+	list-style: none;
+	margin: 0;
+	padding: 8px;
+	min-width: 280px;
+
+	li {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		border-radius: 6px;
+
+		&.is-selected {
+			background: #f0f6fc;
+		}
+		button {
+			border: 0;
+			background: none;
+			cursor: pointer;
+			padding: 6px;
+		}
+	}
+	.evcert-layer-name {
+		flex: 1;
+		text-align: left;
+		display: flex;
+		gap: 6px;
+		align-items: center;
+	}
+}
+
+.evcert-colors .evcert-color-row {
+	display: grid;
+	grid-template-columns: 1fr 72px 72px;
+	gap: 8px;
+	align-items: center;
+	margin-bottom: 6px;
+
+	input {
+		width: 100%;
+		font-family: monospace;
+	}
+	label small {
+		display: block;
+		color: #757575;
+	}
+}
+
+.evcert-color-field {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 8px 0;
+
+	> span {
+		min-width: 60px;
+	}
+	code {
+		font-size: 11px;
+	}
+}
+
+.evcert-swatch {
+	display: inline-block;
+	width: 22px;
+	height: 22px;
+	border-radius: 50%;
+	border: 1px solid rgba(0, 0, 0, 0.2);
+	cursor: pointer;
+	padding: 0;
+	vertical-align: middle;
+	background-image: linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%);
+	background-size: 8px 8px;
+}
+
+.evcert-color-popover {
+	padding: 12px;
+	width: 260px;
+
+	.evcert-var-list {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		button {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			border: 0;
+			background: none;
+			padding: 4px;
+			cursor: pointer;
+			text-align: left;
+		}
+	}
+}
+
+
+
+.evcert-inspector {
+	padding: 16px;
+	header {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin-bottom: 12px;
+	}
+}
+.evcert-section-title {
+	margin: 24px 0 8px;
+	font-size: 11px;
+	font-weight: 500;
+	text-transform: uppercase;
+}
+.evcert-meta {
+	color: #757575;
+}
+
+@media (max-width: 782px) {
+	.evcert-editor {
+		top: 46px;
+	}
+	.evcert-header-center,
+	.evcert-status {
+		display: none;
+	}
+	.evcert-header {
+		grid-template-columns: 1fr auto;
+	}
+	.evcert-sidebar,
+	.evcert-left-panel {
+		position: fixed;
+		left: 0;
+		right: 0;
+		bottom: 24px;
+		width: auto;
+		max-height: 50vh;
+		z-index: 5;
+		border: 0;
+		border-top: 1px solid #e0e0e0;
+		box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.12);
+	}
+}
+
+/* Text with fields as chips. */
+.evcert-field-text {
+	margin-bottom: 16px;
+}
+.evcert-field-text-label {
+	font-size: 11px;
+	font-weight: 500;
+	text-transform: uppercase;
+	margin-bottom: 8px;
+}
+.evcert-field-text-toolbar {
+	display: flex;
+	gap: 4px;
+	margin-bottom: 4px;
+}
+.evcert-field-text-input {
+	min-height: 64px;
+	padding: 8px 10px;
+	border: 1px solid #949494;
+	border-radius: 2px;
+	line-height: 1.8;
+	white-space: pre-wrap;
+	outline: none;
+	&:focus {
+		border-color: var(--wp-admin-theme-color, #3858e9);
+		box-shadow: 0 0 0 1px var(--wp-admin-theme-color, #3858e9);
+	}
+}
+.evcert-chip {
+	display: inline-block;
+	padding: 0 8px;
+	margin: 0 1px;
+	// Tinted from the text's own color, so chips read in light and dark mode.
+	border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+	border-radius: 4px;
+	background: color-mix(in srgb, currentColor 12%, transparent);
+	color: inherit;
+	font-size: 12px;
+	line-height: 20px;
+	cursor: pointer;
+	user-select: none;
+	white-space: nowrap;
+	&:hover {
+		border-color: var(--wp-admin-theme-color, #3858e9);
+	}
+}
+.evcert-chip-popover {
+	padding: 12px;
+	width: 260px;
+}
+.evcert-chip-sample {
+	color: #757575;
+}
+
+/* ---- Block editor patterns (Gutenberg) ---- */
+
+/* Inserter toggle: the + turns into × when open, like editor-document-tools__inserter-toggle. */
+.evcert-inserter-toggle.components-button {
+	svg {
+		transition: transform 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
+	}
+	&.is-pressed svg {
+		transform: rotate(45deg);
+	}
+}
+.evcert-document-bar {
+	height: 32px;
+	width: min(100%, 450px);
+}
+
+/* Inserter (block-editor-inserter__menu), 350px. */
+.evcert-inserter,
+.evcert-list-view {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+.evcert-inserter__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	height: 48px;
+	padding: 0 8px 0 16px;
+	border-bottom: 1px solid #e0e0e0;
+	flex: none;
+}
+.evcert-inserter__search {
+	padding: 16px;
+	position: sticky;
+	top: 0;
+	background: #fff;
+}
+.evcert-inserter__list {
+	display: flex;
+	flex-wrap: wrap;
+	padding: 0 8px 16px;
+}
+.evcert-inserter__item.components-button {
+	width: 33.33%;
+	height: auto;
+	flex-direction: column;
+	justify-content: flex-start;
+	padding: 8px;
+	font-size: 13px;
+	color: #1e1e1e;
+	&:hover {
+		color: var(--wp-admin-theme-color, #3858e9);
+	}
+}
+.evcert-inserter__item-icon {
+	padding: 12px 20px;
+	border-radius: 2px;
+	svg {
+		fill: currentColor;
+	}
+}
+.evcert-inserter__item-title {
+	padding: 4px 2px 8px;
+	font-size: 12px;
+	text-align: center;
+}
+.evcert-inserter__empty {
+	padding: 16px;
+	color: #757575;
+}
+
+/* List View rows (block-editor-list-view-leaf). */
+.evcert-list-view__tree {
+	list-style: none;
+	margin: 0;
+	padding: 8px;
+}
+.evcert-list-view__row {
+	display: flex;
+	align-items: center;
+	border-radius: 2px;
+	margin: 0;
+	&.is-selected {
+		background: var(--wp-admin-theme-color, #3858e9);
+		color: #fff;
+		.evcert-list-view__select,
+		.components-button {
+			color: #fff;
+		}
+		svg {
+			fill: #fff;
+		}
+	}
+	&.is-hidden .evcert-list-view__title {
+		opacity: 0.6;
+	}
+	&:not(.is-selected):hover {
+		background: #f0f0f0;
+	}
+}
+.evcert-list-view__select {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	height: 36px;
+	padding: 0 4px;
+	border: 0;
+	background: none;
+	color: #1e1e1e;
+	font-size: 13px;
+	text-align: left;
+	cursor: pointer;
+	min-width: 0;
+}
+.evcert-list-view__title {
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.evcert-list-view__state {
+	flex: none;
+}
+// Dragging restacks: a grab handle, the dragged row faded, a line where it lands.
+.evcert-list-view__row {
+	position: relative;
+	cursor: grab;
+	&.is-dragging {
+		opacity: 0.4;
+	}
+	&.is-drop-front::before,
+	&.is-drop-behind::after {
+		content: "";
+		position: absolute;
+		left: 0;
+		right: 0;
+		height: 2px;
+		background: var(--wp-admin-theme-color, #3858e9);
+		pointer-events: none;
+	}
+	&.is-drop-front::before {
+		top: -1px;
+	}
+	&.is-drop-behind::after {
+		bottom: -1px;
+	}
+}
+.evcert-list-view__handle {
+	display: flex;
+	flex: none;
+	width: 16px;
+	opacity: 0;
+	svg {
+		fill: currentColor;
+	}
+	.evcert-list-view__row:hover &,
+	.evcert-list-view__row.is-selected & {
+		opacity: 0.6;
+	}
+}
+.evcert-list-view__rename {
+	flex: 1;
+	min-width: 0;
+	height: 28px;
+	padding: 0 6px;
+	border: 1px solid var(--wp-admin-theme-color, #3858e9);
+	border-radius: 2px;
+	font-size: 13px;
+	color: #1e1e1e;
+	background: #fff;
+}
+
+/* Element toolbar (block-editor-block-contextual-toolbar). */
+.evcert-element-toolbar-popover {
+	// Absolute and shrink-to-fit: without this the last group (Options) overflowed the border.
+	width: max-content;
+}
+.evcert-element-toolbar-popover .components-popover__content {
+	overflow: visible;
+}
+.evcert-element-toolbar.components-accessible-toolbar {
+	// Its intrinsic width came out short of its groups (the Options group overflowed the border).
+	width: max-content;
+	background: #fff;
+	border: 1px solid #1e1e1e;
+	border-radius: 2px;
+	min-height: 48px;
+	.components-toolbar-group {
+		// Groups were laid out at their min-content width, so the last one overflowed the border.
+		min-width: max-content;
+		border: 0;
+		border-right: 1px solid #ddd;
+		min-height: 46px;
+		&:last-child {
+			border-right: 0;
+		}
+	}
+}
+
+/* Inspector: block card + tools panels. */
+.evcert-inspector {
+	padding: 0;
+}
+.evcert-card {
+	display: flex;
+	gap: 12px;
+	padding: 16px;
+	border-bottom: 1px solid #e0e0e0;
+}
+.evcert-card__icon {
+	flex: none;
+	svg {
+		fill: currentColor;
+	}
+}
+.evcert-card__title {
+	margin: 2px 0 8px;
+	font-size: 13px;
+	font-weight: 500;
+	line-height: 24px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.evcert-card__description {
+	margin: 0;
+	font-size: 13px;
+	color: #1e1e1e;
+}
+.evcert-inspector__section {
+	padding: 16px;
+	border-bottom: 1px solid #e0e0e0;
+}
+.evcert-inspector .components-tools-panel {
+	border-top: 0;
+	border-bottom: 1px solid #e0e0e0;
+}
+.evcert-color-items {
+	grid-column: 1 / -1;
+	border: 1px solid #ddd;
+	border-radius: 2px;
+	> * + * {
+		border-top: 1px solid #ddd;
+	}
+}
+.evcert-color-item,
+.evcert-color-item__toggle.components-button {
+	width: 100%;
+}
+.evcert-color-item__value {
+	margin-left: auto;
+	color: #757575;
+	font-size: 12px;
+}
+.evcert-color-popover {
+	padding: 16px;
+	width: 260px;
+}
+.evcert-color-popover__label {
+	margin: 0 0 8px;
+	font-size: 11px;
+	font-weight: 500;
+	text-transform: uppercase;
+}
+.evcert-radius__header {
+	margin-bottom: 8px;
+}
+.evcert-radius__legend {
+	font-size: 11px;
+	font-weight: 500;
+	text-transform: uppercase;
+}
+.evcert-radius__corners {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 8px;
+}
+.evcert-grid-2 {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 8px;
+}
+.evcert-suffix {
+	padding-right: 8px;
+	color: #757575;
+	font-size: 12px;
+}
+
+/* Document panel rows (editor-post-panel__row). */
+.evcert-panel-row {
+	width: 100%;
+	min-height: 32px;
+	align-items: flex-start !important;
+}
+.evcert-panel-row__label {
+	width: 38%;
+	flex-shrink: 0;
+	min-height: 32px;
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	line-height: 20px;
+}
+.evcert-panel-row__control {
+	flex-grow: 1;
+	min-height: 32px;
+	display: flex;
+	align-items: center;
+	.components-button {
+		max-width: 100%;
+		text-align: left;
+		white-space: normal;
+		height: auto;
+		min-height: 32px;
+	}
+}
+.evcert-row-popover {
+	padding: 16px;
+	width: 248px;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+.evcert-section-heading {
+	margin: 0 0 8px;
+	font-size: 13px;
+	font-weight: 500;
+}
+.evcert-palette .components-item {
+	cursor: pointer;
+}
+.evcert-palette__name {
+	font-size: 13px;
+}
+.evcert-palette > .components-dropdown {
+	display: block;
+	width: 100%;
+}
+.evcert-palette > .components-dropdown + .components-dropdown {
+	border-top: 1px solid #ddd;
+}
+.evcert-loading {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 1;
+}
+/* Equal-spacing guides (magenta, like Figma's). */
+.evcert-gap {
+	line {
+		stroke: #e01e8c;
+		stroke-width: 1;
+		vector-effect: non-scaling-stroke;
+	}
+	text {
+		fill: #e01e8c;
+		font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+		font-weight: 600;
+	}
+}
+.evcert-radius__linked {
+	> :first-child {
+		flex: 0 0 96px;
+	}
+	> :last-child {
+		flex: 1;
+	}
+}
+.evcert-anchors {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	.is-invalid input {
+		border-color: #cc1818;
+	}
+}
+
+// The options menu sits inside the bordered toolbar like the block toolbar's.
+.evcert-element-toolbar.components-accessible-toolbar {
+	.components-dropdown-menu,
+	.components-dropdown {
+		display: flex;
+		height: 100%;
+	}
+	.components-toolbar-group > .components-button.has-text,
+	.components-toolbar-group .components-dropdown > .components-button:not(.has-icon) {
+		padding: 0 12px;
+	}
+}
+
+// Empty image: the core Image block's placeholder, scaled with the page. Like
+// core's is-small/is-medium, it drops the instructions, then the buttons (the
+// toolbar's Add image stays), then the label as the element gets smaller.
+.evcert-image-ph {
+	width: 100%;
+	height: 100%;
+	container-type: size;
+	cursor: move;
+}
+.evcert-image-ph .evcert-image-placeholder {
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+	min-width: 0;
+	overflow: hidden;
+	.components-placeholder__fieldset {
+		gap: 8px;
+		flex-wrap: wrap;
+	}
+	button {
+		cursor: pointer;
+	}
+}
+@container (max-width: 300px) or (max-height: 190px) {
+	.evcert-image-placeholder.components-placeholder {
+		padding: 8px;
+		gap: 8px;
+	}
+	.evcert-image-placeholder .components-placeholder__instructions {
+		display: none;
+	}
+}
+@container (max-width: 210px) or (max-height: 130px) {
+	.evcert-image-placeholder .components-placeholder__fieldset {
+		display: none;
+	}
+	.evcert-image-placeholder.components-placeholder {
+		align-items: center;
+		justify-content: center;
+	}
+}
+@container (max-width: 110px) or (max-height: 56px) {
+	.evcert-image-placeholder .components-placeholder__label {
+		font-size: 0;
+		margin: 0;
+	}
+	.evcert-image-placeholder .components-placeholder__label svg {
+		margin: 0;
+	}
+}
+.evcert-url-popover,
+.evcert-replace-popover__url {
+	padding: 8px;
+	min-width: 260px;
+}
+.evcert-replace-popover__label {
+	margin: 0 0 8px;
+	font-size: 11px;
+	font-weight: 500;
+	text-transform: uppercase;
+	color: #757575;
+}
+.evcert-replace-popover .components-popover__content {
+	padding: 0;
+}
+.evcert-replace-popover .components-menu-group {
+	padding: 8px;
+	border-bottom: 1px solid #ddd;
+}
+
+// SVG paths, like the palette's color list.
+.evcert-svg-panel__header {
+	margin-bottom: 8px;
+	.evcert-section-heading {
+		margin: 0;
+	}
+}
+.evcert-length__header {
+	margin-bottom: 8px;
+}
+.evcert-length__label {
+	font-size: 11px;
+	font-weight: 500;
+	text-transform: uppercase;
+	line-height: 1.4;
+}
+.evcert-svg-path.components-item {
+	padding: 4px 8px;
+}
+.evcert-svg-path__swatch.components-button {
+	// Room for the dashed "current color" ring, and a clear gap before the path link.
+	padding: 4px;
+	margin-right: 4px;
+	min-width: 0;
+	height: auto;
+	flex-shrink: 0;
+}
+.evcert-svg-path__swatch .component-color-indicator.is-current {
+	box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2);
+	outline: 1px dashed #949494;
+	outline-offset: 2px;
+}
+.evcert-svg-path__d {
+	flex: 1;
+	min-width: 0;
+	input {
+		font-family: Menlo, Consolas, monaco, monospace;
+		font-size: 12px;
+	}
+	&.is-invalid input {
+		border-color: #cc1818;
+	}
+}
+.evcert-code textarea {
+	font-family: Menlo, Consolas, monaco, monospace;
+	font-size: 12px;
+}
+.evcert-code.is-invalid textarea {
+	border-color: #cc1818;
+}
+.evcert-length {
+	min-width: 0;
+}
+// The selected field: the toolbar's Bold/Italic act on it.
+.evcert-chip.is-selected {
+	outline: 2px solid var(--wp-admin-theme-color, #3858e9);
+	outline-offset: 1px;
+}
+
+// The larger drawing editor (modal).
+.evcert-svg-panel__open {
+	margin-top: 12px;
+}
+// Only the fields column scrolls; the preview and the buttons stay in view.
+.components-modal__frame.evcert-svg-editor {
+	height: min(86vh, 820px);
+}
+.evcert-svg-editor .components-modal__content {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-height: 0;
+	overflow: hidden;
+}
+.evcert-svg-editor .components-modal__children-container {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-height: 0;
+}
+.evcert-svg-editor__body {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+	gap: 24px;
+	flex: 1;
+	min-height: 0;
+}
+.evcert-svg-editor__preview {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 24px;
+	min-height: 0;
+	// The preview's size, so the drawing can fit it at its own aspect ratio.
+	container-type: size;
+	svg {
+		// Contain: as wide as fits, or as tall as fits, keeping the viewBox's ratio.
+		width: min(100cqw, 100cqh * var(--evcert-ratio, 1));
+		aspect-ratio: var(--evcert-ratio, 1);
+		background: repeating-conic-gradient(#e0e0e0 0 25%, #fff 0 50%) 0 0 / 16px 16px;
+		// What falls outside the viewBox isn't drawn on certificates either.
+		overflow: hidden;
+	}
+}
+.evcert-svg-editor__fields {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	min-width: 0;
+	min-height: 0;
+	overflow-y: auto;
+	padding-right: 4px;
+}
+// Inline mover in a path row: the block mover's chevrons at full size, side by
+// side (stacked at row height they read as a tiny sort toggle).
+.evcert-mover--inline {
+	display: flex;
+	flex-shrink: 0;
+	.components-button {
+		width: 24px;
+		height: 24px;
+		min-width: 24px;
+		padding: 0;
+		justify-content: center;
+		svg {
+			width: 24px;
+			height: 24px;
+		}
+	}
+}
+.evcert-mover.components-toolbar-group {
+	flex-direction: column;
+	justify-content: center;
+	padding: 0 4px;
+	.components-button {
+		height: 22px;
+		min-width: 24px;
+		padding: 0;
+		justify-content: center;
+		svg {
+			width: 18px;
+			height: 18px;
+		}
+	}
+}
+.evcert-svg-path__link {
+	flex: 1;
+	min-width: 0;
+}
+.evcert-svg-path__d-link.components-button {
+	display: block;
+	width: 100%;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	text-align: left;
+	font-family: Menlo, Consolas, monaco, monospace;
+	font-size: 12px;
+}
+.evcert-svg-path__popover {
+	width: 420px;
+	max-width: calc(100vw - 32px);
+	padding: 12px;
+	textarea {
+		font-family: Menlo, Consolas, monaco, monospace;
+		font-size: 12px;
+		min-height: 160px;
+	}
+}
+.evcert-svg-editor__footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	margin-top: 24px;
+}
+@media (max-width: 782px) {
+	.evcert-svg-editor__body {
+		grid-template-columns: 1fr;
+		grid-template-rows: 200px minmax(0, 1fr);
+	}
+}
+
+// Preview switcher.
+.evcert-preview-dropdown__note {
+	margin: 0;
+	padding: 8px 12px 12px;
+	max-width: 240px;
+	color: #757575;
+	font-size: 12px;
+}
+.evcert-view-badge {
+	margin-left: auto;
+	margin-right: 8px;
+	color: #757575;
+}
+
+// At the end of the Paths heading: the block appender (a dark rounded square with a +).
+.evcert-appender.components-button {
+	display: flex;
+	width: 24px;
+	height: 24px;
+	min-width: 24px;
+	padding: 0;
+	justify-content: center;
+	border-radius: 2px;
+	background: #1e1e1e;
+	color: #fff;
+	svg {
+		width: 24px;
+		height: 24px;
+	}
+	&:hover:not(:disabled),
+	&:focus:not(:disabled) {
+		background: var(--wp-admin-theme-color, #3858e9);
+		color: #fff;
+	}
+}
+
+// Notices (import), bottom left like the editor's snackbars.
+.evcert-snackbar {
+	position: fixed;
+	left: 16px;
+	bottom: 40px;
+	z-index: 100000;
+}
+
+// Import modal.
+.evcert-import-modal {
+	max-width: 560px;
+	p {
+		margin-top: 0;
+	}
+	.components-notice {
+		margin: 16px 0 0;
+	}
+}
+.evcert-import-modal__drop {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 24px;
+	border: 1px dashed #949494;
+	border-radius: 2px;
+}
+.evcert-import-modal__footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	margin-top: 24px;
+}
+
+// A text that is only a standard text: empty, with the translated words as a placeholder (like an empty paragraph).
+.evcert-field-text-input.is-placeholder,
+.evcert-text--editing.is-placeholder {
+	&::before {
+		content: attr(data-placeholder);
+		white-space: pre-line;
+		opacity: 0.62;
+		pointer-events: none;
+	}
+	&:focus-within::before,
+	&:focus::before {
+		opacity: 0.45;
+	}
+	&.is-placeholder-b::before {
+		font-weight: 700;
+	}
+	&.is-placeholder-i::before {
+		font-style: italic;
+	}
+}
+
+// Paired fields (line height | letter spacing, left | width…): a label on two lines keeps the inputs level.
+.typography-block-support-panel .components-tools-panel-item.single-column,
+.evcert-grid-2 > * {
+	align-self: end;
+}
+
+// Zoom in the footer.
+.evcert-zoom {
+	display: flex;
+	align-items: center;
+	margin-left: auto;
+	.components-button {
+		height: 22px;
+		min-width: 22px;
+	}
+	.evcert-zoom__level {
+		min-width: 52px;
+		justify-content: center;
+		font-variant-numeric: tabular-nums;
+	}
+}
+
+.evcert-color-popover__footer {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 8px;
+	.evcert-meta {
+		margin: 0;
+	}
+}
+
+// Sheet switch (Certificate | Declaration), before the document bar.
+.evcert-sides {
+	display: flex;
+	gap: 2px;
+	margin-right: 8px;
+	padding: 2px;
+	border-radius: 4px;
+	background: #f0f0f0;
+}
+.evcert-header-center {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}

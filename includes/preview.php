@@ -1,0 +1,262 @@
+<?php
+/**
+ * Preview in a new tab: the design editor sends the design as it is (unsaved
+ * changes included), kept for a while per user, and opens the site with
+ * ?preview=1, like a post's preview, drawn like a certificate
+ * page with the preview data, in any of the site's languages (?evcert_lang=).
+ * The QR code and the code are the placeholders the editor shows, on any site.
+ * Only people who may edit designs see it.
+ *
+ * @package EventsCertificate
+ */
+
+namespace EventsCertificate\Preview;
+
+use EventsCertificate\Admin;
+use EventsCertificate\Designs;
+use EventsCertificate\Render;
+use WP_Error;
+use WP_REST_Request;
+
+defined( 'ABSPATH' ) || exit;
+
+/**
+ * The query argument that asks for the preview: WordPress's own `preview`,
+ * taken only on the site's home address with no post in it (a post preview,
+ * ?p=…&preview=true, stays WordPress's).
+ */
+const QUERY_ARG = 'preview';
+
+/**
+ * Query arguments that make `preview` a post's preview.
+ */
+const POST_ARGS = array( 'p', 'page_id', 'preview_id', 'post_type', 'name', 'pagename', 'attachment_id' );
+
+/**
+ * The code a preview shows: clearly not a real one, as long as a real one.
+ */
+const SAMPLE_CODE = 'XXXX-XXXX-XXXX-XXXX';
+
+/**
+ * Hooks.
+ */
+function bootstrap() {
+	add_action( 'rest_api_init', __NAMESPACE__ . '\register_route' );
+	add_action( 'template_redirect', __NAMESPACE__ . '\maybe_render', 1 );
+}
+
+/**
+ * The preview's address in a language ('' = the site's).
+ *
+ * @param string $locale Locale.
+ * @return string
+ */
+function url( $locale = '' ) {
+	$args = array( QUERY_ARG => '1' );
+	if ( $locale && get_locale() !== $locale ) {
+		$args['evcert_lang'] = $locale;
+	}
+
+	return add_query_arg( $args, home_url( '/' ) );
+}
+
+/**
+ * Prints the preview when the address asks for it.
+ */
+function maybe_render() {
+	// phpcs:disable WordPress.Security.NonceVerification.Recommended -- read-only page, shown only to people who may edit designs.
+	if ( ! isset( $_GET[ QUERY_ARG ] ) || '1' !== $_GET[ QUERY_ARG ] || array_intersect_key( $_GET, array_flip( POST_ARGS ) ) || ( ! is_front_page() && ! is_home() ) ) {
+		return;
+	}
+	$lang = isset( $_GET['evcert_lang'] ) ? sanitize_text_field( wp_unslash( $_GET['evcert_lang'] ) ) : '';
+	// phpcs:enable
+	$locale   = in_array( $lang, \EventsCertificate\Verify\locales(), true ) ? $lang : get_locale();
+	$switched = switch_to_locale( $locale );
+	nocache_headers();
+	header( 'X-Robots-Tag: noindex, nofollow' );
+	render( $locale );
+	if ( $switched ) {
+		restore_previous_locale();
+	}
+	exit;
+}
+
+/**
+ * The transient holding a user's previewed design.
+ *
+ * @param int $user_id User ID.
+ * @return string
+ */
+function key( $user_id ) {
+	return 'evcert_preview_' . (int) $user_id;
+}
+
+/**
+ * REST route: POST /evcert/v1/preview (design) → the preview page's address.
+ */
+function register_route() {
+	register_rest_route(
+		'evcert/v1',
+		'/preview',
+		array(
+			'methods'             => 'POST',
+			'callback'            => __NAMESPACE__ . '\store',
+			'permission_callback' => static function () {
+				return current_user_can( Admin\CAPABILITY );
+			},
+			'args'                => array(
+				'design' => array(
+					'type'     => 'object',
+					'required' => true,
+				),
+				'role'   => array(
+					'type'              => 'string',
+					'sanitize_callback' => 'sanitize_key',
+				),
+			),
+		)
+	);
+}
+
+/**
+ * Keeps the design for an hour and answers with the preview address.
+ *
+ * @param WP_REST_Request $request Request.
+ * @return array<string, string>|WP_Error
+ */
+function store( WP_REST_Request $request ) {
+	$design = $request['design'];
+	if ( ! is_array( $design ) || ! isset( $design['page'], $design['elements'] ) || ! is_array( $design['elements'] ) ) {
+		return new WP_Error( 'evcert_design', __( 'Not a certificate design.', 'events-certificates' ), array( 'status' => 400 ) );
+	}
+	// The template's first role is the preview's role (a volunteers' template shows a volunteer).
+	$role = (string) $request['role'];
+	if ( isset( \EventsCertificate\Designs\role_labels()[ $role ] ) ) {
+		$design['sample']         = (array) ( $design['sample'] ?? array() );
+		$design['sample']['role'] = $design['sample']['role'] ?? \EventsCertificate\Designs\role_labels()[ $role ];
+	}
+	set_transient( key( get_current_user_id() ), $design, HOUR_IN_SECONDS );
+
+	return array( 'url' => url() );
+}
+
+/**
+ * The design to preview: the one sent last by this user, else the site's.
+ *
+ * @return array<string, mixed>
+ */
+function design() {
+	$sent = get_transient( key( get_current_user_id() ) );
+
+	return is_array( $sent ) ? $sent : (array) Designs\get( Designs\site_design_id() );
+}
+
+/**
+ * The fields' values: a certificate of today with the design's preview data,
+ * the signer, event and place of the site, and the placeholder code.
+ *
+ * @param array<string, mixed> $design Design.
+ * @return array<string, string>
+ */
+function values( array $design ) {
+	$values = Render\values(
+		array(
+			'name'      => 'Alex Rivera',
+			'role'      => 'attendee',
+			'hours'     => '8',
+			'code'      => SAMPLE_CODE,
+			'issued_at' => gmdate( 'Y-m-d H:i:s' ),
+		)
+	);
+	// The signer previews the participant too, as in the editor.
+	if ( '' !== $values['signer_name'] ) {
+		$values['name'] = $values['signer_name'];
+	}
+	foreach ( (array) ( $design['sample'] ?? array() ) as $key => $value ) {
+		if ( is_string( $value ) && '' !== $value && isset( $values[ $key ] ) && ! in_array( $key, array( 'code', 'verify_url' ), true ) ) {
+			$values[ $key ] = $value;
+		}
+	}
+	// The declaration sheet's sample: a document, a day and a talk.
+	$values['document']              = '•••.•••.789-••';
+	$values['day']                   = '' !== $values['day'] ? $values['day'] : __( 'Conference', 'events-certificates' );
+	$values['activities']            = '' !== $values['activities'] ? $values['activities'] : wp_date( 'd/m' ) . ' — ' . __( 'Conference', 'events-certificates' ) . "\n" . wp_date( (string) get_option( 'time_format' ), strtotime( '09:30' ) ) . ' · ' . __( 'Building accessible blocks', 'events-certificates' ) . ' — ' . $values['signer_name'];
+	$values['declaration_statement'] = Render\statement_text( array( 'doc_label' => 'CPF' ), $values, array() );
+
+	return $values;
+}
+
+/**
+ * Prints the preview page (only for people who may edit designs).
+ *
+ * @param string $locale Locale.
+ */
+function render( $locale ) {
+	if ( ! current_user_can( Admin\CAPABILITY ) ) {
+		status_header( 404 );
+		\EventsCertificate\Verify\render_page( null, '', $locale, false );
+		return;
+	}
+	$design = design();
+	$values = values( $design );
+	$style  = \EventsCertificate\Assets\src( 'verify', 'css' );
+	$script = \EventsCertificate\Assets\src( 'verify', 'js' );
+	wp_register_style( 'evcert-verify', $style['url'], array(), $style['version'] );
+	wp_add_inline_style( 'evcert-verify', Render\fonts_css( false ) );
+	wp_register_script( 'evcert-verify', $script['url'], array(), $script['version'], true );
+	$title = __( 'Certificate preview', 'events-certificates' );
+	$opts  = array( 'preview' => true );
+	?>
+<!DOCTYPE html>
+<html lang="<?php echo esc_attr( str_replace( '_', '-', $locale ) ); ?>">
+<head>
+	<meta charset="<?php bloginfo( 'charset' ); ?>">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="robots" content="noindex, nofollow">
+	<title><?php echo esc_html( $title . ' – ' . get_bloginfo( 'name' ) ); ?></title>
+	<?php wp_print_styles( array( 'evcert-verify' ) ); ?>
+</head>
+<body class="evcert-verify has-certificate is-preview<?php echo ! empty( $design['back']['elements'] ) ? ' has-declaration' : ''; ?>">
+	<h1 class="screen-reader-text"><?php echo esc_html( $title ); ?></h1>
+	<main class="evcert-verify__stage">
+		<div class="evcert-verify__art" style="<?php echo esc_attr( sprintf( '--evcert-w:%.2F;--evcert-h:%.2F', $design['page']['w'], $design['page']['h'] ) ); ?>">
+			<div class="evcert-verify__mode is-light"><?php echo wp_kses( Render\artwork( $design, $values, $opts + array( 'mode' => 'light' ) ), Render\allowed_html(), Render\allowed_protocols() ); ?></div>
+			<div class="evcert-verify__mode is-dark"><?php echo wp_kses( Render\artwork( $design, $values, $opts + array( 'mode' => 'dark' ) ), Render\allowed_html(), Render\allowed_protocols() ); ?></div>
+		</div>
+		<?php if ( ! empty( $design['back']['elements'] ) ) : ?>
+			<?php $sheet = array( 'elements' => $design['back']['elements'] ) + $design; ?>
+			<div class="evcert-verify__art" style="<?php echo esc_attr( sprintf( '--evcert-w:%.2F;--evcert-h:%.2F', $design['page']['w'], $design['page']['h'] ) ); ?>">
+				<div class="evcert-verify__mode is-light"><?php echo wp_kses( Render\artwork( $sheet, $values, $opts + array( 'mode' => 'light' ) ), Render\allowed_html(), Render\allowed_protocols() ); ?></div>
+				<div class="evcert-verify__mode is-dark"><?php echo wp_kses( Render\artwork( $sheet, $values, $opts + array( 'mode' => 'dark' ) ), Render\allowed_html(), Render\allowed_protocols() ); ?></div>
+			</div>
+		<?php endif; ?>
+	</main>
+	<nav class="evcert-dock" data-evcert-dock aria-label="<?php esc_attr_e( 'Certificate tools', 'events-certificates' ); ?>">
+		<div class="evcert-dock__bar">
+			<div class="evcert-dock__tools">
+				<span class="evcert-dock__status evcert-dock__preview"><?php esc_html_e( 'Preview', 'events-certificates' ); ?></span>
+				<?php
+				// Language: a globe with the current language's name; two languages switch on click, more open a menu.
+				$others = array_values( array_diff( \EventsCertificate\Verify\locales(), array( $locale ) ) );
+				?>
+				<?php if ( 1 === count( $others ) ) : ?>
+					<a class="evcert-dock__tool" href="<?php echo esc_url( url( $others[0] ) ); ?>" hreflang="<?php echo esc_attr( str_replace( '_', '-', $others[0] ) ); ?>" title="<?php echo esc_attr( \EventsCertificate\Verify\locale_name( $others[0] ) ); ?>"><?php \EventsCertificate\Verify\the_icon( 'globe' ); ?><span><?php echo esc_html( \EventsCertificate\Verify\locale_name( $locale ) ); ?></span></a>
+				<?php elseif ( count( $others ) > 1 ) : ?>
+					<button type="button" class="evcert-dock__tool" data-evcert-pop="langs" aria-expanded="false"><?php \EventsCertificate\Verify\the_icon( 'globe' ); ?><span><?php echo esc_html( \EventsCertificate\Verify\locale_name( $locale ) ); ?></span></button>
+				<?php endif; ?>
+				<button type="button" class="evcert-dock__tool" data-evcert-mode data-to-light="<?php esc_attr_e( 'Light', 'events-certificates' ); ?>" data-to-dark="<?php esc_attr_e( 'Dark', 'events-certificates' ); ?>"><span class="evcert-dock__glyph" aria-hidden="true">☀︎</span><span class="evcert-dock__mode-label"><?php esc_html_e( 'Light', 'events-certificates' ); ?></span></button>
+			</div>
+		</div>
+		<?php if ( count( \EventsCertificate\Verify\locales() ) > 2 ) : ?>
+			<div class="evcert-dock__pop is-menu" data-evcert-popover="langs" hidden>
+				<?php foreach ( \EventsCertificate\Verify\locales() as $l ) : ?>
+					<a href="<?php echo esc_url( url( $l ) ); ?>" lang="<?php echo esc_attr( str_replace( '_', '-', $l ) ); ?>" <?php echo $l === $locale ? 'aria-current="true"' : ''; ?>><?php echo esc_html( \EventsCertificate\Verify\locale_name( $l ) ); ?></a>
+				<?php endforeach; ?>
+			</div>
+		<?php endif; ?>
+	</nav>
+	<?php wp_print_scripts( array( 'evcert-verify' ) ); ?>
+</body>
+</html>
+	<?php
+}

@@ -1,0 +1,47 @@
+{
+	"name": "events-certificates",
+	"private": true,
+	"description": "Development tools for the Events Certificates plugin.",
+	"license": "GPL-2.0-or-later",
+	"scripts": {
+		"build": "wp-build && node bin/build-signer.mjs && node bin/build-blocks.mjs && node bin/build-assets.mjs && node bin/postbuild.mjs",
+		"dev": "wp-build --watch",
+		"check-types": "tsc --noEmit",
+		"assets": "node bin/build-assets.mjs",
+		"start": "node bin/build-assets.mjs --watch",
+		"test:js": "node --test tests/js/*.test.mjs",
+		"readme": "grunt readme"
+	},
+	"devDependencies": {
+		"@types/react": "18.3.28",
+		"@wordpress/admin-ui": "2.6.0",
+		"@wordpress/api-fetch": "7.57.0",
+		"@wordpress/base-styles": "11.0.0",
+		"@wordpress/block-editor": "20.0.0",
+		"@wordpress/blocks": "17.1.0",
+		"@wordpress/build": "0.19.0",
+		"@wordpress/components": "37.0.0",
+		"@wordpress/compose": "8.4.0",
+		"@wordpress/data": "10.51.0",
+		"@wordpress/element": "8.3.0",
+		"@wordpress/i18n": "6.24.0",
+		"@wordpress/icons": "15.2.0",
+		"@wordpress/notices": "5.51.0",
+		"@wordpress/server-side-render": "7.1.0",
+		"@wordpress/ui": "0.18.0",
+		"grunt": "^1.6.3",
+		"grunt-wp-readme-to-markdown": "^2.1.0",
+		"sass": "1.108.2",
+		"terser": "5.51.2",
+		"typescript": "5.9.3"
+	},
+	"wpPlugin": {
+		"name": "evcert",
+		"scriptGlobal": false,
+		"packageNamespace": "evcert",
+		"handlePrefix": "evcert",
+		"pages": [
+			"evcert-editor"
+		]
+	}
+}

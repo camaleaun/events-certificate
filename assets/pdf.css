@@ -1,0 +1,4 @@
+/* The PDF page (dompdf): no margins; the page size comes from setPaper(), the fonts from registerFont(). */
+@page { margin: 0; }
+html, body { margin: 0; padding: 0; }
+b, strong { font-weight: 600; }

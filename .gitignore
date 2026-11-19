@@ -1,0 +1,13 @@
+.DS_Store
+*.log
+/vendor/
+.phpunit.result.cache
+/node_modules/
+/build/
+/build-signer/
+/build-blocks/
+/assets/css/
+/assets/js/
+
+# Strauss phar: downloaded by each developer (composer prefix-namespaces).
+/bin/strauss.phar

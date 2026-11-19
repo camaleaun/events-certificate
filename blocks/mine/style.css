@@ -1,0 +1,33 @@
+/**
+ * "Get my certificate": CampTix's markup (#tix tables) does most of the look
+ * when CampTix is active; this keeps it usable when it isn't.
+ */
+.evcert-mine-form .tix_tickets_table {
+	width: 100%;
+	border-collapse: collapse;
+}
+.evcert-mine-form .tix_tickets_table th,
+.evcert-mine-form .tix_tickets_table td {
+	padding: 0.5em 0.75em;
+	text-align: left;
+	vertical-align: top;
+}
+.evcert-mine-form .tix-left {
+	width: 30%;
+}
+.evcert-mine-form input[type="email"],
+.evcert-mine-form input[type="text"] {
+	width: 100%;
+	max-width: 32ch;
+}
+.evcert-mine-form #evcert-mine-code {
+	max-width: 12ch;
+	font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+	letter-spacing: 0.3em;
+}
+.evcert-mine-form .tix-notice,
+.evcert-mine-form .tix-error {
+	margin: 0 0 1em;
+	padding: 0.6em 0.9em;
+	border-left: 4px solid currentColor;
+}

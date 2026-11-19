@@ -1,0 +1,18 @@
+// The certificate generator's page: the app's own look (scoped under .evcert-app), the same on any theme.
+//
+// Built by `npm run build` (bin/build-assets.mjs) into assets/css/quick-generator.css and quick-generator.min.css.
+// Keep the order of the @use rules: where two rules have the same specificity, the later one wins.
+
+@use 'quick-generator/fonts';
+@use 'quick-generator/isolation';
+@use 'quick-generator/tokens';
+@use 'quick-generator/base';
+@use 'quick-generator/layout';
+@use 'quick-generator/panels';
+@use 'quick-generator/forms';
+@use 'quick-generator/people';
+@use 'quick-generator/preview';
+@use 'quick-generator/tutorial';
+@use 'quick-generator/motion';
+@use 'quick-generator/sheet-svg';
+@use 'quick-generator/editor';

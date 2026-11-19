@@ -1,0 +1,62 @@
+/*
+ * The certificate page (includes/verify.php): the certificate fills the
+ * screen; the tools float in a Dock like Playground's toolbar, which docks to
+ * the left or right corner as one icon. Light/dark follows the system until
+ * chosen with the Dock's toggle.
+ */
+:root {
+	color-scheme: light dark;
+	--fg: #1e1e1e;
+	--muted: #757575;
+	--bg: #e9e9ea;
+	--card: #fff;
+	--accent: #3858e9;
+	--ok: #4ab866;
+	--warn: #f0c33c;
+	--bad: #f86368;
+	--dock: #1a1919;
+	--dock-fg: #f0f0f0;
+	--dock-item: rgba(246, 246, 246, 0.68);
+	--dock-muted: #a7aaad;
+	--dock-hover: rgba(246, 246, 246, 0.14);
+	--dock-active: rgba(246, 246, 246, 0.22);
+	--dock-field: #40464d;
+	--dock-accent: #3858e9;
+	--dock-accent-hover: #2f49bd;
+	--dock-accent-soft: #8ea2ff;
+}
+:root[data-mode="dark"] {
+	color-scheme: dark;
+	--fg: #f0f0f1;
+	--muted: #a7aaad;
+	--bg: #0b0c0e;
+	--card: #1d1f23;
+	--accent: #8ea2ff;
+}
+:root[data-mode="light"] { color-scheme: light; }
+@media (prefers-color-scheme: dark) {
+	:root:not([data-mode="light"]) {
+		--fg: #f0f0f1;
+		--muted: #a7aaad;
+		--bg: #0b0c0e;
+		--card: #1d1f23;
+		--accent: #8ea2ff;
+	}
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body.evcert-verify {
+	margin: 0;
+	background: var(--bg);
+	color: var(--fg);
+	font: 14px/1.5 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+.screen-reader-text {
+	position: absolute !important;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(1px, 1px, 1px, 1px);
+	white-space: nowrap;
+}
